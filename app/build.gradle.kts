@@ -27,9 +27,11 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            buildConfigField("String", "BASE_URL", "\"https://can-fly.shop/\"")
         }
         debug {
             isMinifyEnabled = false
+            buildConfigField("String", "BASE_URL", "\"http://10.0.2.2:8080/\"")
         }
     }
 
@@ -86,4 +88,10 @@ dependencies {
     // Image (Coil 3)
     implementation(libs.coil.compose)
     implementation(libs.coil.network.okhttp)
+
+    // Splash
+    implementation(libs.androidx.core.splashscreen)
+
+    // DataStore (token storage)
+    implementation(libs.androidx.datastore.preferences)
 }
