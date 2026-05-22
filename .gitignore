@@ -36,6 +36,7 @@ Thumbs.db
 /release/
 
 # Local notes (untracked)
+local-docs/
 local_readme.md
 local_*.md
 LOCAL_*.md
