@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Compose가 실제 UI 테마를 담당하므로 XML 테마는 시스템 창(상태바·내비바·스플래시)용 최소만.
+-->
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <style name="Theme.MohaemohaeKyung" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:statusBarColor" tools:targetApi="l">@android:color/transparent</item>
+        <item name="android:windowLightStatusBar" tools:targetApi="m">true</item>
+    </style>
+</resources>
