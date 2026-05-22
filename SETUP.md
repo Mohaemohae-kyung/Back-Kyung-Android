@@ -25,7 +25,7 @@
 ### 1-1. Android Studio
 - **다운로드**: https://developer.android.com/studio
 - **권장 버전**: 2025.3 (Panda 4) 이상
-- **설치 옵션**: 기본 설정 그대로 진행. 첫 실행 시 SDK Platform 35 자동 설치됨.
+- **설치 옵션**: 기본 설정 그대로 진행. 첫 실행 시 최신 SDK Platform 자동 설치됨 (본 프로젝트는 compileSdk 36 사용 — Gradle sync 시 자동 다운로드).
 
 ### 1-2. Git
 | OS | 설치 |
@@ -107,7 +107,7 @@ gradlew.bat assembleDebug
 ### Android Studio에서 실행
 1. 상단 툴바 디바이스 셀렉터 → 에뮬레이터 또는 연결된 디바이스 선택
 2. ▶️ **Run 'app'** 버튼 클릭 (또는 `Shift+F10` / `Ctrl+R`)
-3. 앱 화면에 "환영합니다 — Mohaemohae kyung" 표시되면 성공
+3. 앱 화면에 텍스트가 표시되면 성공 (현재는 `MainActivity.kt` 의 임시 텍스트, 기능 추가 시 교체됨)
 
 ---
 
