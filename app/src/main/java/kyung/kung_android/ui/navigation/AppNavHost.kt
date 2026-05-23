@@ -6,11 +6,16 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import kyung.kung_android.ui.auth.login.LoginScreen
 import kyung.kung_android.ui.auth.signup.SignupScreen
+import androidx.navigation.NavType
+import androidx.navigation.navArgument
 import kyung.kung_android.ui.chatbot.ChatBotScreen
 import kyung.kung_android.ui.common.PlaceholderScreen
+import kyung.kung_android.ui.expert_detail.ExpertDetailScreen
 import kyung.kung_android.ui.expert_register.ExpertRegisterScreen
 import kyung.kung_android.ui.main.MainScaffold
 import kyung.kung_android.ui.mypage.MyPageScreen
+import kyung.kung_android.ui.quote_detail.QuoteDetailScreen
+import kyung.kung_android.ui.quote_request.QuoteRequestScreen
 
 @Composable
 fun AppNavHost(
@@ -28,6 +33,46 @@ fun AppNavHost(
                 onNavigateMyPage = { navController.navigate(AppRoute.MY_PAGE) },
                 onNavigateChatbot = { navController.navigate(AppRoute.CHATBOT) },
                 onNavigateExpertRegister = { navController.navigate(AppRoute.EXPERT_REGISTER) },
+                onNavigateExpertDetail = { id -> navController.navigate("${AppRoute.EXPERT_DETAIL}/$id") },
+                onNavigateQuoteDetail = { id -> navController.navigate("${AppRoute.QUOTE_DETAIL}/$id") },
+            )
+        }
+
+        composable(
+            route = "${AppRoute.EXPERT_DETAIL}/{expertId}",
+            arguments = listOf(navArgument("expertId") { type = NavType.LongType }),
+        ) {
+            ExpertDetailScreen(
+                onBack = { navController.popBackStack() },
+                onNavigateQuoteRequest = { expertId, expertServiceId ->
+                    navController.navigate("${AppRoute.QUOTE_REQUEST}/$expertId/$expertServiceId")
+                },
+            )
+        }
+
+        composable(
+            route = "${AppRoute.QUOTE_REQUEST}/{expertId}/{expertServiceId}",
+            arguments = listOf(
+                navArgument("expertId") { type = NavType.LongType },
+                navArgument("expertServiceId") { type = NavType.LongType },
+            ),
+        ) {
+            QuoteRequestScreen(
+                onBack = { navController.popBackStack() },
+                onSuccess = {
+                    navController.popBackStack(AppRoute.MAIN, inclusive = false)
+                },
+            )
+        }
+
+        composable(
+            route = "${AppRoute.QUOTE_DETAIL}/{requestId}",
+            arguments = listOf(navArgument("requestId") { type = NavType.LongType }),
+        ) {
+            QuoteDetailScreen(
+                onBack = { navController.popBackStack() },
+                onNavigateExpertDetail = { id -> navController.navigate("${AppRoute.EXPERT_DETAIL}/$id") },
+                onNavigateChat = { /* PR-G(채팅 흐름)에서 연결 */ },
             )
         }
 

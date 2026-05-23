@@ -19,6 +19,7 @@ import kyung.kung_android.ui.common.PlaceholderScreen
 import kyung.kung_android.ui.expert_search.ExpertSearchScreen
 import kyung.kung_android.ui.home.HomeScreen
 import kyung.kung_android.ui.navigation.AppRoute
+import kyung.kung_android.ui.received_quote.ReceivedQuoteScreen
 
 @Composable
 fun MainScaffold(
@@ -27,6 +28,7 @@ fun MainScaffold(
     onNavigateExpertDetail: (Long) -> Unit = {},
     onNavigateChatbot: () -> Unit = {},
     onNavigateExpertRegister: () -> Unit = {},
+    onNavigateQuoteDetail: (Long) -> Unit = {},
     viewModel: MainScaffoldViewModel = hiltViewModel(),
 ) {
     val nestedNavController = rememberNavController()
@@ -107,7 +109,18 @@ fun MainScaffold(
 
             composable(AppRoute.Tab.RECEIVED_QUOTE) {
                 LoginGate(isLoggedIn = isLoggedIn, onNavigateLogin = onNavigateLogin) {
-                    PlaceholderScreen(title = "받은견적")
+                    ReceivedQuoteScreen(
+                        onNavigateExpertSearch = {
+                            nestedNavController.navigate(expertSearchRoute(null, null)) {
+                                popUpTo(nestedNavController.graph.findStartDestination().id) {
+                                    saveState = true
+                                }
+                                launchSingleTop = true
+                                restoreState = true
+                            }
+                        },
+                        onNavigateQuoteDetail = onNavigateQuoteDetail,
+                    )
                 }
             }
 
