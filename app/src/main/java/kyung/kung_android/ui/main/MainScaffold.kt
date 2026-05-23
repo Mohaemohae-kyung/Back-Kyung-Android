@@ -16,6 +16,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import kyung.kung_android.ui.common.LoginGate
 import kyung.kung_android.ui.common.PlaceholderScreen
+import kyung.kung_android.ui.community.CommunityScreen
 import kyung.kung_android.ui.expert_search.ExpertSearchScreen
 import kyung.kung_android.ui.home.HomeScreen
 import kyung.kung_android.ui.navigation.AppRoute
@@ -29,6 +30,8 @@ fun MainScaffold(
     onNavigateChatbot: () -> Unit = {},
     onNavigateExpertRegister: () -> Unit = {},
     onNavigateQuoteDetail: (Long) -> Unit = {},
+    onNavigatePostDetail: (Long) -> Unit = {},
+    onNavigatePostWrite: () -> Unit = {},
     viewModel: MainScaffoldViewModel = hiltViewModel(),
 ) {
     val nestedNavController = rememberNavController()
@@ -131,7 +134,12 @@ fun MainScaffold(
             }
 
             composable(AppRoute.Tab.COMMUNITY) {
-                PlaceholderScreen(title = "커뮤니티")
+                CommunityScreen(
+                    onNavigatePostDetail = onNavigatePostDetail,
+                    onNavigatePostWrite = {
+                        if (isLoggedIn) onNavigatePostWrite() else onNavigateLogin()
+                    },
+                )
             }
         }
     }

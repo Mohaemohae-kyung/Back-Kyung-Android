@@ -12,6 +12,8 @@ object AppRoute {
     const val EXPERT_DETAIL = "expert_detail"
     const val QUOTE_REQUEST = "quote_request"
     const val QUOTE_DETAIL = "quote_detail"
+    const val POST_DETAIL = "post_detail"
+    const val POST_EDITOR = "post_editor"
 
     // 5탭 nested NavHost 내부 라우트
     object Tab {

@@ -14,6 +14,8 @@ import kyung.kung_android.ui.expert_detail.ExpertDetailScreen
 import kyung.kung_android.ui.expert_register.ExpertRegisterScreen
 import kyung.kung_android.ui.main.MainScaffold
 import kyung.kung_android.ui.mypage.MyPageScreen
+import kyung.kung_android.ui.post_detail.PostDetailScreen
+import kyung.kung_android.ui.post_editor.PostEditorScreen
 import kyung.kung_android.ui.quote_detail.QuoteDetailScreen
 import kyung.kung_android.ui.quote_request.QuoteRequestScreen
 
@@ -35,7 +37,20 @@ fun AppNavHost(
                 onNavigateExpertRegister = { navController.navigate(AppRoute.EXPERT_REGISTER) },
                 onNavigateExpertDetail = { id -> navController.navigate("${AppRoute.EXPERT_DETAIL}/$id") },
                 onNavigateQuoteDetail = { id -> navController.navigate("${AppRoute.QUOTE_DETAIL}/$id") },
+                onNavigatePostDetail = { id -> navController.navigate("${AppRoute.POST_DETAIL}/$id") },
+                onNavigatePostWrite = { navController.navigate(AppRoute.POST_EDITOR) },
             )
+        }
+
+        composable(
+            route = "${AppRoute.POST_DETAIL}/{postId}",
+            arguments = listOf(navArgument("postId") { type = NavType.LongType }),
+        ) {
+            PostDetailScreen(onBack = { navController.popBackStack() })
+        }
+
+        composable(AppRoute.POST_EDITOR) {
+            PostEditorScreen(onBack = { navController.popBackStack() })
         }
 
         composable(
