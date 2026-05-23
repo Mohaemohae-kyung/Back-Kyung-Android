@@ -1,5 +1,6 @@
 package kyung.kung_android.ui.main
 
+import android.net.Uri
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Person
@@ -144,7 +145,8 @@ fun MainScaffold(
                                 saveState = true
                             }
                             launchSingleTop = true
-                            restoreState = true
+                            // restoreState 미사용: 홈에서 시작한 검색은 새 args가 보장돼야 함.
+                            // restoreState=true 시 이전에 저장된 back stack entry의 옛 args가 복원되어 새 keyword/category가 무시됨.
                         }
                     },
                     onNavigateExpertDetail = onNavigateExpertDetail,
@@ -220,7 +222,7 @@ fun MainScaffold(
 }
 
 private fun expertSearchRoute(keyword: String?, categoryId: Long?, locationId: Long?): String {
-    val k = keyword?.takeIf { it.isNotEmpty() }.orEmpty()
+    val k = keyword?.takeIf { it.isNotEmpty() }?.let(Uri::encode).orEmpty()
     val c = categoryId?.toString() ?: "-1"
     val l = locationId?.toString() ?: "-1"
     return "${AppRoute.Tab.EXPERT_SEARCH}?keyword=$k&categoryId=$c&locationId=$l"

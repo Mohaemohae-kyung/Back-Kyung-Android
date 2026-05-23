@@ -93,18 +93,18 @@ class ExpertSearchViewModel @Inject constructor(
         }
     }
 
-    fun applyKeywordFromHome(keyword: String) {
-        _local.update { it.copy(keyword = keyword) }
-        search()
-    }
-
-    fun applyCategoryFromHome(categoryId: Long) {
-        _local.update { it.copy(selectedCategoryId = categoryId) }
-        search()
-    }
-
-    fun applyLocationFromHome(locationId: Long) {
-        _local.update { it.copy(selectedLocationId = locationId) }
+    /**
+     * 홈/외부 진입 args를 권위적으로 반영. null/빈 값은 해당 필터를 clear.
+     * (이전 keyword에 카테고리만 추가되는 stale 잔존 문제 방지)
+     */
+    fun applyHomeArgs(keyword: String?, categoryId: Long?, locationId: Long?) {
+        _local.update {
+            it.copy(
+                keyword = keyword.orEmpty(),
+                selectedCategoryId = categoryId,
+                selectedLocationId = locationId,
+            )
+        }
         search()
     }
 

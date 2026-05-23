@@ -82,9 +82,18 @@ fun ExpertSearchScreen(
     val state by viewModel.state.collectAsStateWithLifecycle()
 
     LaunchedEffect(initialKeyword, initialCategoryId, initialLocationId) {
-        initialKeyword?.takeIf { it.isNotEmpty() }?.let(viewModel::applyKeywordFromHome)
-        initialCategoryId?.let(viewModel::applyCategoryFromHome)
-        initialLocationId?.let(viewModel::applyLocationFromHome)
+        // 홈/외부에서 args를 들고 진입한 경우에만 authoritative로 덮어쓴다.
+        // 모든 args가 비어있으면 (하단탭 클릭 등) ViewModel 기존 상태 보존.
+        val hasAnyArg = !initialKeyword.isNullOrEmpty() ||
+            initialCategoryId != null ||
+            initialLocationId != null
+        if (hasAnyArg) {
+            viewModel.applyHomeArgs(
+                keyword = initialKeyword,
+                categoryId = initialCategoryId,
+                locationId = initialLocationId,
+            )
+        }
     }
 
     Column(modifier = Modifier.fillMaxSize()) {
