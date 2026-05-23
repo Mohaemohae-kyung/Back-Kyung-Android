@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.22.1)
 project(kungandroid)
 
 add_library(native SHARED
-    native-stub.cpp
+    native_security.cpp
 )
 
 find_library(log-lib log)
