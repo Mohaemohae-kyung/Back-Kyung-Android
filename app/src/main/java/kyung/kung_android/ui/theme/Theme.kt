@@ -1,6 +1,8 @@
 package kyung.kung_android.ui.theme
 
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 
@@ -37,12 +39,48 @@ private val KungLightColorScheme = lightColorScheme(
     onErrorContainer = KungColors.ErrorDark,
 )
 
+private val KungDarkColorScheme = darkColorScheme(
+    primary = KungColors.PurpleLight,
+    onPrimary = KungColors.White,
+    primaryContainer = KungColors.PurpleDark,
+    onPrimaryContainer = KungColors.PurpleBg,
+
+    secondary = KungColors.BgSubtle,
+    onSecondary = KungColors.Charcoal,
+    secondaryContainer = KungColors.Slate,
+    onSecondaryContainer = KungColors.White,
+
+    tertiary = KungColors.Success,
+    onTertiary = KungColors.White,
+    tertiaryContainer = KungColors.Slate,
+    onTertiaryContainer = KungColors.SuccessBg,
+
+    background = KungColors.Charcoal,
+    onBackground = KungColors.White,
+
+    surface = KungColors.Ink,
+    onSurface = KungColors.White,
+    surfaceVariant = KungColors.Slate,
+    onSurfaceVariant = KungColors.BgSubtle,
+
+    outline = KungColors.Slate,
+    outlineVariant = KungColors.Slate,
+
+    error = KungColors.Error,
+    onError = KungColors.White,
+    errorContainer = KungColors.ErrorDark,
+    onErrorContainer = KungColors.ErrorBg,
+)
+
 @Composable
 fun KungTheme(
+    darkTheme: Boolean = isSystemInDarkTheme(),
     content: @Composable () -> Unit,
 ) {
+    val colors = if (darkTheme) KungDarkColorScheme else KungLightColorScheme
     MaterialTheme(
-        colorScheme = KungLightColorScheme,
+        colorScheme = colors,
+        shapes = KungShapes,
         content = content,
     )
 }

@@ -1,4 +1,4 @@
-# Mohaemohae kyung — Android
+# 매칭온 — Android
 
 [Back-Kyung](https://github.com/Mohaemohae-kyung/Back-Kyung) 백엔드(Spring Boot 3.2.3 + Oracle)와 연동하는 안드로이드 클라이언트.
 
@@ -12,7 +12,7 @@
 | Android Gradle Plugin | 8.13.2 |
 | Gradle | 8.14.5 |
 | compileSdk / targetSdk | 36 (Android 16) |
-| minSdk | 26 (Android 8.0+) |
+| minSdk | 28 (Android 9.0+) |
 | UI | Jetpack Compose + Material3 |
 | DI | Hilt 2.56.2 |
 | 네트워크 | Retrofit 2.11.0 + OkHttp 4.12.0 + Kotlinx Serialization |

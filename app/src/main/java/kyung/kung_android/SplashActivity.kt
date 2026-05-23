@@ -7,20 +7,22 @@ import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.lifecycleScope
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
+import kyung.kung_android.data.auth.TokenStore
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class SplashActivity : ComponentActivity() {
+
+    @Inject lateinit var tokenStore: TokenStore
 
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
         super.onCreate(savedInstanceState)
 
         lifecycleScope.launch {
-            val next = resolveNext()
-            startActivity(Intent(this@SplashActivity, next))
+            tokenStore.prime()
+            startActivity(Intent(this@SplashActivity, MainActivity::class.java))
             finish()
         }
     }
-
-    private fun resolveNext(): Class<*> = MainActivity::class.java
 }
