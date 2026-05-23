@@ -6,6 +6,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import kyung.kung_android.ui.auth.login.LoginScreen
 import kyung.kung_android.ui.auth.signup.SignupScreen
+import kyung.kung_android.ui.chatbot.ChatBotScreen
 import kyung.kung_android.ui.common.PlaceholderScreen
 import kyung.kung_android.ui.main.MainScaffold
 
@@ -21,13 +22,14 @@ fun AppNavHost(
     ) {
         composable(AppRoute.MAIN) {
             MainScaffold(
-                onNavigateLogin = {
-                    navController.navigate(AppRoute.LOGIN)
-                },
-                onNavigateMyPage = {
-                    navController.navigate(AppRoute.MY_PAGE)
-                },
+                onNavigateLogin = { navController.navigate(AppRoute.LOGIN) },
+                onNavigateMyPage = { navController.navigate(AppRoute.MY_PAGE) },
+                onNavigateChatbot = { navController.navigate(AppRoute.CHATBOT) },
             )
+        }
+
+        composable(AppRoute.CHATBOT) {
+            ChatBotScreen(onClose = { navController.popBackStack() })
         }
 
         composable(AppRoute.LOGIN) {
