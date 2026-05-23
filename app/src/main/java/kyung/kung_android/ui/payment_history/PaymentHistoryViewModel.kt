@@ -26,10 +26,6 @@ class PaymentHistoryViewModel @Inject constructor(
     private val _state = MutableStateFlow(PaymentHistoryUiState())
     val state: StateFlow<PaymentHistoryUiState> = _state.asStateFlow()
 
-    init {
-        load()
-    }
-
     fun load() {
         _state.update { it.copy(isLoading = true, error = null) }
         viewModelScope.launch {

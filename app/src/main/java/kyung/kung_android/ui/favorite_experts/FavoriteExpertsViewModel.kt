@@ -28,10 +28,6 @@ class FavoriteExpertsViewModel @Inject constructor(
     private val _state = MutableStateFlow(FavoriteExpertsUiState())
     val state: StateFlow<FavoriteExpertsUiState> = _state.asStateFlow()
 
-    init {
-        load()
-    }
-
     fun load() {
         _state.update { it.copy(isLoading = true, error = null) }
         viewModelScope.launch {

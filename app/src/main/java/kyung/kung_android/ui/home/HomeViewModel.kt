@@ -25,11 +25,7 @@ class HomeViewModel @Inject constructor(
     private val _state = MutableStateFlow(HomeUiState())
     val state: StateFlow<HomeUiState> = _state.asStateFlow()
 
-    init {
-        loadRecommendations()
-    }
-
-    private fun loadRecommendations() {
+    fun loadRecommendations() {
         _state.update { it.copy(isLoadingRecommended = true) }
         viewModelScope.launch {
             try {

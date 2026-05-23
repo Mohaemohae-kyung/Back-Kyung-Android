@@ -42,10 +42,6 @@ class PostDetailViewModel @Inject constructor(
     val isLoggedIn: StateFlow<Boolean> = authRepository.isLoggedIn
         .stateIn(viewModelScope, SharingStarted.Eagerly, false)
 
-    init {
-        load()
-    }
-
     fun onInputChange(v: String) = _state.update { it.copy(input = v) }
 
     fun onSendComment() {
@@ -80,7 +76,7 @@ class PostDetailViewModel @Inject constructor(
         }
     }
 
-    private fun load() {
+    fun load() {
         _state.update { it.copy(isLoading = true, error = null) }
         viewModelScope.launch {
             try {

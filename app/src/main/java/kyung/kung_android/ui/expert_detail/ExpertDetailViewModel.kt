@@ -32,10 +32,6 @@ class ExpertDetailViewModel @Inject constructor(
     private val _state = MutableStateFlow(ExpertDetailUiState(expertId = expertId))
     val state: StateFlow<ExpertDetailUiState> = _state.asStateFlow()
 
-    init {
-        loadExpert()
-    }
-
     fun onFavoriteToggle() {
         viewModelScope.launch {
             try {
@@ -47,7 +43,7 @@ class ExpertDetailViewModel @Inject constructor(
         }
     }
 
-    private fun loadExpert() {
+    fun loadExpert() {
         _state.update { it.copy(isLoading = true, error = null) }
         viewModelScope.launch {
             try {

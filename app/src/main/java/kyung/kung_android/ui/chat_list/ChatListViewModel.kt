@@ -39,10 +39,6 @@ class ChatListViewModel @Inject constructor(
     private val _state = MutableStateFlow(ChatListUiState())
     val state: StateFlow<ChatListUiState> = _state.asStateFlow()
 
-    init {
-        load()
-    }
-
     fun load() {
         _state.update { it.copy(isLoading = true, error = null) }
         viewModelScope.launch {

@@ -27,10 +27,6 @@ class ReceivedQuoteViewModel @Inject constructor(
     private val _state = MutableStateFlow(ReceivedQuoteUiState())
     val state: StateFlow<ReceivedQuoteUiState> = _state.asStateFlow()
 
-    init {
-        load()
-    }
-
     fun load() {
         _state.update { it.copy(isLoading = true, error = null) }
         viewModelScope.launch {

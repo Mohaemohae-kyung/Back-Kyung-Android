@@ -28,6 +28,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kyung.kung_android.data.request.dto.ServiceRequestResponse
 import kyung.kung_android.ui.theme.KungColors
@@ -40,6 +41,11 @@ fun ReceivedQuoteScreen(
     viewModel: ReceivedQuoteViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+
+    LifecycleResumeEffect(Unit) {
+        viewModel.load()
+        onPauseOrDispose { }
+    }
 
     if (state.inProgress.isEmpty() && state.pastRequests.isEmpty() && !state.isLoading) {
         EmptyState(onNavigateExpertSearch = onNavigateExpertSearch)

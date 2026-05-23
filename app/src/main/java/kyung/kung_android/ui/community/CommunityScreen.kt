@@ -35,6 +35,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
 import kyung.kung_android.data.community.dto.PostResponse
@@ -61,6 +62,11 @@ fun CommunityScreen(
             .collect { reached ->
                 if (reached) viewModel.loadMore()
             }
+    }
+
+    LifecycleResumeEffect(Unit) {
+        viewModel.refresh()
+        onPauseOrDispose { }
     }
 
     Box(modifier = Modifier.fillMaxSize()) {

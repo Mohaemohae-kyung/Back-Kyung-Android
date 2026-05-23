@@ -36,10 +36,6 @@ class QuoteDetailViewModel @Inject constructor(
     private val _state = MutableStateFlow(QuoteDetailUiState(requestId = requestId))
     val state: StateFlow<QuoteDetailUiState> = _state.asStateFlow()
 
-    init {
-        load()
-    }
-
     fun onCancel() {
         viewModelScope.launch {
             _state.update { it.copy(isCancelling = true) }
@@ -52,7 +48,7 @@ class QuoteDetailViewModel @Inject constructor(
         }
     }
 
-    private fun load() {
+    fun load() {
         _state.update { it.copy(isLoading = true, error = null) }
         viewModelScope.launch {
             try {

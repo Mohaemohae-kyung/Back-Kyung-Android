@@ -42,7 +42,7 @@ class MyPageViewModel @Inject constructor(
         }
     }
 
-    private fun loadUser() {
+    fun loadUser() {
         _state.update { it.copy(isLoading = true, error = null) }
         viewModelScope.launch {
             try {

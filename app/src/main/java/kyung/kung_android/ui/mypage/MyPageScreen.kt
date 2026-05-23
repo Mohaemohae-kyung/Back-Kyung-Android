@@ -37,6 +37,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kyung.kung_android.BuildConfig
 import kyung.kung_android.data.user.dto.UserProfileResponse
@@ -56,6 +57,11 @@ fun MyPageScreen(
     viewModel: MyPageViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+
+    LifecycleResumeEffect(state.isLoggedIn) {
+        if (state.isLoggedIn) viewModel.loadUser()
+        onPauseOrDispose { }
+    }
 
     Scaffold(
         topBar = {

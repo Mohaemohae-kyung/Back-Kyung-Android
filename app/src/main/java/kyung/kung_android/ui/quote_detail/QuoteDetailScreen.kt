@@ -44,6 +44,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kyung.kung_android.data.expert.dto.ExpertDetailResponse
 import kyung.kung_android.data.request.dto.ServiceRequestResponse
@@ -62,6 +63,11 @@ fun QuoteDetailScreen(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     var showCancelDialog by remember { mutableStateOf(false) }
+
+    LifecycleResumeEffect(Unit) {
+        viewModel.load()
+        onPauseOrDispose { }
+    }
 
     Scaffold(
         topBar = {
