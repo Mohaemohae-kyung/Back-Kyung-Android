@@ -166,7 +166,7 @@ private fun QuoteDetailContent(
 
         expert?.let {
             item {
-                ExpertCardRow(expert = it, onClick = { onNavigateExpertDetail(it.expertProfileId) })
+                ExpertCardRow(expert = it, onClick = { onNavigateExpertDetail(it.expertServiceId) })
             }
         }
 
