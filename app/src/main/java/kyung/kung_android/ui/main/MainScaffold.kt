@@ -1,10 +1,21 @@
 package kyung.kung_android.ui.main
 
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -22,6 +33,7 @@ import kyung.kung_android.ui.home.HomeScreen
 import kyung.kung_android.ui.navigation.AppRoute
 import kyung.kung_android.ui.received_quote.ReceivedQuoteScreen
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScaffold(
     onNavigateLogin: () -> Unit,
@@ -41,6 +53,7 @@ fun MainScaffold(
     val navBackStackEntry by nestedNavController.currentBackStackEntryAsState()
     val currentBaseRoute = navBackStackEntry?.destination?.route?.substringBefore("?")
     val isLoggedIn by viewModel.isLoggedIn.collectAsStateWithLifecycle()
+    val isExpert by viewModel.isExpert.collectAsStateWithLifecycle()
 
     androidx.compose.runtime.LaunchedEffect(forceTab) {
         val tab = forceTab ?: return@LaunchedEffect
@@ -54,7 +67,41 @@ fun MainScaffold(
         onForceTabConsumed()
     }
 
+    val tabTitle = when (currentBaseRoute) {
+        AppRoute.Tab.EXPERT_SEARCH -> "고수찾기"
+        AppRoute.Tab.RECEIVED_QUOTE -> "받은견적"
+        AppRoute.Tab.CHAT -> "채팅"
+        AppRoute.Tab.COMMUNITY -> "커뮤니티"
+        else -> null
+    }
+
     Scaffold(
+        topBar = {
+            if (tabTitle != null) {
+                TopAppBar(
+                    title = {
+                        Text(
+                            text = tabTitle,
+                            style = MaterialTheme.typography.titleLarge.copy(
+                                fontWeight = FontWeight.ExtraBold,
+                                letterSpacing = (-0.4).sp,
+                            ),
+                        )
+                    },
+                    actions = {
+                        IconButton(onClick = onNavigateMyPage) {
+                            Icon(
+                                imageVector = Icons.Filled.Person,
+                                contentDescription = "마이페이지",
+                            )
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.surface,
+                    ),
+                )
+            }
+        },
         bottomBar = {
             MainBottomNavigation(
                 currentRoute = currentBaseRoute,
@@ -82,6 +129,7 @@ fun MainScaffold(
             composable(AppRoute.Tab.HOME) {
                 HomeScreen(
                     isLoggedIn = isLoggedIn,
+                    isExpert = isExpert,
                     onNavigateLogin = onNavigateLogin,
                     onNavigateMyPage = onNavigateMyPage,
                     onNavigateExpertSearch = { keyword, categoryId, locationId ->

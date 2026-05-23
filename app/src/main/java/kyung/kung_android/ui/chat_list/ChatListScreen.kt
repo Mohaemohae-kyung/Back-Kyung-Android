@@ -18,9 +18,9 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import kyung.kung_android.ui.common.InitialAvatar
 import kyung.kung_android.ui.common.KungPullToRefresh
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -78,10 +78,10 @@ fun ChatListScreen(
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
                     contentPadding = PaddingValues(top = 8.dp, bottom = 96.dp),
+                    verticalArrangement = Arrangement.spacedBy(2.dp),
                 ) {
                     items(state.rooms, key = { it.chatRoomId }) { room ->
                         ChatRoomItem(room = room, onClick = { onNavigateChat(room.chatRoomId) })
-                        HorizontalDivider()
                     }
                 }
             }
@@ -98,28 +98,17 @@ private fun ChatRoomItem(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick)
-            .padding(horizontal = 16.dp, vertical = 12.dp),
+            .padding(horizontal = 16.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Box(
-            modifier = Modifier
-                .size(48.dp)
-                .clip(CircleShape)
-                .background(KungColors.Purple),
-            contentAlignment = Alignment.Center,
-        ) {
-            Text(
-                text = room.peerName.firstOrNull()?.toString() ?: "?",
-                color = KungColors.White,
-                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-            )
-        }
-        Spacer(modifier = Modifier.width(12.dp))
+        InitialAvatar(name = room.peerName, size = 52.dp)
+        Spacer(modifier = Modifier.width(14.dp))
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = room.peerName,
                 style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
             )
+            Spacer(modifier = Modifier.size(2.dp))
             room.lastMessage?.let {
                 Text(
                     text = it,
@@ -135,7 +124,7 @@ private fun ChatRoomItem(
                 modifier = Modifier
                     .size(22.dp)
                     .clip(CircleShape)
-                    .background(KungColors.Error),
+                    .background(KungColors.Coral),
                 contentAlignment = Alignment.Center,
             ) {
                 Text(

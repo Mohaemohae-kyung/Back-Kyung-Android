@@ -16,19 +16,22 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.ui.text.font.FontWeight
+import kyung.kung_android.ui.common.KungPrimaryButton
+import kyung.kung_android.ui.theme.KungColors
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -72,21 +75,36 @@ fun AccountWithdrawScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("계정 탈퇴") },
+                title = {
+                    Text(
+                        text = "계정 탈퇴",
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.ExtraBold),
+                    )
+                },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "뒤로")
                     }
                 },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface,
+                ),
             )
         },
         bottomBar = {
-            Button(
-                onClick = { confirmDialog = true },
-                enabled = state.canSubmit,
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
-                modifier = Modifier.fillMaxWidth().padding(16.dp),
-            ) { Text("탈퇴하기") }
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(MaterialTheme.colorScheme.surface)
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
+            ) {
+                KungPrimaryButton(
+                    text = "탈퇴하기",
+                    onClick = { confirmDialog = true },
+                    enabled = state.canSubmit,
+                    containerColor = MaterialTheme.colorScheme.error,
+                )
+            }
         },
     ) { padding ->
         Column(
@@ -117,6 +135,8 @@ fun AccountWithdrawScreen(
                     value = state.customReason,
                     onValueChange = viewModel::onCustomReasonChange,
                     placeholder = { Text("사유를 입력해주세요") },
+                    shape = RoundedCornerShape(14.dp),
+                    colors = withdrawFieldColors(),
                     modifier = Modifier.fillMaxWidth(),
                     maxLines = 3,
                 )
@@ -127,7 +147,9 @@ fun AccountWithdrawScreen(
             OutlinedTextField(
                 value = state.password,
                 onValueChange = viewModel::onPasswordChange,
-                label = { Text("비밀번호") },
+                placeholder = { Text("비밀번호") },
+                shape = RoundedCornerShape(14.dp),
+                colors = withdrawFieldColors(),
                 visualTransformation = PasswordVisualTransformation(),
                 singleLine = true,
                 isError = state.passwordError != null,
@@ -167,6 +189,15 @@ fun AccountWithdrawScreen(
         )
     }
 }
+
+@Composable
+private fun withdrawFieldColors() = OutlinedTextFieldDefaults.colors(
+    focusedBorderColor = KungColors.Purple,
+    unfocusedBorderColor = KungColors.BorderSoft,
+    focusedContainerColor = KungColors.BgRaised,
+    unfocusedContainerColor = KungColors.BgSurface,
+    cursorColor = KungColors.Purple,
+)
 
 @Composable
 private fun WarningBox() {

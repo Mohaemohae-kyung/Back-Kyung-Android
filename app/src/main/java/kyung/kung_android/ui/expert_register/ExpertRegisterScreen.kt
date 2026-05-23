@@ -9,27 +9,30 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -37,6 +40,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
 import kyung.kung_android.domain.category.model.Categories
 import kyung.kung_android.domain.location.model.Regions
+import kyung.kung_android.ui.common.KungPrimaryButton
+import kyung.kung_android.ui.theme.KungColors
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -61,12 +66,20 @@ fun ExpertRegisterScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("고수 가입") },
+                title = {
+                    Text(
+                        text = "고수 가입",
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.ExtraBold),
+                    )
+                },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "뒤로")
                     }
                 },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface,
+                ),
             )
         },
     ) { padding ->
@@ -75,53 +88,69 @@ fun ExpertRegisterScreen(
                 .fillMaxSize()
                 .padding(padding)
                 .verticalScroll(scroll)
-                .padding(horizontal = 24.dp, vertical = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+                .padding(horizontal = 24.dp, vertical = 8.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
+            Text(
+                text = "당신의 전문성을\n프로필로 보여주세요",
+                style = MaterialTheme.typography.headlineSmall.copy(
+                    fontWeight = FontWeight.ExtraBold,
+                    lineHeight = 32.sp,
+                    letterSpacing = (-0.5).sp,
+                ),
+            )
+            Spacer(modifier = Modifier.height(6.dp))
+
+            FieldLabel("활동명 *")
             OutlinedTextField(
                 value = state.displayName,
                 onValueChange = viewModel::onDisplayNameChange,
-                label = { Text("활동명 *") },
+                placeholder = { Text("예: 자소서 첨삭 고수") },
                 singleLine = true,
+                shape = RoundedCornerShape(14.dp),
+                colors = registerFieldColors(),
                 isError = state.displayNameError != null,
                 supportingText = state.displayNameError?.let { { Text(it) } },
-                placeholder = { Text("예: 자소서 첨삭 고수") },
                 modifier = Modifier.fillMaxWidth(),
             )
 
+            FieldLabel("소개글 *")
             OutlinedTextField(
                 value = state.introduction,
                 onValueChange = viewModel::onIntroductionChange,
-                label = { Text("소개글 *") },
+                placeholder = { Text("경력, 가능한 서비스, 진행 방식을 적어주세요.") },
+                shape = RoundedCornerShape(14.dp),
+                colors = registerFieldColors(),
                 isError = state.introductionError != null,
                 supportingText = state.introductionError?.let { { Text(it) } },
-                placeholder = { Text("경력, 가능한 서비스, 진행 방식을 적어주세요.") },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(140.dp),
+                    .height(160.dp),
             )
 
+            FieldLabel("경력 (년) *")
             OutlinedTextField(
                 value = state.careerYears,
                 onValueChange = viewModel::onCareerYearsChange,
-                label = { Text("경력 (년) *") },
+                placeholder = { Text("예: 3") },
                 singleLine = true,
+                shape = RoundedCornerShape(14.dp),
+                colors = registerFieldColors(),
                 isError = state.careerYearsError != null,
                 supportingText = state.careerYearsError?.let { { Text(it) } },
-                placeholder = { Text("예: 3") },
                 keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
                     keyboardType = KeyboardType.Number,
                 ),
                 modifier = Modifier.fillMaxWidth(),
             )
 
-            Text("서비스 분야 *", style = MaterialTheme.typography.titleSmall)
+            FieldLabel("서비스 분야 *")
             CategoryChips(
                 selectedId = state.mainCategoryId,
                 onSelect = viewModel::onCategorySelected,
             )
 
-            Text("활동 지역 *", style = MaterialTheme.typography.titleSmall)
+            FieldLabel("활동 지역 *")
             RegionChips(
                 selectedId = state.mainLocationId,
                 onSelect = viewModel::onLocationSelected,
@@ -137,24 +166,35 @@ fun ExpertRegisterScreen(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            Button(
+            KungPrimaryButton(
+                text = "프로필 등록",
                 onClick = viewModel::onSubmit,
                 enabled = state.canSubmit,
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                if (state.isSubmitting) {
-                    CircularProgressIndicator(
-                        color = MaterialTheme.colorScheme.onPrimary,
-                        strokeWidth = 2.dp,
-                        modifier = Modifier.height(20.dp),
-                    )
-                } else {
-                    Text("프로필 등록")
-                }
-            }
+                loading = state.isSubmitting,
+            )
+
+            Spacer(modifier = Modifier.height(24.dp))
         }
     }
 }
+
+@Composable
+private fun FieldLabel(text: String) {
+    Text(
+        text = text,
+        style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
+        color = KungColors.Slate,
+    )
+}
+
+@Composable
+private fun registerFieldColors() = OutlinedTextFieldDefaults.colors(
+    focusedBorderColor = KungColors.Purple,
+    unfocusedBorderColor = KungColors.BorderSoft,
+    focusedContainerColor = KungColors.BgRaised,
+    unfocusedContainerColor = KungColors.BgSurface,
+    cursorColor = KungColors.Purple,
+)
 
 @OptIn(ExperimentalMaterial3Api::class, androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 @Composable
@@ -171,7 +211,16 @@ private fun CategoryChips(
             FilterChip(
                 selected = selectedId == category.id,
                 onClick = { onSelect(category.id) },
-                label = { Text(category.name) },
+                label = {
+                    Text(
+                        text = category.name,
+                        style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
+                    )
+                },
+                colors = FilterChipDefaults.filterChipColors(
+                    selectedContainerColor = KungColors.PurpleBg,
+                    selectedLabelColor = KungColors.Purple,
+                ),
             )
         }
     }
@@ -192,7 +241,16 @@ private fun RegionChips(
             FilterChip(
                 selected = selectedId == region.id,
                 onClick = { onSelect(region.id) },
-                label = { Text(region.name) },
+                label = {
+                    Text(
+                        text = region.name,
+                        style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
+                    )
+                },
+                colors = FilterChipDefaults.filterChipColors(
+                    selectedContainerColor = KungColors.PurpleBg,
+                    selectedLabelColor = KungColors.Purple,
+                ),
             )
         }
     }

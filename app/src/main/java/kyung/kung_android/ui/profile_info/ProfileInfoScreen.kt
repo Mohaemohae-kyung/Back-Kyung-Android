@@ -13,9 +13,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -24,6 +26,8 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import kyung.kung_android.ui.theme.KungColors
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -55,12 +59,20 @@ fun ProfileInfoScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("개인 정보 관리") },
+                title = {
+                    Text(
+                        text = "개인 정보 관리",
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.ExtraBold),
+                    )
+                },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "뒤로")
                     }
                 },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface,
+                ),
             )
         },
     ) { padding ->
@@ -71,27 +83,36 @@ fun ProfileInfoScreen(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(MaterialTheme.colorScheme.surfaceVariant)
-                    .padding(12.dp),
+                    .clip(RoundedCornerShape(14.dp))
+                    .background(KungColors.PurpleBg)
+                    .padding(14.dp),
             ) {
                 Text(
                     text = "개인정보는 상대방에게 노출되지 않습니다.",
-                    style = MaterialTheme.typography.bodySmall,
+                    style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold),
+                    color = KungColors.Purple,
                 )
             }
-            HorizontalDivider()
-            InfoRow(
-                label = "휴대전화",
-                value = state.user?.phone ?: "—",
-                onClick = { phoneDialog = true },
-            )
-            HorizontalDivider()
-            InfoRow(
-                label = "이메일",
-                value = state.user?.email ?: "—",
-                onClick = null,
-            )
+            Card(
+                shape = RoundedCornerShape(18.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                border = BorderStroke(1.dp, KungColors.BorderSoft),
+            ) {
+                Column(modifier = Modifier.padding(horizontal = 4.dp)) {
+                    InfoRow(
+                        label = "휴대전화",
+                        value = state.user?.phone ?: "—",
+                        onClick = { phoneDialog = true },
+                    )
+                    androidx.compose.material3.HorizontalDivider(color = KungColors.BorderSoft)
+                    InfoRow(
+                        label = "이메일",
+                        value = state.user?.email ?: "—",
+                        onClick = null,
+                    )
+                }
+            }
         }
     }
 

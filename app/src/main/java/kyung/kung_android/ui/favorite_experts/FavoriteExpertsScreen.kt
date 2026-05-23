@@ -1,5 +1,6 @@
 package kyung.kung_android.ui.favorite_experts
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -21,8 +22,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material3.Button
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import kyung.kung_android.ui.common.KungPullToRefresh
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -32,6 +34,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -39,10 +42,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kyung.kung_android.data.favorite.dto.FavoriteExpertResponse
+import kyung.kung_android.ui.common.InitialAvatar
+import kyung.kung_android.ui.common.KungPrimaryButton
 import kyung.kung_android.ui.common.toCareerYearLabel
 import kyung.kung_android.ui.theme.KungColors
 
@@ -64,12 +70,20 @@ fun FavoriteExpertsScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("찜한 고수") },
+                title = {
+                    Text(
+                        text = "찜한 고수",
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.ExtraBold),
+                    )
+                },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "뒤로")
                     }
                 },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface,
+                ),
             )
         },
     ) { padding ->
@@ -116,25 +130,16 @@ private fun FavoriteCard(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick),
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(18.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        border = BorderStroke(1.dp, KungColors.BorderSoft),
     ) {
         Row(
-            modifier = Modifier.fillMaxWidth().padding(16.dp),
+            modifier = Modifier.fillMaxWidth().padding(14.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Box(
-                modifier = Modifier
-                    .size(48.dp)
-                    .clip(CircleShape)
-                    .background(KungColors.Purple),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(
-                    text = item.displayName.firstOrNull()?.toString() ?: "?",
-                    color = KungColors.White,
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                )
-            }
+            InitialAvatar(name = item.displayName, size = 52.dp)
             Spacer(Modifier.width(12.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Text(
@@ -158,7 +163,7 @@ private fun FavoriteCard(
                 Icon(
                     imageVector = Icons.Filled.Favorite,
                     contentDescription = "찜 해제",
-                    tint = KungColors.Purple,
+                    tint = KungColors.Coral,
                 )
             }
         }
@@ -175,13 +180,38 @@ private fun EmptyState(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
+        Box(
+            modifier = Modifier
+                .size(72.dp)
+                .clip(CircleShape)
+                .background(KungColors.PurpleBg),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(
+                imageVector = Icons.Filled.FavoriteBorder,
+                contentDescription = null,
+                tint = KungColors.Purple,
+                modifier = Modifier.size(32.dp),
+            )
+        }
+        Spacer(Modifier.height(16.dp))
         Text(
             text = "아직 찜한 고수가 없어요",
-            style = MaterialTheme.typography.titleMedium,
+            style = MaterialTheme.typography.titleMedium.copy(
+                fontWeight = FontWeight.ExtraBold,
+                letterSpacing = (-0.3).sp,
+            ),
         )
-        Spacer(Modifier.height(16.dp))
-        Button(onClick = onNavigateExpertSearch) {
-            Text("고수 찾으러 가기")
-        }
+        Spacer(Modifier.height(6.dp))
+        Text(
+            text = "마음에 드는 고수를 찜하고 빠르게 찾아보세요",
+            style = MaterialTheme.typography.bodyMedium,
+            color = KungColors.Gray,
+        )
+        Spacer(Modifier.height(20.dp))
+        KungPrimaryButton(
+            text = "고수 찾으러 가기",
+            onClick = onNavigateExpertSearch,
+        )
     }
 }

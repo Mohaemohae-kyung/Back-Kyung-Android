@@ -1,5 +1,6 @@
 package kyung.kung_android.ui.quote_detail
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -12,17 +13,15 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -33,6 +32,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -46,6 +46,8 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import kyung.kung_android.ui.common.InitialAvatar
+import kyung.kung_android.ui.common.KungPrimaryButton
 import kyung.kung_android.ui.common.SectionTitle
 import kyung.kung_android.data.expert.dto.ExpertDetailResponse
 import kyung.kung_android.data.request.dto.ServiceRequestResponse
@@ -73,12 +75,20 @@ fun QuoteDetailScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("견적 상세") },
+                title = {
+                    Text(
+                        text = "견적 상세",
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.ExtraBold),
+                    )
+                },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "뒤로")
                     }
                 },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface,
+                ),
             )
         },
     ) { padding ->
@@ -198,25 +208,16 @@ private fun ExpertCardRow(expert: ExpertDetailResponse, onClick: () -> Unit) {
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick),
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(18.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        border = BorderStroke(1.dp, KungColors.BorderSoft),
     ) {
         Row(
-            modifier = Modifier.fillMaxWidth().padding(16.dp),
+            modifier = Modifier.fillMaxWidth().padding(14.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Box(
-                modifier = Modifier
-                    .size(48.dp)
-                    .clip(CircleShape)
-                    .background(KungColors.Purple),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(
-                    text = expert.displayName.firstOrNull()?.toString() ?: "?",
-                    color = KungColors.White,
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                )
-            }
+            InitialAvatar(name = expert.displayName, size = 48.dp)
             Spacer(modifier = Modifier.width(12.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Text(
@@ -264,22 +265,24 @@ private fun ActionArea(
             OutlinedButton(
                 onClick = onRequestCancel,
                 enabled = !isCancelling,
-                modifier = Modifier.fillMaxWidth().height(48.dp),
+                shape = RoundedCornerShape(16.dp),
+                modifier = Modifier.fillMaxWidth().height(54.dp),
             ) {
                 Text(if (isCancelling) "취소 중..." else "요청 취소")
             }
         }
         "CHATTING" -> {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Button(
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                KungPrimaryButton(
+                    text = "채팅방 가기",
                     onClick = { quote.chatRoomId?.let(onNavigateChat) },
                     enabled = quote.chatRoomId != null,
-                    modifier = Modifier.fillMaxWidth().height(48.dp),
-                ) { Text("채팅방 가기") }
+                )
                 OutlinedButton(
                     onClick = onRequestCancel,
                     enabled = !isCancelling,
-                    modifier = Modifier.fillMaxWidth().height(48.dp),
+                    shape = RoundedCornerShape(16.dp),
+                    modifier = Modifier.fillMaxWidth().height(54.dp),
                 ) { Text(if (isCancelling) "취소 중..." else "요청 취소") }
             }
         }
@@ -295,12 +298,16 @@ private fun StatusBanner(text: String) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp))
-            .background(MaterialTheme.colorScheme.surfaceVariant)
-            .padding(16.dp),
+            .clip(RoundedCornerShape(14.dp))
+            .background(KungColors.BgSurface)
+            .padding(18.dp),
         contentAlignment = Alignment.Center,
     ) {
-        Text(text = text, style = MaterialTheme.typography.bodyMedium)
+        Text(
+            text = text,
+            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
+            color = KungColors.Slate,
+        )
     }
 }
 
