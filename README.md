@@ -1,4 +1,4 @@
-# Mohaemohae kyung — Android
+# 매칭온 — Android
 
 [Back-Kyung](https://github.com/Mohaemohae-kyung/Back-Kyung) 백엔드(Spring Boot 3.2.3 + Oracle)와 연동하는 안드로이드 클라이언트.
 
