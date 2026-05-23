@@ -188,7 +188,7 @@ Windows Defender 등이 `build/` `caches/` 폴더를 매번 스캔하면 빌드�
 | Kotlin | 2.0.21 | `gradle/libs.versions.toml` |
 | KSP | 2.0.21-1.0.27 | `gradle/libs.versions.toml` |
 | compileSdk / targetSdk | 36 (Android 16) | `app/build.gradle.kts` |
-| minSdk | 26 (Android 8.0+) | `app/build.gradle.kts` |
+| minSdk | 28 (Android 9.0+) | `app/build.gradle.kts` |
 | Compose BOM | 2024.12.01 | `gradle/libs.versions.toml` |
 | Hilt | 2.56.2 | `gradle/libs.versions.toml` |
 | Retrofit / OkHttp | 2.11.0 / 4.12.0 | `gradle/libs.versions.toml` |

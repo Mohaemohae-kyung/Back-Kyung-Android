@@ -13,7 +13,7 @@ android {
 
     defaultConfig {
         applicationId = "kyung.kung_android"
-        minSdk = 26
+        minSdk = 28
         targetSdk = 36
         versionCode = 1
         versionName = "0.1.0"
@@ -31,7 +31,7 @@ android {
         }
         debug {
             isMinifyEnabled = false
-            buildConfigField("String", "BASE_URL", "\"http://10.0.2.2:8080/\"")
+            buildConfigField("String", "BASE_URL", "\"https://can-fly.shop/\"")
         }
     }
 
@@ -58,6 +58,7 @@ dependencies {
     // AndroidX 기본
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
+    implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.activity.compose)
 

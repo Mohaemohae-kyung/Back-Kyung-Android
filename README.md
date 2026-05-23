@@ -12,7 +12,7 @@
 | Android Gradle Plugin | 8.13.2 |
 | Gradle | 8.14.5 |
 | compileSdk / targetSdk | 36 (Android 16) |
-| minSdk | 26 (Android 8.0+) |
+| minSdk | 28 (Android 9.0+) |
 | UI | Jetpack Compose + Material3 |
 | DI | Hilt 2.56.2 |
 | 네트워크 | Retrofit 2.11.0 + OkHttp 4.12.0 + Kotlinx Serialization |
