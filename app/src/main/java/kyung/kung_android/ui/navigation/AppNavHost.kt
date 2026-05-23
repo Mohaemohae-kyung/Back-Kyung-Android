@@ -9,6 +9,7 @@ import kyung.kung_android.ui.auth.signup.SignupScreen
 import kyung.kung_android.ui.chatbot.ChatBotScreen
 import kyung.kung_android.ui.common.PlaceholderScreen
 import kyung.kung_android.ui.main.MainScaffold
+import kyung.kung_android.ui.mypage.MyPageScreen
 
 @Composable
 fun AppNavHost(
@@ -52,9 +53,13 @@ fun AppNavHost(
         }
 
         composable(AppRoute.MY_PAGE) {
-            PlaceholderScreen(
-                title = "마이페이지",
+            MyPageScreen(
                 onBack = { navController.popBackStack() },
+                onNavigateLogin = { navController.navigate(AppRoute.LOGIN) },
+                onNavigateExpertRegister = {
+                    // INV-21 후속 PR. 일단 닫기.
+                    navController.popBackStack()
+                },
             )
         }
     }
