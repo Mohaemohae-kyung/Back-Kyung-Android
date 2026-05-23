@@ -6,6 +6,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kyung.kung_android.data.user.dto.UserProfileResponse
@@ -33,14 +34,11 @@ class MyPageViewModel @Inject constructor(
     val state: StateFlow<MyPageUiState> = _state.asStateFlow()
 
     init {
-        refresh()
-    }
-
-    fun refresh() {
         viewModelScope.launch {
-            val loggedIn = authRepository.isLoggedIn()
-            _state.update { it.copy(isLoggedIn = loggedIn) }
-            if (loggedIn) loadUser()
+            authRepository.isLoggedIn.collectLatest { loggedIn ->
+                _state.update { it.copy(isLoggedIn = loggedIn, user = if (!loggedIn) null else it.user) }
+                if (loggedIn) loadUser()
+            }
         }
     }
 

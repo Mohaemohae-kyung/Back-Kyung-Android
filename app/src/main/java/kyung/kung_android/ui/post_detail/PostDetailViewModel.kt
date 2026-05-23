@@ -5,12 +5,15 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kyung.kung_android.data.community.dto.CommentResponse
 import kyung.kung_android.data.community.dto.PostResponse
+import kyung.kung_android.domain.auth.AuthRepository
 import kyung.kung_android.domain.community.CommunityRepository
 import javax.inject.Inject
 
@@ -28,12 +31,16 @@ data class PostDetailUiState(
 class PostDetailViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val communityRepository: CommunityRepository,
+    authRepository: AuthRepository,
 ) : ViewModel() {
 
     private val postId: Long = savedStateHandle.get<Long>("postId") ?: 0L
 
     private val _state = MutableStateFlow(PostDetailUiState(postId = postId))
     val state: StateFlow<PostDetailUiState> = _state.asStateFlow()
+
+    val isLoggedIn: StateFlow<Boolean> = authRepository.isLoggedIn
+        .stateIn(viewModelScope, SharingStarted.Eagerly, false)
 
     init {
         load()

@@ -3,6 +3,9 @@ package kyung.kung_android.ui.chat_list
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -45,32 +48,31 @@ class ChatListViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 val rooms = chatRepository.getRooms()
-                val requests = runCatching { serviceRequestRepository.getMyRequests() }
+                val requestsByRoom = runCatching { serviceRequestRepository.getMyRequests() }
                     .getOrDefault(emptyList())
                     .filter { it.chatRoomId != null }
                     .associateBy { it.chatRoomId!! }
 
-                val expertCache = mutableMapOf<Long, Pair<String, String?>>() // id -> (name, category)
-
-                val cards = rooms.map { room ->
-                    val request = requests[room.chatRoomId]
-                    val expertProfileId = request?.expertProfileId
-                    val expertInfo = expertProfileId?.let { id ->
-                        expertCache[id] ?: runCatching {
-                            val expert = expertRepository.getExpertDetail(id)
-                            expert.displayName to expert.mainCategoryName
-                        }.getOrNull()?.also { expertCache[id] = it }
-                    }
-                    val lastMessage = runCatching {
-                        chatRepository.getMessages(room.chatRoomId).lastOrNull()?.content
-                    }.getOrNull()
-
-                    ChatRoomCard(
-                        chatRoomId = room.chatRoomId,
-                        peerName = expertInfo?.first ?: "상대",
-                        categoryName = expertInfo?.second,
-                        lastMessage = lastMessage,
-                    )
+                val cards = coroutineScope {
+                    rooms.map { room ->
+                        async {
+                            val request = requestsByRoom[room.chatRoomId]
+                            val expertDeferred = request?.expertProfileId?.let { id ->
+                                async { runCatching { expertRepository.getExpertDetail(id) }.getOrNull() }
+                            }
+                            val lastMessageDeferred = async {
+                                runCatching { chatRepository.getLatestMessage(room.chatRoomId) }.getOrNull()
+                            }
+                            val expert = expertDeferred?.await()
+                            val lastMessage = lastMessageDeferred.await()
+                            ChatRoomCard(
+                                chatRoomId = room.chatRoomId,
+                                peerName = expert?.displayName ?: "상대",
+                                categoryName = expert?.mainCategoryName,
+                                lastMessage = lastMessage?.content,
+                            )
+                        }
+                    }.awaitAll()
                 }
                 _state.update { it.copy(rooms = cards, isLoading = false) }
             } catch (t: Throwable) {

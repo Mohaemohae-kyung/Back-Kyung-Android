@@ -1,5 +1,6 @@
 package kyung.kung_android.ui.post_detail
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -47,9 +48,11 @@ import kyung.kung_android.data.community.dto.PostResponse
 @Composable
 fun PostDetailScreen(
     onBack: () -> Unit,
+    onNavigateLogin: () -> Unit = {},
     viewModel: PostDetailViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val isLoggedIn by viewModel.isLoggedIn.collectAsStateWithLifecycle()
 
     Scaffold(
         topBar = {
@@ -63,12 +66,16 @@ fun PostDetailScreen(
             )
         },
         bottomBar = {
-            CommentInputBar(
-                input = state.input,
-                onInputChange = viewModel::onInputChange,
-                onSend = viewModel::onSendComment,
-                enabled = !state.isPosting,
-            )
+            if (isLoggedIn) {
+                CommentInputBar(
+                    input = state.input,
+                    onInputChange = viewModel::onInputChange,
+                    onSend = viewModel::onSendComment,
+                    enabled = !state.isPosting,
+                )
+            } else {
+                LoginPromptBar(onClick = onNavigateLogin)
+            }
         },
     ) { padding ->
         when {
@@ -179,5 +186,22 @@ private fun CommentInputBar(
         ) {
             Icon(Icons.Filled.ArrowUpward, contentDescription = "전송")
         }
+    }
+}
+
+@Composable
+private fun LoginPromptBar(onClick: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(horizontal = 16.dp, vertical = 14.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text = "로그인하고 댓글 작성하기",
+            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
+            color = MaterialTheme.colorScheme.primary,
+        )
     }
 }

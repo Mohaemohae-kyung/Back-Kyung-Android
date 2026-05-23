@@ -6,9 +6,10 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kyung.kung_android.BuildConfig
@@ -29,15 +30,12 @@ class TokenStore @Inject constructor(
     @Volatile private var cachedRefresh: String? = null
     @Volatile private var primed: Boolean = false
 
-    fun getAccessSync(): String? {
-        if (!primed) runBlocking { prime() }
-        return cachedAccess
-    }
+    private val _isLoggedIn = MutableStateFlow(false)
+    val isLoggedIn: StateFlow<Boolean> = _isLoggedIn.asStateFlow()
 
-    fun getRefreshSync(): String? {
-        if (!primed) runBlocking { prime() }
-        return cachedRefresh
-    }
+    fun getAccessSync(): String? = cachedAccess
+
+    fun getRefreshSync(): String? = cachedRefresh
 
     suspend fun getAccess(): String? {
         ensurePrimed()
@@ -61,6 +59,7 @@ class TokenStore @Inject constructor(
             cachedRefresh = refresh
             primed = true
         }
+        _isLoggedIn.value = true
     }
 
     suspend fun clear() {
@@ -70,13 +69,10 @@ class TokenStore @Inject constructor(
             cachedRefresh = null
             primed = true
         }
+        _isLoggedIn.value = false
     }
 
-    private suspend fun ensurePrimed() {
-        if (!primed) prime()
-    }
-
-    private suspend fun prime() {
+    suspend fun prime() {
         cacheMutex.withLock {
             if (primed) return
             val prefs = ds.data.first()
@@ -87,6 +83,11 @@ class TokenStore @Inject constructor(
                 Log.d(TAG, "primed access=${cachedAccess != null} refresh=${cachedRefresh != null}")
             }
         }
+        _isLoggedIn.value = cachedAccess != null
+    }
+
+    private suspend fun ensurePrimed() {
+        if (!primed) prime()
     }
 
     private fun decryptOrNull(stored: String): String? {

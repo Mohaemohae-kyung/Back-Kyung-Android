@@ -57,7 +57,10 @@ fun AppNavHost(
             route = "${AppRoute.POST_DETAIL}/{postId}",
             arguments = listOf(navArgument("postId") { type = NavType.LongType }),
         ) {
-            PostDetailScreen(onBack = { navController.popBackStack() })
+            PostDetailScreen(
+                onBack = { navController.popBackStack() },
+                onNavigateLogin = { navController.navigate(AppRoute.LOGIN) },
+            )
         }
 
         composable(AppRoute.POST_EDITOR) {

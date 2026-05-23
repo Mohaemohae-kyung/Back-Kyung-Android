@@ -13,6 +13,12 @@ class ChatRepository @Inject constructor(
 
     suspend fun getRooms(): List<ChatRoomResponse> = chatApi.getRooms()
 
-    suspend fun getMessages(chatRoomId: Long): List<ChatMessageResponse> =
-        chatApi.getMessages(chatRoomId)
+    suspend fun getMessages(
+        chatRoomId: Long,
+        page: Int = 0,
+        size: Int = 50,
+    ): List<ChatMessageResponse> = chatApi.getMessages(chatRoomId, page = page, size = size)
+
+    suspend fun getLatestMessage(chatRoomId: Long): ChatMessageResponse? =
+        chatApi.getMessages(chatRoomId, page = 0, size = 1).firstOrNull()
 }

@@ -7,6 +7,7 @@ import kyung.kung_android.BuildConfig
 import kyung.kung_android.data.auth.TokenStore
 import kyung.kung_android.data.chat.dto.ChatMessageResponse
 import kyung.kung_android.data.chat.dto.ChatMessageSendRequest
+import kyung.kung_android.data.network.di.AuthClient
 import okhttp3.OkHttpClient
 import org.hildan.krossbow.stomp.StompClient
 import org.hildan.krossbow.stomp.StompSession
@@ -19,14 +20,11 @@ import javax.inject.Singleton
 @Singleton
 class ChatStompClient @Inject constructor(
     private val tokenStore: TokenStore,
+    @AuthClient okHttpClient: OkHttpClient,
+    private val json: Json,
 ) {
 
-    private val json = Json {
-        ignoreUnknownKeys = true
-        explicitNulls = false
-    }
-
-    private val wsClient = OkHttpWebSocketClient(OkHttpClient())
+    private val wsClient = OkHttpWebSocketClient(okHttpClient)
     private val stompClient = StompClient(wsClient)
 
     suspend fun connect(): StompSession {

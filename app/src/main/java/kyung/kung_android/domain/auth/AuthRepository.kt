@@ -1,5 +1,6 @@
 package kyung.kung_android.domain.auth
 
+import kotlinx.coroutines.flow.StateFlow
 import kyung.kung_android.data.auth.TokenStore
 import kyung.kung_android.data.auth.api.AuthApi
 import kyung.kung_android.data.auth.api.AuthenticatedAuthApi
@@ -52,5 +53,5 @@ class AuthRepository @Inject constructor(
         return serverResult
     }
 
-    suspend fun isLoggedIn(): Boolean = tokenStore.getAccess() != null
+    val isLoggedIn: StateFlow<Boolean> = tokenStore.isLoggedIn
 }
