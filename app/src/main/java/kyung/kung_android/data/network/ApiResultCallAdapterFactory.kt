@@ -96,7 +96,9 @@ private class ApiResultCall<T>(
                     response.code(),
                 )
             if (body.isSuccess) {
-                return Response.success(body.result, response.raw())
+                @Suppress("UNCHECKED_CAST")
+                val safeResult: T = body.result ?: (Unit as T)
+                return Response.success(safeResult, response.raw())
             }
             throw ApiException(body.code, body.message, null, response.code())
         } else {
