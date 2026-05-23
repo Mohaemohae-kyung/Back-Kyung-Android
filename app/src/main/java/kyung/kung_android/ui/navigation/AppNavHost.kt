@@ -194,6 +194,8 @@ fun AppNavHost(
                     navController.navigate("${AppRoute.EXPERT_DETAIL}/$id")
                 },
                 onNavigateExpertSearch = {
+                    navController.getBackStackEntry(AppRoute.MAIN)
+                        .savedStateHandle[AppRoute.ARG_FORCE_TAB] = AppRoute.Tab.EXPERT_SEARCH
                     navController.popBackStack(AppRoute.MAIN, inclusive = false)
                 },
             )

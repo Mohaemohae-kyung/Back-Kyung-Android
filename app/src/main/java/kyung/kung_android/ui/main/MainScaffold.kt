@@ -57,7 +57,11 @@ fun MainScaffold(
 
     androidx.compose.runtime.LaunchedEffect(forceTab) {
         val tab = forceTab ?: return@LaunchedEffect
-        nestedNavController.navigate(tab) {
+        val target = when (tab) {
+            AppRoute.Tab.EXPERT_SEARCH -> expertSearchRoute(null, null, null)
+            else -> tab
+        }
+        nestedNavController.navigate(target) {
             popUpTo(nestedNavController.graph.findStartDestination().id) {
                 saveState = true
             }
