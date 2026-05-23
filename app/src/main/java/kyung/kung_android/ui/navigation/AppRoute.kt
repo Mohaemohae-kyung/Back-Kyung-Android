@@ -8,6 +8,7 @@ object AppRoute {
     const val MAIN = "main"
     const val MY_PAGE = "my_page"
     const val CHATBOT = "chatbot"
+    const val EXPERT_REGISTER = "expert_register"
 
     // 5탭 nested NavHost 내부 라우트
     object Tab {

@@ -8,6 +8,7 @@ import kyung.kung_android.ui.auth.login.LoginScreen
 import kyung.kung_android.ui.auth.signup.SignupScreen
 import kyung.kung_android.ui.chatbot.ChatBotScreen
 import kyung.kung_android.ui.common.PlaceholderScreen
+import kyung.kung_android.ui.expert_register.ExpertRegisterScreen
 import kyung.kung_android.ui.main.MainScaffold
 import kyung.kung_android.ui.mypage.MyPageScreen
 
@@ -26,6 +27,7 @@ fun AppNavHost(
                 onNavigateLogin = { navController.navigate(AppRoute.LOGIN) },
                 onNavigateMyPage = { navController.navigate(AppRoute.MY_PAGE) },
                 onNavigateChatbot = { navController.navigate(AppRoute.CHATBOT) },
+                onNavigateExpertRegister = { navController.navigate(AppRoute.EXPERT_REGISTER) },
             )
         }
 
@@ -56,11 +58,12 @@ fun AppNavHost(
             MyPageScreen(
                 onBack = { navController.popBackStack() },
                 onNavigateLogin = { navController.navigate(AppRoute.LOGIN) },
-                onNavigateExpertRegister = {
-                    // INV-21 후속 PR. 일단 닫기.
-                    navController.popBackStack()
-                },
+                onNavigateExpertRegister = { navController.navigate(AppRoute.EXPERT_REGISTER) },
             )
+        }
+
+        composable(AppRoute.EXPERT_REGISTER) {
+            ExpertRegisterScreen(onBack = { navController.popBackStack() })
         }
     }
 }

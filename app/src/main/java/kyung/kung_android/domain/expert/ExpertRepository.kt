@@ -2,6 +2,7 @@ package kyung.kung_android.domain.expert
 
 import kyung.kung_android.data.expert.api.ExpertApi
 import kyung.kung_android.data.expert.dto.ExpertDetailResponse
+import kyung.kung_android.data.expert.dto.ExpertProfileCreateRequest
 import kyung.kung_android.data.expert.dto.ExpertSearchResponse
 import kyung.kung_android.data.expert.dto.FavoriteToggleResponse
 import javax.inject.Inject
@@ -28,4 +29,22 @@ class ExpertRepository @Inject constructor(
 
     suspend fun toggleFavorite(expertProfileId: Long): FavoriteToggleResponse =
         expertApi.toggleFavorite(expertProfileId)
+
+    suspend fun createProfile(
+        displayName: String,
+        introduction: String,
+        careerYears: Long,
+        mainCategoryId: Long,
+        mainLocationId: Long,
+    ) {
+        expertApi.createProfile(
+            ExpertProfileCreateRequest(
+                displayName = displayName.trim(),
+                introduction = introduction.trim(),
+                careerYears = careerYears,
+                mainCategoryId = mainCategoryId,
+                mainLocationId = mainLocationId,
+            )
+        )
+    }
 }
