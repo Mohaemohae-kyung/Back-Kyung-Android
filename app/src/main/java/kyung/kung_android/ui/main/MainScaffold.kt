@@ -8,12 +8,15 @@ import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import kyung.kung_android.ui.common.LoginGate
 import kyung.kung_android.ui.common.PlaceholderScreen
+import kyung.kung_android.ui.expert_search.ExpertSearchScreen
 import kyung.kung_android.ui.home.HomeScreen
 import kyung.kung_android.ui.navigation.AppRoute
 
@@ -21,19 +24,26 @@ import kyung.kung_android.ui.navigation.AppRoute
 fun MainScaffold(
     onNavigateLogin: () -> Unit,
     onNavigateMyPage: () -> Unit,
+    onNavigateExpertDetail: (Long) -> Unit = {},
+    onNavigateChatbot: () -> Unit = {},
+    onNavigateExpertRegister: () -> Unit = {},
     viewModel: MainScaffoldViewModel = hiltViewModel(),
 ) {
     val nestedNavController = rememberNavController()
     val navBackStackEntry by nestedNavController.currentBackStackEntryAsState()
-    val currentRoute = navBackStackEntry?.destination?.route
+    val currentBaseRoute = navBackStackEntry?.destination?.route?.substringBefore("?")
     val isLoggedIn by viewModel.isLoggedIn.collectAsStateWithLifecycle()
 
     Scaffold(
         bottomBar = {
             MainBottomNavigation(
-                currentRoute = currentRoute,
+                currentRoute = currentBaseRoute,
                 onTabSelected = { route ->
-                    nestedNavController.navigate(route) {
+                    val target = when (route) {
+                        AppRoute.Tab.EXPERT_SEARCH -> expertSearchRoute(null, null)
+                        else -> route
+                    }
+                    nestedNavController.navigate(target) {
                         popUpTo(nestedNavController.graph.findStartDestination().id) {
                             saveState = true
                         }
@@ -54,11 +64,45 @@ fun MainScaffold(
                     isLoggedIn = isLoggedIn,
                     onNavigateLogin = onNavigateLogin,
                     onNavigateMyPage = onNavigateMyPage,
+                    onNavigateExpertSearch = { keyword, categoryId ->
+                        nestedNavController.navigate(
+                            expertSearchRoute(keyword = keyword, categoryId = categoryId)
+                        ) {
+                            popUpTo(nestedNavController.graph.findStartDestination().id) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    },
+                    onNavigateExpertDetail = onNavigateExpertDetail,
+                    onNavigateChatbot = onNavigateChatbot,
+                    onNavigateExpertRegister = onNavigateExpertRegister,
                 )
             }
 
-            composable(AppRoute.Tab.EXPERT_SEARCH) {
-                PlaceholderScreen(title = "고수찾기")
+            composable(
+                route = "${AppRoute.Tab.EXPERT_SEARCH}?keyword={keyword}&categoryId={categoryId}",
+                arguments = listOf(
+                    navArgument("keyword") {
+                        type = NavType.StringType
+                        nullable = true
+                        defaultValue = null
+                    },
+                    navArgument("categoryId") {
+                        type = NavType.LongType
+                        defaultValue = -1L
+                    },
+                ),
+            ) { backStackEntry ->
+                val keyword = backStackEntry.arguments?.getString("keyword")
+                val categoryIdRaw = backStackEntry.arguments?.getLong("categoryId") ?: -1L
+                val categoryId = categoryIdRaw.takeIf { it != -1L }
+                ExpertSearchScreen(
+                    initialKeyword = keyword,
+                    initialCategoryId = categoryId,
+                    onNavigateExpertDetail = onNavigateExpertDetail,
+                )
             }
 
             composable(AppRoute.Tab.RECEIVED_QUOTE) {
@@ -78,4 +122,10 @@ fun MainScaffold(
             }
         }
     }
+}
+
+private fun expertSearchRoute(keyword: String?, categoryId: Long?): String {
+    val k = keyword?.takeIf { it.isNotEmpty() }.orEmpty()
+    val c = categoryId?.toString() ?: "-1"
+    return "${AppRoute.Tab.EXPERT_SEARCH}?keyword=$k&categoryId=$c"
 }

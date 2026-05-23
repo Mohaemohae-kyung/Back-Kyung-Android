@@ -16,7 +16,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.HeadsetMic
@@ -43,9 +48,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import kyung.kung_android.data.expert.dto.ExpertSearchResponse
 import kyung.kung_android.domain.category.model.Categories
 import kyung.kung_android.domain.category.model.Category
 import kyung.kung_android.ui.theme.KungColors
@@ -56,26 +64,51 @@ fun HomeScreen(
     isLoggedIn: Boolean,
     onNavigateLogin: () -> Unit,
     onNavigateMyPage: () -> Unit,
+    onNavigateExpertSearch: (keyword: String?, categoryId: Long?) -> Unit,
+    onNavigateExpertDetail: (Long) -> Unit,
+    onNavigateChatbot: () -> Unit,
+    onNavigateExpertRegister: () -> Unit,
     modifier: Modifier = Modifier,
-    @Suppress("UNUSED_PARAMETER") viewModel: HomeViewModel = hiltViewModel(),
+    viewModel: HomeViewModel = hiltViewModel(),
 ) {
+    val state by viewModel.state.collectAsStateWithLifecycle()
+
     Box(modifier = modifier.fillMaxSize()) {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(bottom = 96.dp),
             verticalArrangement = Arrangement.spacedBy(20.dp),
         ) {
-            item { HomeTopBar(onNavigateMyPage = onNavigateMyPage) }
-            item { HomeSearchSection() }
-            item { HomeCategoryGrid() }
-            item { HomeRecommendedExpertsSection() }
+            item {
+                HomeTopBar(
+                    onNavigateMyPage = onNavigateMyPage,
+                    onNavigateExpertRegister = onNavigateExpertRegister,
+                )
+            }
+            item {
+                HomeSearchSection(
+                    onSubmit = { keyword -> onNavigateExpertSearch(keyword.takeIf { it.isNotEmpty() }, null) },
+                )
+            }
+            item {
+                HomeCategoryGrid(
+                    onCategoryClick = { category -> onNavigateExpertSearch(null, category.id) },
+                )
+            }
+            item {
+                HomeRecommendedExpertsSection(
+                    experts = state.recommended,
+                    isLoading = state.isLoadingRecommended,
+                    onExpertClick = onNavigateExpertDetail,
+                )
+            }
             if (!isLoggedIn) {
                 item { HomeLoginBanner(onNavigateLogin = onNavigateLogin) }
             }
         }
 
         FloatingActionButton(
-            onClick = { /* INV-22 챗봇 진입 — 후속 PR */ },
+            onClick = onNavigateChatbot,
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(end = 16.dp, bottom = 16.dp),
@@ -94,6 +127,7 @@ fun HomeScreen(
 @Composable
 private fun HomeTopBar(
     onNavigateMyPage: () -> Unit,
+    onNavigateExpertRegister: () -> Unit,
 ) {
     Row(
         modifier = Modifier
@@ -106,9 +140,7 @@ private fun HomeTopBar(
                 .size(40.dp)
                 .clip(RoundedCornerShape(12.dp))
                 .background(
-                    Brush.linearGradient(
-                        listOf(KungColors.Purple, KungColors.PurpleLight)
-                    )
+                    Brush.linearGradient(listOf(KungColors.Purple, KungColors.PurpleLight))
                 ),
             contentAlignment = Alignment.Center,
         ) {
@@ -135,7 +167,7 @@ private fun HomeTopBar(
         }
 
         Button(
-            onClick = { /* INV-21 고수 등록 — 후속 PR */ },
+            onClick = onNavigateExpertRegister,
             modifier = Modifier.height(36.dp),
         ) {
             Text("고수가입")
@@ -145,7 +177,9 @@ private fun HomeTopBar(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun HomeSearchSection() {
+private fun HomeSearchSection(
+    onSubmit: (String) -> Unit,
+) {
     var searchText by remember { mutableStateOf("") }
 
     Row(
@@ -163,6 +197,8 @@ private fun HomeSearchSection() {
             singleLine = true,
             shape = RoundedCornerShape(16.dp),
             leadingIcon = { Icon(Icons.Filled.Search, contentDescription = null) },
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+            keyboardActions = KeyboardActions(onSearch = { onSubmit(searchText) }),
         )
         AssistChip(
             onClick = { /* 지역 선택 바텀시트 — 후속 PR */ },
@@ -172,7 +208,9 @@ private fun HomeSearchSection() {
 }
 
 @Composable
-private fun HomeCategoryGrid() {
+private fun HomeCategoryGrid(
+    onCategoryClick: (Category) -> Unit,
+) {
     Column(modifier = Modifier.padding(horizontal = 16.dp)) {
         Text(
             text = "분야별 고수 찾기",
@@ -186,6 +224,7 @@ private fun HomeCategoryGrid() {
             Categories.ALL.forEach { category ->
                 CategoryCard(
                     category = category,
+                    onClick = { onCategoryClick(category) },
                     modifier = Modifier.weight(1f),
                 )
             }
@@ -196,12 +235,13 @@ private fun HomeCategoryGrid() {
 @Composable
 private fun CategoryCard(
     category: Category,
+    onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Card(
         modifier = modifier
             .aspectRatio(1f)
-            .clickable { /* 카테고리 진입 (INV-06 + categoryId) — 후속 PR */ },
+            .clickable(onClick = onClick),
         shape = RoundedCornerShape(16.dp),
     ) {
         Box(
@@ -219,18 +259,87 @@ private fun CategoryCard(
 }
 
 @Composable
-private fun HomeRecommendedExpertsSection() {
-    Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+private fun HomeRecommendedExpertsSection(
+    experts: List<ExpertSearchResponse>,
+    isLoading: Boolean,
+    onExpertClick: (Long) -> Unit,
+) {
+    if (!isLoading && experts.isEmpty()) return
+
+    Column(modifier = Modifier.padding(start = 16.dp, end = 16.dp)) {
         Text(
             text = "오늘의 추천 고수",
             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
         )
         Spacer(modifier = Modifier.height(12.dp))
-        Text(
-            text = "(추천 고수 API 연동 후속 PR 예정)",
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
+
+        if (isLoading && experts.isEmpty()) {
+            Text(
+                text = "불러오는 중...",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        } else {
+            LazyRow(
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                contentPadding = PaddingValues(end = 16.dp),
+            ) {
+                items(experts, key = { it.expertProfileId }) { expert ->
+                    RecommendedExpertCard(
+                        expert = expert,
+                        onClick = { onExpertClick(expert.expertProfileId) },
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun RecommendedExpertCard(
+    expert: ExpertSearchResponse,
+    onClick: () -> Unit,
+) {
+    Card(
+        modifier = Modifier
+            .width(160.dp)
+            .clickable(onClick = onClick),
+        shape = RoundedCornerShape(16.dp),
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(56.dp)
+                    .clip(CircleShape)
+                    .background(KungColors.Purple),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    text = expert.displayName.firstOrNull()?.toString() ?: "?",
+                    color = KungColors.White,
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                )
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = expert.displayName,
+                style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
+                maxLines = 1,
+            )
+            expert.mainCategoryName?.let {
+                Text(
+                    text = it,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                )
+            }
+        }
     }
 }
 
