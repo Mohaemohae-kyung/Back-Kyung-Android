@@ -14,6 +14,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -39,7 +43,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import kyung.kung_android.ui.common.KungPullToRefresh
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -94,12 +98,13 @@ fun ExpertSearchScreen(
             onLocationSelected = viewModel::onLocationSelected,
         )
 
-        Box(modifier = Modifier.fillMaxSize()) {
-            PullToRefreshBox(
-                isRefreshing = state.isLoading && state.experts.isNotEmpty(),
-                onRefresh = { viewModel.onSubmit() },
-                modifier = Modifier.fillMaxSize(),
-            ) {
+        KungPullToRefresh(
+            isLoading = state.isLoading,
+            onRefresh = { viewModel.onSubmit() },
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxWidth(),
+        ) {
             when {
                 state.isLoading && state.experts.isEmpty() -> {
                     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -114,17 +119,16 @@ fun ExpertSearchScreen(
                         contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 96.dp),
                         verticalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
-                        items(state.experts, key = { it.expertProfileId }) { expert ->
+                        items(state.experts, key = { it.expertServiceId }) { expert ->
                             ExpertCard(
                                 expert = expert,
                                 isFavorited = expert.expertProfileId in state.favoritedExpertIds,
-                                onClick = { onNavigateExpertDetail(expert.expertProfileId) },
+                                onClick = { onNavigateExpertDetail(expert.expertServiceId) },
                                 onFavoriteClick = { viewModel.onFavoriteToggle(expert.expertProfileId) },
                             )
                         }
                     }
                 }
-            }
             }
         }
     }
@@ -249,24 +253,26 @@ private fun CategoryPickerSheet(
 ) {
     ModalBottomSheet(onDismissRequest = onDismiss) {
         SheetTitle("카테고리 선택")
-        LazyColumn {
-            item {
-                PickerRow(
+        LazyVerticalGrid(
+            columns = GridCells.Fixed(2),
+            contentPadding = PaddingValues(16.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            item(span = { GridItemSpan(2) }) {
+                PickerCard(
                     label = "전체",
                     selected = selectedId == null,
                     onClick = { onSelected(null) },
                 )
-                HorizontalDivider()
             }
-            items(Categories.ALL, key = { it.id }) { category: Category ->
-                PickerRow(
+            items(Categories.ALL, key = { it.id }) { category ->
+                PickerCard(
                     label = category.name,
                     selected = selectedId == category.id,
                     onClick = { onSelected(category.id) },
                 )
-                HorizontalDivider()
             }
-            item { Spacer(modifier = Modifier.size(16.dp)) }
         }
     }
 }
@@ -280,24 +286,56 @@ private fun LocationPickerSheet(
 ) {
     ModalBottomSheet(onDismissRequest = onDismiss) {
         SheetTitle("지역 선택")
-        LazyColumn {
-            item {
-                PickerRow(
+        LazyVerticalGrid(
+            columns = GridCells.Fixed(2),
+            contentPadding = PaddingValues(16.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            item(span = { GridItemSpan(2) }) {
+                PickerCard(
                     label = "전국",
                     selected = selectedId == null,
                     onClick = { onSelected(null) },
                 )
-                HorizontalDivider()
             }
-            items(Regions.ALL, key = { it.id }) { region: Region ->
-                PickerRow(
+            items(Regions.ALL, key = { it.id }) { region ->
+                PickerCard(
                     label = region.name,
                     selected = selectedId == region.id,
                     onClick = { onSelected(region.id) },
                 )
-                HorizontalDivider()
             }
-            item { Spacer(modifier = Modifier.size(16.dp)) }
+        }
+    }
+}
+
+@Composable
+private fun PickerCard(
+    label: String,
+    selected: Boolean,
+    onClick: () -> Unit,
+) {
+    androidx.compose.material3.Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .clickable(onClick = onClick),
+        color = if (selected) KungColors.PurpleBg else MaterialTheme.colorScheme.surfaceVariant,
+        shape = RoundedCornerShape(12.dp),
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 16.dp),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(
+                text = label,
+                color = if (selected) KungColors.Purple else MaterialTheme.colorScheme.onSurface,
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
+            )
         }
     }
 }

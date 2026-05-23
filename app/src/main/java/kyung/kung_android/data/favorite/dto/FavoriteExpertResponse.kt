@@ -6,7 +6,7 @@ import kotlinx.serialization.Serializable
 data class FavoriteExpertResponse(
     val expertProfileId: Long,
     val displayName: String,
-    val careerYears: Long? = null,
+    val careerYears: Double? = null,
     val mainCategoryName: String? = null,
     val favorite: Boolean = true,
 )

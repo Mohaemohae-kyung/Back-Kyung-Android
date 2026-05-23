@@ -44,6 +44,7 @@ import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kyung.kung_android.data.expert.dto.ExpertDetailResponse
 import kyung.kung_android.ui.common.SectionTitle
+import kyung.kung_android.ui.common.toCareerYearLabel
 import kyung.kung_android.ui.theme.KungColors
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -141,7 +142,7 @@ private fun ExpertDetailContent(
             SectionTitle("활동 정보")
             InfoRow(label = "카테고리", value = expert.mainCategoryName ?: "—")
             InfoRow(label = "활동 지역", value = expert.mainLocationName ?: "—")
-            InfoRow(label = "경력", value = expert.careerYears?.let { "${it}년" } ?: "—")
+            InfoRow(label = "경력", value = expert.careerYears?.toCareerYearLabel() ?: "—")
         }
     }
 }
@@ -195,7 +196,7 @@ private fun ProfileCard(expert: ExpertDetailResponse) {
                 }
                 expert.careerYears?.let {
                     Text(
-                        text = "경력 ${it}년",
+                        text = "경력 ${it.toCareerYearLabel()}",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )

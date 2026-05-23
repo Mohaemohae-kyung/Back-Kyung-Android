@@ -21,6 +21,8 @@ data class ServiceRequestResponse(
     @Serializable(with = LocalDateTimeSerializer::class)
     val preferredDate: LocalDateTime? = null,
     val status: String,
+    val requesterName: String? = null,
+    val unreadCount: Long = 0,
     @Serializable(with = LocalDateTimeSerializer::class)
     val createdAt: LocalDateTime? = null,
     @Serializable(with = LocalDateTimeSerializer::class)

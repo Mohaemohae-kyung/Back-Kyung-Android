@@ -32,7 +32,6 @@ class CommunityViewModel @Inject constructor(
 
     fun refresh() {
         nextPage = 0
-        _state.update { CommunityUiState() }
         loadFirstPage()
     }
 

@@ -24,7 +24,7 @@ import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import kyung.kung_android.ui.common.KungPullToRefresh
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -43,6 +43,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kyung.kung_android.data.favorite.dto.FavoriteExpertResponse
+import kyung.kung_android.ui.common.toCareerYearLabel
 import kyung.kung_android.ui.theme.KungColors
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -72,8 +73,8 @@ fun FavoriteExpertsScreen(
             )
         },
     ) { padding ->
-        PullToRefreshBox(
-            isRefreshing = state.isLoading && state.favorites.isNotEmpty(),
+        KungPullToRefresh(
+            isLoading = state.isLoading,
             onRefresh = { viewModel.load() },
             modifier = Modifier.fillMaxSize().padding(padding),
         ) {
@@ -143,7 +144,7 @@ private fun FavoriteCard(
                 val sub = buildString {
                     item.mainCategoryName?.let { append(it) }
                     if (item.mainCategoryName != null && item.careerYears != null) append(" · ")
-                    item.careerYears?.let { append("경력 ${it}년") }
+                    item.careerYears?.let { append("경력 ${it.toCareerYearLabel()}") }
                 }
                 if (sub.isNotEmpty()) {
                     Text(

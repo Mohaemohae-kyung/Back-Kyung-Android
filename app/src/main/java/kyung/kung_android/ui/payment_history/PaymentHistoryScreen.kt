@@ -20,7 +20,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import kyung.kung_android.ui.common.KungPullToRefresh
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -61,8 +61,8 @@ fun PaymentHistoryScreen(
             )
         },
     ) { padding ->
-        PullToRefreshBox(
-            isRefreshing = state.isLoading && state.payments.isNotEmpty(),
+        KungPullToRefresh(
+            isLoading = state.isLoading,
             onRefresh = { viewModel.load() },
             modifier = Modifier.fillMaxSize().padding(padding),
         ) {

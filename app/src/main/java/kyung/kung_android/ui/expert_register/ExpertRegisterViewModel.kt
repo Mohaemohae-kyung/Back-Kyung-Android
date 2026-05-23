@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kyung.kung_android.data.network.ApiException
 import kyung.kung_android.domain.expert.ExpertRepository
+import kyung.kung_android.domain.expert_service.ExpertServiceRepository
 import javax.inject.Inject
 
 data class ExpertRegisterUiState(
@@ -32,7 +33,7 @@ data class ExpertRegisterUiState(
     val canSubmit: Boolean
         get() = displayName.isNotBlank() &&
                 introduction.isNotBlank() &&
-                careerYears.toLongOrNull()?.let { it >= 0 } == true &&
+                careerYears.toDoubleOrNull()?.let { it >= 0 } == true &&
                 mainCategoryId != null &&
                 mainLocationId != null &&
                 !isSubmitting
@@ -45,6 +46,7 @@ sealed interface ExpertRegisterEffect {
 @HiltViewModel
 class ExpertRegisterViewModel @Inject constructor(
     private val expertRepository: ExpertRepository,
+    private val expertServiceRepository: ExpertServiceRepository,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(ExpertRegisterUiState())
@@ -56,8 +58,10 @@ class ExpertRegisterViewModel @Inject constructor(
     fun onDisplayNameChange(v: String) = _state.update { it.copy(displayName = v, displayNameError = null) }
     fun onIntroductionChange(v: String) = _state.update { it.copy(introduction = v, introductionError = null) }
     fun onCareerYearsChange(v: String) {
-        if (v.isEmpty() || v.all { it.isDigit() }) {
-            _state.update { it.copy(careerYears = v, careerYearsError = null) }
+        val normalized = v.replace(',', '.')
+        // 소수 1자리까지 허용 (예: "3", "3.5")
+        if (normalized.isEmpty() || normalized.matches(Regex("""^\d{0,3}(\.\d{0,1})?$"""))) {
+            _state.update { it.copy(careerYears = normalized, careerYearsError = null) }
         }
     }
     fun onCategorySelected(id: Long) = _state.update { it.copy(mainCategoryId = id, categoryError = null) }
@@ -74,10 +78,19 @@ class ExpertRegisterViewModel @Inject constructor(
                 expertRepository.createProfile(
                     displayName = current.displayName,
                     introduction = current.introduction,
-                    careerYears = current.careerYears.toLong(),
+                    careerYears = current.careerYears.toDouble(),
                     mainCategoryId = requireNotNull(current.mainCategoryId),
                     mainLocationId = requireNotNull(current.mainLocationId),
                 )
+                runCatching {
+                    expertServiceRepository.createService(
+                        categoryId = requireNotNull(current.mainCategoryId),
+                        locationId = requireNotNull(current.mainLocationId),
+                        serviceTitle = current.displayName,
+                        serviceDescription = current.introduction,
+                        price = 0,
+                    )
+                }
                 _effects.emit(ExpertRegisterEffect.NavigateBack)
             } catch (e: ApiException) {
                 _state.update { it.copy(errorMessage = e.message ?: "등록에 실패했어요.") }

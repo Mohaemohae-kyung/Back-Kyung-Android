@@ -86,8 +86,8 @@ fun HomeScreen(
     }
 
     Box(modifier = modifier.fillMaxSize()) {
-        androidx.compose.material3.pulltorefresh.PullToRefreshBox(
-            isRefreshing = state.isLoadingRecommended && state.recommended.isNotEmpty(),
+        kyung.kung_android.ui.common.KungPullToRefresh(
+            isLoading = state.isLoadingRecommended,
             onRefresh = { viewModel.loadRecommendations() },
             modifier = Modifier.fillMaxSize(),
         ) {
@@ -432,10 +432,10 @@ private fun HomeRecommendedExpertsSection(
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                 contentPadding = PaddingValues(end = 16.dp),
             ) {
-                items(experts, key = { it.expertProfileId }) { expert ->
+                items(experts, key = { it.expertServiceId }) { expert ->
                     RecommendedExpertCard(
                         expert = expert,
-                        onClick = { onExpertClick(expert.expertProfileId) },
+                        onClick = { onExpertClick(expert.expertServiceId) },
                     )
                 }
             }

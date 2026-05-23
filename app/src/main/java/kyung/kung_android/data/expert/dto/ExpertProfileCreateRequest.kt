@@ -6,7 +6,7 @@ import kotlinx.serialization.Serializable
 data class ExpertProfileCreateRequest(
     val displayName: String,
     val introduction: String,
-    val careerYears: Long,
+    val careerYears: Double,
     val mainCategoryId: Long,
     val mainLocationId: Long,
 )

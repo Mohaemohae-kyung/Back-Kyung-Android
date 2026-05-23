@@ -30,7 +30,7 @@ data class SignupUiState(
     val errorMessage: String? = null,
 ) {
     val canSubmit: Boolean
-        get() = email.isNotBlank() && password.length >= 8 && name.isNotBlank() && !isLoading
+        get() = email.isNotBlank() && password.length in 8..20 && name.isNotBlank() && !isLoading
 }
 
 sealed interface SignupEffect {

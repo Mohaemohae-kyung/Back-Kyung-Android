@@ -11,10 +11,12 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.combine
 import kyung.kung_android.data.community.dto.CommentResponse
 import kyung.kung_android.data.community.dto.PostResponse
 import kyung.kung_android.domain.auth.AuthRepository
 import kyung.kung_android.domain.community.CommunityRepository
+import kyung.kung_android.domain.user.UserRepository
 import javax.inject.Inject
 
 data class PostDetailUiState(
@@ -32,6 +34,7 @@ class PostDetailViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val communityRepository: CommunityRepository,
     authRepository: AuthRepository,
+    userRepository: UserRepository,
 ) : ViewModel() {
 
     private val postId: Long = savedStateHandle.get<Long>("postId") ?: 0L
@@ -41,6 +44,12 @@ class PostDetailViewModel @Inject constructor(
 
     val isLoggedIn: StateFlow<Boolean> = authRepository.isLoggedIn
         .stateIn(viewModelScope, SharingStarted.Eagerly, false)
+
+    val isOwnPost: StateFlow<Boolean> = combine(_state, userRepository.currentUser) { st, me ->
+        val writer = st.post?.writerName?.trim().orEmpty()
+        val myName = me?.name?.trim().orEmpty()
+        writer.isNotEmpty() && myName.isNotEmpty() && writer == myName
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, false)
 
     fun onInputChange(v: String) = _state.update { it.copy(input = v) }
 

@@ -21,7 +21,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import kyung.kung_android.ui.common.KungPullToRefresh
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -47,8 +47,8 @@ fun ChatListScreen(
         onPauseOrDispose { }
     }
 
-    PullToRefreshBox(
-        isRefreshing = state.isLoading && state.rooms.isNotEmpty(),
+    KungPullToRefresh(
+        isLoading = state.isLoading,
         onRefresh = { viewModel.load() },
         modifier = Modifier.fillMaxSize(),
     ) {
@@ -120,19 +120,28 @@ private fun ChatRoomItem(
                 text = room.peerName,
                 style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
             )
-            room.categoryName?.let {
-                Text(
-                    text = it,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
             room.lastMessage?.let {
                 Text(
                     text = it,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,
+                )
+            }
+        }
+        if (room.unreadCount > 0) {
+            Spacer(modifier = Modifier.width(8.dp))
+            Box(
+                modifier = Modifier
+                    .size(22.dp)
+                    .clip(CircleShape)
+                    .background(KungColors.Error),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    text = if (room.unreadCount > 99) "99+" else room.unreadCount.toString(),
+                    color = KungColors.White,
+                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                 )
             }
         }

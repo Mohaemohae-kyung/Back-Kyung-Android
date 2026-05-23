@@ -88,7 +88,7 @@ fun SignupScreen(
         OutlinedTextField(
             value = state.password,
             onValueChange = viewModel::onPasswordChange,
-            label = { Text("비밀번호 (8자 이상) *") },
+            label = { Text("비밀번호 (8~20자) *") },
             singleLine = true,
             visualTransformation = PasswordVisualTransformation(),
             isError = state.passwordError != null,

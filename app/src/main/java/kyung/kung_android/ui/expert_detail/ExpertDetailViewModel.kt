@@ -48,10 +48,11 @@ class ExpertDetailViewModel @Inject constructor(
         _local,
         favoriteRepository.favoriteIds,
     ) { local, favoriteIds ->
+        val profileId = local.expert?.expertProfileId
         ExpertDetailUiState(
             expertId = expertId,
             expert = local.expert,
-            isFavorited = expertId in favoriteIds,
+            isFavorited = profileId != null && profileId in favoriteIds,
             isLoading = local.isLoading,
             error = local.error,
         )
@@ -60,9 +61,10 @@ class ExpertDetailViewModel @Inject constructor(
     val isLoggedIn: StateFlow<Boolean> = authRepository.isLoggedIn
 
     fun onFavoriteToggle() {
+        val profileId = _local.value.expert?.expertProfileId ?: return
         viewModelScope.launch {
             try {
-                favoriteRepository.toggleFavorite(expertId)
+                favoriteRepository.toggleFavorite(profileId)
             } catch (t: Throwable) {
                 _local.update { it.copy(error = "찜 처리에 실패했어요.") }
             }

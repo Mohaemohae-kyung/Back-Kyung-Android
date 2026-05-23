@@ -29,7 +29,7 @@ class ExpertRepository @Inject constructor(
     suspend fun createProfile(
         displayName: String,
         introduction: String,
-        careerYears: Long,
+        careerYears: Double,
         mainCategoryId: Long,
         mainLocationId: Long,
     ) {

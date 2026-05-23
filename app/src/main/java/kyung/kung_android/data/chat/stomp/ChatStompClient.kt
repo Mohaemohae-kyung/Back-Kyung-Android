@@ -60,7 +60,7 @@ class ChatStompClient @Inject constructor(
                 type = "TEXT",
             ),
         )
-        session.sendText("/app/chat/message", payload)
+        session.sendText("/pub/chat/message", payload)
     }
 
     suspend fun disconnect(session: StompSession) {
