@@ -31,7 +31,9 @@ import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Verified
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
@@ -42,6 +44,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import kyung.kung_android.ui.common.KungPullToRefresh
 import androidx.compose.runtime.Composable
@@ -149,8 +152,15 @@ private fun SearchBarSection(
             .padding(horizontal = 16.dp, vertical = 12.dp),
         placeholder = { Text("어떤 서비스가 필요하세요?") },
         singleLine = true,
-        shape = RoundedCornerShape(16.dp),
-        leadingIcon = { Icon(Icons.Filled.Search, contentDescription = null) },
+        shape = RoundedCornerShape(28.dp),
+        leadingIcon = { Icon(Icons.Filled.Search, contentDescription = null, tint = KungColors.Purple) },
+        colors = OutlinedTextFieldDefaults.colors(
+            focusedBorderColor = KungColors.Purple,
+            unfocusedBorderColor = KungColors.BorderSoft,
+            focusedContainerColor = KungColors.BgRaised,
+            unfocusedContainerColor = KungColors.BgSurface,
+            cursorColor = KungColors.Purple,
+        ),
         keyboardOptions = KeyboardOptions(
             imeAction = ImeAction.Search,
             capitalization = KeyboardCapitalization.None,
@@ -391,7 +401,10 @@ private fun ExpertCard(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick),
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(18.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        border = BorderStroke(1.dp, KungColors.BorderSoft),
     ) {
         Row(
             modifier = Modifier
@@ -399,7 +412,7 @@ private fun ExpertCard(
                 .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            InitialAvatar(name = expert.displayName)
+            InitialAvatar(name = expert.displayName, size = 52.dp)
             Spacer(modifier = Modifier.width(12.dp))
 
             Column(modifier = Modifier.weight(1f)) {
@@ -443,7 +456,7 @@ private fun ExpertCard(
                 Icon(
                     imageVector = if (isFavorited) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
                     contentDescription = if (isFavorited) "찜 해제" else "찜",
-                    tint = if (isFavorited) KungColors.Error else KungColors.Gray,
+                    tint = if (isFavorited) KungColors.Coral else KungColors.Hint,
                 )
             }
         }

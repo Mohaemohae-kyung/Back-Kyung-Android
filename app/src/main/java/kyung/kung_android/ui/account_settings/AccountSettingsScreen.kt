@@ -48,6 +48,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
+import kyung.kung_android.ui.common.InitialAvatar
 import kyung.kung_android.ui.theme.KungColors
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -85,12 +86,20 @@ fun AccountSettingsScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("계정 설정") },
+                title = {
+                    Text(
+                        text = "계정 설정",
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.ExtraBold),
+                    )
+                },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "뒤로")
                     }
                 },
+                colors = androidx.compose.material3.TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface,
+                ),
             )
         },
     ) { padding ->
@@ -184,19 +193,7 @@ private fun ProfileImageSection(
                     modifier = Modifier.size(96.dp).clip(CircleShape),
                 )
             } else {
-                Box(
-                    modifier = Modifier
-                        .size(96.dp)
-                        .clip(CircleShape)
-                        .background(KungColors.Purple),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Text(
-                        text = displayName.firstOrNull()?.toString() ?: "?",
-                        color = KungColors.White,
-                        style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
-                    )
-                }
+                InitialAvatar(name = displayName, size = 96.dp)
             }
             if (isUploading) {
                 CircularProgressIndicator(modifier = Modifier.size(96.dp))

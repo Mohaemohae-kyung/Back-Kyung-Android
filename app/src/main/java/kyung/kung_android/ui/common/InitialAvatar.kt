@@ -10,6 +10,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -21,11 +22,12 @@ fun InitialAvatar(
     size: Dp = 48.dp,
     modifier: Modifier = Modifier,
 ) {
+    val gradient = KungColors.avatarGradient(name)
     Box(
         modifier = modifier
             .size(size)
             .clip(CircleShape)
-            .background(KungColors.Purple),
+            .background(Brush.linearGradient(gradient)),
         contentAlignment = Alignment.Center,
     ) {
         Text(
