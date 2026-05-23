@@ -8,6 +8,7 @@ import kyung.kung_android.ui.auth.login.LoginScreen
 import kyung.kung_android.ui.auth.signup.SignupScreen
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
+import kyung.kung_android.ui.chat_detail.ChatDetailScreen
 import kyung.kung_android.ui.chatbot.ChatBotScreen
 import kyung.kung_android.ui.common.PlaceholderScreen
 import kyung.kung_android.ui.expert_detail.ExpertDetailScreen
@@ -39,7 +40,17 @@ fun AppNavHost(
                 onNavigateQuoteDetail = { id -> navController.navigate("${AppRoute.QUOTE_DETAIL}/$id") },
                 onNavigatePostDetail = { id -> navController.navigate("${AppRoute.POST_DETAIL}/$id") },
                 onNavigatePostWrite = { navController.navigate(AppRoute.POST_EDITOR) },
+                onNavigateChatDetail = { chatRoomId ->
+                    navController.navigate("${AppRoute.CHAT_DETAIL}/$chatRoomId")
+                },
             )
+        }
+
+        composable(
+            route = "${AppRoute.CHAT_DETAIL}/{${AppRoute.ARG_CHAT_ROOM_ID}}",
+            arguments = listOf(navArgument(AppRoute.ARG_CHAT_ROOM_ID) { type = NavType.LongType }),
+        ) {
+            ChatDetailScreen(onNavigateBack = { navController.popBackStack() })
         }
 
         composable(
@@ -87,7 +98,9 @@ fun AppNavHost(
             QuoteDetailScreen(
                 onBack = { navController.popBackStack() },
                 onNavigateExpertDetail = { id -> navController.navigate("${AppRoute.EXPERT_DETAIL}/$id") },
-                onNavigateChat = { /* PR-G(채팅 흐름)에서 연결 */ },
+                onNavigateChat = { chatRoomId ->
+                    navController.navigate("${AppRoute.CHAT_DETAIL}/$chatRoomId")
+                },
             )
         }
 

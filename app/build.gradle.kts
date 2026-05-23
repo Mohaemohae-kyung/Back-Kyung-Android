@@ -96,4 +96,9 @@ dependencies {
 
     // DataStore (token storage)
     implementation(libs.androidx.datastore.preferences)
+
+    // STOMP WebSocket (krossbow)
+    implementation(libs.krossbow.stomp.core)
+    implementation(libs.krossbow.websocket.okhttp)
+    implementation(libs.krossbow.stomp.kxserialization.json)
 }

@@ -14,8 +14,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import kyung.kung_android.ui.chat_list.ChatListScreen
 import kyung.kung_android.ui.common.LoginGate
-import kyung.kung_android.ui.common.PlaceholderScreen
 import kyung.kung_android.ui.community.CommunityScreen
 import kyung.kung_android.ui.expert_search.ExpertSearchScreen
 import kyung.kung_android.ui.home.HomeScreen
@@ -32,6 +32,7 @@ fun MainScaffold(
     onNavigateQuoteDetail: (Long) -> Unit = {},
     onNavigatePostDetail: (Long) -> Unit = {},
     onNavigatePostWrite: () -> Unit = {},
+    onNavigateChatDetail: (Long) -> Unit = {},
     viewModel: MainScaffoldViewModel = hiltViewModel(),
 ) {
     val nestedNavController = rememberNavController()
@@ -129,7 +130,7 @@ fun MainScaffold(
 
             composable(AppRoute.Tab.CHAT) {
                 LoginGate(isLoggedIn = isLoggedIn, onNavigateLogin = onNavigateLogin) {
-                    PlaceholderScreen(title = "채팅")
+                    ChatListScreen(onNavigateChat = onNavigateChatDetail)
                 }
             }
 

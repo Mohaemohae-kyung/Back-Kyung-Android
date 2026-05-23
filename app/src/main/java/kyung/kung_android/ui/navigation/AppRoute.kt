@@ -14,6 +14,9 @@ object AppRoute {
     const val QUOTE_DETAIL = "quote_detail"
     const val POST_DETAIL = "post_detail"
     const val POST_EDITOR = "post_editor"
+    const val CHAT_DETAIL = "chat_detail"
+
+    const val ARG_CHAT_ROOM_ID = "chatRoomId"
 
     // 5탭 nested NavHost 내부 라우트
     object Tab {
