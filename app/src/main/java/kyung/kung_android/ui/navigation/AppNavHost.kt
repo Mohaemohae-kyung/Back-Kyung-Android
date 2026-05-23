@@ -8,15 +8,20 @@ import kyung.kung_android.ui.auth.login.LoginScreen
 import kyung.kung_android.ui.auth.signup.SignupScreen
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
+import kyung.kung_android.ui.account_settings.AccountSettingsScreen
+import kyung.kung_android.ui.account_withdraw.AccountWithdrawScreen
 import kyung.kung_android.ui.chat_detail.ChatDetailScreen
 import kyung.kung_android.ui.chatbot.ChatBotScreen
 import kyung.kung_android.ui.common.PlaceholderScreen
 import kyung.kung_android.ui.expert_detail.ExpertDetailScreen
 import kyung.kung_android.ui.expert_register.ExpertRegisterScreen
+import kyung.kung_android.ui.favorite_experts.FavoriteExpertsScreen
 import kyung.kung_android.ui.main.MainScaffold
 import kyung.kung_android.ui.mypage.MyPageScreen
+import kyung.kung_android.ui.payment_history.PaymentHistoryScreen
 import kyung.kung_android.ui.post_detail.PostDetailScreen
 import kyung.kung_android.ui.post_editor.PostEditorScreen
+import kyung.kung_android.ui.profile_info.ProfileInfoScreen
 import kyung.kung_android.ui.quote_detail.QuoteDetailScreen
 import kyung.kung_android.ui.quote_request.QuoteRequestScreen
 
@@ -135,11 +140,55 @@ fun AppNavHost(
                 onBack = { navController.popBackStack() },
                 onNavigateLogin = { navController.navigate(AppRoute.LOGIN) },
                 onNavigateExpertRegister = { navController.navigate(AppRoute.EXPERT_REGISTER) },
+                onNavigateAccountSettings = { navController.navigate(AppRoute.ACCOUNT_SETTINGS) },
+                onNavigateFavorites = { navController.navigate(AppRoute.FAVORITE_EXPERTS) },
+                onNavigatePaymentHistory = { navController.navigate(AppRoute.PAYMENT_HISTORY) },
             )
         }
 
         composable(AppRoute.EXPERT_REGISTER) {
             ExpertRegisterScreen(onBack = { navController.popBackStack() })
+        }
+
+        composable(AppRoute.ACCOUNT_SETTINGS) {
+            AccountSettingsScreen(
+                onBack = { navController.popBackStack() },
+                onNavigateProfileInfo = { navController.navigate(AppRoute.PROFILE_INFO) },
+                onNavigateWithdraw = { navController.navigate(AppRoute.ACCOUNT_WITHDRAW) },
+                onLoggedOut = {
+                    navController.popBackStack(AppRoute.MAIN, inclusive = false)
+                },
+            )
+        }
+
+        composable(AppRoute.ACCOUNT_WITHDRAW) {
+            AccountWithdrawScreen(
+                onBack = { navController.popBackStack() },
+                onWithdrawSuccess = {
+                    navController.popBackStack(AppRoute.MAIN, inclusive = false)
+                    navController.navigate(AppRoute.LOGIN)
+                },
+            )
+        }
+
+        composable(AppRoute.PROFILE_INFO) {
+            ProfileInfoScreen(onBack = { navController.popBackStack() })
+        }
+
+        composable(AppRoute.FAVORITE_EXPERTS) {
+            FavoriteExpertsScreen(
+                onBack = { navController.popBackStack() },
+                onNavigateExpertDetail = { id ->
+                    navController.navigate("${AppRoute.EXPERT_DETAIL}/$id")
+                },
+                onNavigateExpertSearch = {
+                    navController.popBackStack(AppRoute.MAIN, inclusive = false)
+                },
+            )
+        }
+
+        composable(AppRoute.PAYMENT_HISTORY) {
+            PaymentHistoryScreen(onBack = { navController.popBackStack() })
         }
     }
 }

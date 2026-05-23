@@ -15,6 +15,11 @@ object AppRoute {
     const val POST_DETAIL = "post_detail"
     const val POST_EDITOR = "post_editor"
     const val CHAT_DETAIL = "chat_detail"
+    const val ACCOUNT_SETTINGS = "account_settings"
+    const val ACCOUNT_WITHDRAW = "account_withdraw"
+    const val PROFILE_INFO = "profile_info"
+    const val FAVORITE_EXPERTS = "favorite_experts"
+    const val PAYMENT_HISTORY = "payment_history"
 
     const val ARG_CHAT_ROOM_ID = "chatRoomId"
 
