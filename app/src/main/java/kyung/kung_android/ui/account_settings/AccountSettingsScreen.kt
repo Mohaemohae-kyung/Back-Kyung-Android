@@ -203,7 +203,7 @@ private fun ProfileImageSection(
             }
             Box(
                 modifier = Modifier
-                    .size(32.dp)
+                    .size(40.dp)
                     .align(Alignment.BottomEnd)
                     .clip(CircleShape)
                     .background(MaterialTheme.colorScheme.primary)
@@ -214,7 +214,7 @@ private fun ProfileImageSection(
                     imageVector = Icons.Filled.PhotoCamera,
                     contentDescription = "사진 변경",
                     tint = MaterialTheme.colorScheme.onPrimary,
-                    modifier = Modifier.size(18.dp),
+                    modifier = Modifier.size(20.dp),
                 )
             }
         }

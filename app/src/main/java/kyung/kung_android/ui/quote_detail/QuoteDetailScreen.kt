@@ -46,6 +46,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import kyung.kung_android.ui.common.SectionTitle
 import kyung.kung_android.data.expert.dto.ExpertDetailResponse
 import kyung.kung_android.data.request.dto.ServiceRequestResponse
 import kyung.kung_android.ui.received_quote.StatusChip
@@ -160,7 +161,7 @@ private fun QuoteDetailContent(
         }
 
         item {
-            SectionLabel("요청 내용")
+            SectionTitle("요청 내용")
             Spacer(modifier = Modifier.height(8.dp))
             Text(text = quote.title, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold))
             Spacer(modifier = Modifier.height(8.dp))
@@ -168,7 +169,7 @@ private fun QuoteDetailContent(
         }
 
         item {
-            SectionLabel("희망 사항")
+            SectionTitle("희망 사항")
             Spacer(modifier = Modifier.height(8.dp))
             InfoRow(
                 label = "예산",
@@ -237,10 +238,6 @@ private fun ExpertCardRow(expert: ExpertDetailResponse, onClick: () -> Unit) {
     }
 }
 
-@Composable
-private fun SectionLabel(text: String) {
-    Text(text = text, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold))
-}
 
 @Composable
 private fun InfoRow(label: String, value: String) {

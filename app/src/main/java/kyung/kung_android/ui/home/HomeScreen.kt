@@ -23,10 +23,16 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Apps
+import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.filled.Brush
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.HeadsetMic
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.School
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.SelfImprovement
+import androidx.compose.material.icons.filled.Work
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -65,7 +71,7 @@ fun HomeScreen(
     isLoggedIn: Boolean,
     onNavigateLogin: () -> Unit,
     onNavigateMyPage: () -> Unit,
-    onNavigateExpertSearch: (keyword: String?, categoryId: Long?) -> Unit,
+    onNavigateExpertSearch: (keyword: String?, categoryId: Long?, locationId: Long?) -> Unit,
     onNavigateExpertDetail: (Long) -> Unit,
     onNavigateChatbot: () -> Unit,
     onNavigateExpertRegister: () -> Unit,
@@ -80,6 +86,11 @@ fun HomeScreen(
     }
 
     Box(modifier = modifier.fillMaxSize()) {
+        androidx.compose.material3.pulltorefresh.PullToRefreshBox(
+            isRefreshing = state.isLoadingRecommended && state.recommended.isNotEmpty(),
+            onRefresh = { viewModel.loadRecommendations() },
+            modifier = Modifier.fillMaxSize(),
+        ) {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(bottom = 96.dp),
@@ -87,18 +98,26 @@ fun HomeScreen(
         ) {
             item {
                 HomeTopBar(
+                    isLoggedIn = isLoggedIn,
                     onNavigateMyPage = onNavigateMyPage,
                     onNavigateExpertRegister = onNavigateExpertRegister,
                 )
             }
+            item { HomeHeroCopy() }
             item {
                 HomeSearchSection(
-                    onSubmit = { keyword -> onNavigateExpertSearch(keyword.takeIf { it.isNotEmpty() }, null) },
+                    onSubmit = { keyword -> onNavigateExpertSearch(keyword.takeIf { it.isNotEmpty() }, null, null) },
+                    onLocationSelected = { locationId -> onNavigateExpertSearch(null, null, locationId) },
+                )
+            }
+            item {
+                HomeQuickTags(
+                    onTagClick = { keyword -> onNavigateExpertSearch(keyword, null, null) },
                 )
             }
             item {
                 HomeCategoryGrid(
-                    onCategoryClick = { category -> onNavigateExpertSearch(null, category.id) },
+                    onCategoryClick = { category -> onNavigateExpertSearch(null, category.id, null) },
                 )
             }
             item {
@@ -108,9 +127,7 @@ fun HomeScreen(
                     onExpertClick = onNavigateExpertDetail,
                 )
             }
-            if (!isLoggedIn) {
-                item { HomeLoginBanner(onNavigateLogin = onNavigateLogin) }
-            }
+        }
         }
 
         FloatingActionButton(
@@ -132,6 +149,7 @@ fun HomeScreen(
 
 @Composable
 private fun HomeTopBar(
+    isLoggedIn: Boolean,
     onNavigateMyPage: () -> Unit,
     onNavigateExpertRegister: () -> Unit,
 ) {
@@ -172,11 +190,13 @@ private fun HomeTopBar(
             )
         }
 
-        Button(
-            onClick = onNavigateExpertRegister,
-            modifier = Modifier.height(36.dp),
-        ) {
-            Text("고수가입")
+        if (isLoggedIn) {
+            Button(
+                onClick = onNavigateExpertRegister,
+                modifier = Modifier.height(36.dp),
+            ) {
+                Text("고수가입")
+            }
         }
     }
 }
@@ -185,8 +205,10 @@ private fun HomeTopBar(
 @Composable
 private fun HomeSearchSection(
     onSubmit: (String) -> Unit,
+    onLocationSelected: (Long) -> Unit,
 ) {
     var searchText by remember { mutableStateOf("") }
+    var showLocationSheet by remember { mutableStateOf(false) }
 
     Row(
         modifier = Modifier
@@ -207,9 +229,109 @@ private fun HomeSearchSection(
             keyboardActions = KeyboardActions(onSearch = { onSubmit(searchText) }),
         )
         AssistChip(
-            onClick = { /* 지역 선택 바텀시트 — 후속 PR */ },
-            label = { Text("서울 ▾") },
+            onClick = { showLocationSheet = true },
+            label = { Text("지역 ▾") },
         )
+    }
+
+    if (showLocationSheet) {
+        LocationPickerSheet(
+            onDismiss = { showLocationSheet = false },
+            onSelected = { region ->
+                showLocationSheet = false
+                onLocationSelected(region.id)
+            },
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun LocationPickerSheet(
+    onDismiss: () -> Unit,
+    onSelected: (kyung.kung_android.domain.location.model.Region) -> Unit,
+) {
+    androidx.compose.material3.ModalBottomSheet(onDismissRequest = onDismiss) {
+        Column(modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)) {
+            Text(
+                text = "지역 선택",
+                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+            )
+            LazyColumn {
+                items(
+                    kyung.kung_android.domain.location.model.Regions.ALL,
+                    key = { it.id },
+                ) { region ->
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { onSelected(region) }
+                            .padding(horizontal = 16.dp, vertical = 14.dp),
+                    ) {
+                        Text(text = region.name, style = MaterialTheme.typography.bodyLarge)
+                    }
+                }
+                item { Spacer(modifier = Modifier.height(16.dp)) }
+            }
+        }
+    }
+}
+
+@Composable
+private fun HomeHeroCopy() {
+    Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+        Row(
+            modifier = Modifier
+                .clip(RoundedCornerShape(20.dp))
+                .background(KungColors.PurpleBg)
+                .padding(horizontal = 12.dp, vertical = 6.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
+            Icon(
+                imageVector = Icons.Filled.AutoAwesome,
+                contentDescription = null,
+                tint = KungColors.Purple,
+                modifier = Modifier.size(14.dp),
+            )
+            Text(
+                text = "원하는 고수를 빠르게 만나는 방법",
+                style = MaterialTheme.typography.labelMedium,
+                color = KungColors.Purple,
+            )
+        }
+        Spacer(modifier = Modifier.height(12.dp))
+        Text(
+            text = "필요한 서비스를\n고수에게 바로 요청하세요",
+            style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = "분야와 지역을 선택하고, 마음에 드는 고수에게 견적을 요청해보세요.",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
+}
+
+@Composable
+private fun HomeQuickTags(
+    onTagClick: (String) -> Unit,
+) {
+    val tags = remember {
+        listOf("자소서 첨삭", "코딩 과외", "로고 디자인", "번역", "생활 도움")
+    }
+    LazyRow(
+        contentPadding = PaddingValues(horizontal = 16.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        items(tags) { tag ->
+            AssistChip(
+                onClick = { onTagClick(tag) },
+                label = { Text(tag) },
+            )
+        }
     }
 }
 
@@ -238,29 +360,49 @@ private fun HomeCategoryGrid(
     }
 }
 
+private fun iconForCategory(id: Long) = when (id) {
+    1L -> Icons.Filled.Work             // 취업/직무
+    6L -> Icons.Filled.SelfImprovement  // 취미/자기계발
+    11L -> Icons.Filled.School          // 과외
+    16L -> Icons.Filled.Brush           // 외주
+    else -> Icons.Filled.Apps           // 기타
+}
+
 @Composable
 private fun CategoryCard(
     category: Category,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Card(
+    Column(
         modifier = modifier
-            .aspectRatio(1f)
-            .clickable(onClick = onClick),
-        shape = RoundedCornerShape(16.dp),
+            .clip(RoundedCornerShape(12.dp))
+            .clickable(onClick = onClick)
+            .padding(vertical = 8.dp),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Box(
-            modifier = Modifier.fillMaxSize().padding(8.dp),
+            modifier = Modifier
+                .size(56.dp)
+                .clip(CircleShape)
+                .background(KungColors.PurpleBg),
             contentAlignment = Alignment.Center,
         ) {
-            Text(
-                text = category.name,
-                style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold),
-                textAlign = TextAlign.Center,
-                maxLines = 2,
+            Icon(
+                imageVector = iconForCategory(category.id),
+                contentDescription = null,
+                tint = KungColors.Purple,
+                modifier = Modifier.size(28.dp),
             )
         }
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = category.name,
+            style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium),
+            textAlign = TextAlign.Center,
+            maxLines = 1,
+        )
     }
 }
 
@@ -336,6 +478,7 @@ private fun RecommendedExpertCard(
                 text = expert.displayName,
                 style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
                 maxLines = 1,
+                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
             )
             expert.mainCategoryName?.let {
                 Text(
@@ -349,30 +492,3 @@ private fun RecommendedExpertCard(
     }
 }
 
-@Composable
-private fun HomeLoginBanner(
-    onNavigateLogin: () -> Unit,
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp)
-            .clip(RoundedCornerShape(16.dp))
-            .background(KungColors.PurpleBg)
-            .padding(horizontal = 16.dp, vertical = 12.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Text(
-            text = "로그인하고 더 많은 기능을 이용해보세요",
-            style = MaterialTheme.typography.bodyMedium,
-            modifier = Modifier.weight(1f),
-        )
-        TextButton(onClick = onNavigateLogin) {
-            Text(
-                text = "로그인",
-                color = KungColors.Purple,
-                fontWeight = FontWeight.SemiBold,
-            )
-        }
-    }
-}

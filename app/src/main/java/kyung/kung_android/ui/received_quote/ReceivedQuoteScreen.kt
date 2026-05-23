@@ -32,6 +32,7 @@ import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import kyung.kung_android.ui.common.SectionTitle
 import kyung.kung_android.data.request.dto.ServiceRequestResponse
 import kyung.kung_android.ui.theme.KungColors
 import java.time.format.DateTimeFormatter
@@ -62,17 +63,17 @@ fun ReceivedQuoteScreen(
 
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(16.dp),
+            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 96.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             if (state.inProgress.isNotEmpty()) {
-                item { SectionLabel("진행 중") }
+                item { SectionTitle("진행 중") }
                 items(state.inProgress, key = { it.requestId }) {
                     QuoteCard(request = it, onClick = { onNavigateQuoteDetail(it.requestId) })
                 }
             }
             if (state.pastRequests.isNotEmpty()) {
-                item { SectionLabel("지난 요청") }
+                item { SectionTitle("지난 요청") }
                 items(state.pastRequests, key = { it.requestId }) {
                     QuoteCard(request = it, onClick = { onNavigateQuoteDetail(it.requestId) })
                 }
@@ -81,14 +82,6 @@ fun ReceivedQuoteScreen(
     }
 }
 
-@Composable
-private fun SectionLabel(text: String) {
-    Text(
-        text = text,
-        style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
-        modifier = Modifier.padding(vertical = 8.dp),
-    )
-}
 
 @Composable
 private fun QuoteCard(

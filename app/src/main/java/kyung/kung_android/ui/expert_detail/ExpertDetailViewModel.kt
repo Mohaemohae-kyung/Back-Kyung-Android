@@ -12,6 +12,8 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kyung.kung_android.data.expert.dto.ExpertDetailResponse
+import kyung.kung_android.data.network.ApiException
+import kyung.kung_android.domain.auth.AuthRepository
 import kyung.kung_android.domain.expert.ExpertRepository
 import kyung.kung_android.domain.favorite.FavoriteRepository
 import javax.inject.Inject
@@ -35,6 +37,7 @@ class ExpertDetailViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val expertRepository: ExpertRepository,
     private val favoriteRepository: FavoriteRepository,
+    authRepository: AuthRepository,
 ) : ViewModel() {
 
     private val expertId: Long = savedStateHandle.get<Long>("expertId") ?: 0L
@@ -54,6 +57,8 @@ class ExpertDetailViewModel @Inject constructor(
         )
     }.stateIn(viewModelScope, SharingStarted.Eagerly, ExpertDetailUiState(expertId = expertId))
 
+    val isLoggedIn: StateFlow<Boolean> = authRepository.isLoggedIn
+
     fun onFavoriteToggle() {
         viewModelScope.launch {
             try {
@@ -70,6 +75,12 @@ class ExpertDetailViewModel @Inject constructor(
             try {
                 val expert = expertRepository.getExpertDetail(expertId)
                 _local.update { it.copy(expert = expert, isLoading = false) }
+            } catch (e: ApiException) {
+                if (e.isAuthError) {
+                    _local.update { it.copy(isLoading = false, error = null) }
+                } else {
+                    _local.update { it.copy(isLoading = false, error = "정보를 불러오지 못했어요.") }
+                }
             } catch (t: Throwable) {
                 _local.update { it.copy(isLoading = false, error = "정보를 불러오지 못했어요.") }
             }

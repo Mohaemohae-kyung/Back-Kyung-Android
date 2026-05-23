@@ -77,7 +77,7 @@ fun ChatListScreen(
             else -> {
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(vertical = 8.dp),
+                    contentPadding = PaddingValues(top = 8.dp, bottom = 96.dp),
                 ) {
                     items(state.rooms, key = { it.chatRoomId }) { room ->
                         ChatRoomItem(room = room, onClick = { onNavigateChat(room.chatRoomId) })

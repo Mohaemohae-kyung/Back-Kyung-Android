@@ -173,13 +173,14 @@ private fun ImageAttachmentRow(
                 )
                 IconButton(
                     onClick = { onRemove(fileId) },
-                    modifier = Modifier.align(Alignment.TopEnd).size(24.dp),
+                    modifier = Modifier.align(Alignment.TopEnd).size(40.dp),
                 ) {
                     Icon(
                         Icons.Filled.Close,
                         contentDescription = "삭제",
                         tint = KungColors.White,
                         modifier = Modifier
+                            .size(20.dp)
                             .background(KungColors.Charcoal, RoundedCornerShape(50))
                             .padding(2.dp),
                     )

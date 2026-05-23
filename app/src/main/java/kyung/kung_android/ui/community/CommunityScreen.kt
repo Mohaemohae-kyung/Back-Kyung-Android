@@ -98,7 +98,7 @@ fun CommunityScreen(
                     LazyColumn(
                         state = listState,
                         modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(16.dp),
+                        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 96.dp),
                         verticalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
                         items(state.posts, key = { it.postId }) { post ->
@@ -141,6 +141,7 @@ private fun PostCard(
                     text = post.title,
                     style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
                     maxLines = 2,
+                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
                 )
                 Spacer(modifier = Modifier.height(6.dp))
                 Text(

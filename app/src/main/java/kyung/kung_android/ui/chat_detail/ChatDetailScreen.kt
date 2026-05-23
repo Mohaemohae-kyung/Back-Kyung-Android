@@ -75,20 +75,42 @@ fun ChatDetailScreen(
         },
     ) { padding ->
         Box(modifier = Modifier.fillMaxSize().padding(padding)) {
-            LazyColumn(
-                state = listState,
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(12.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                items(state.messages, key = { it.chatMessageId }) { msg ->
-                    MessageBubble(
-                        message = msg,
-                        isMine = state.currentUserId != null && msg.senderId == state.currentUserId,
-                    )
+            Column(modifier = Modifier.fillMaxSize()) {
+                if (!state.isConnected) {
+                    ConnectionBanner()
+                }
+                LazyColumn(
+                    state = listState,
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(12.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    items(state.messages, key = { it.chatMessageId }) { msg ->
+                        MessageBubble(
+                            message = msg,
+                            isMine = state.currentUserId != null && msg.senderId == state.currentUserId,
+                        )
+                    }
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun ConnectionBanner() {
+    androidx.compose.foundation.layout.Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(MaterialTheme.colorScheme.errorContainer)
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            text = "연결이 끊어졌어요. 다시 연결하는 중...",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onErrorContainer,
+        )
     }
 }
 

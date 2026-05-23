@@ -60,7 +60,7 @@ fun MainScaffold(
                 currentRoute = currentBaseRoute,
                 onTabSelected = { route ->
                     val target = when (route) {
-                        AppRoute.Tab.EXPERT_SEARCH -> expertSearchRoute(null, null)
+                        AppRoute.Tab.EXPERT_SEARCH -> expertSearchRoute(null, null, null)
                         else -> route
                     }
                     nestedNavController.navigate(target) {
@@ -84,9 +84,9 @@ fun MainScaffold(
                     isLoggedIn = isLoggedIn,
                     onNavigateLogin = onNavigateLogin,
                     onNavigateMyPage = onNavigateMyPage,
-                    onNavigateExpertSearch = { keyword, categoryId ->
+                    onNavigateExpertSearch = { keyword, categoryId, locationId ->
                         nestedNavController.navigate(
-                            expertSearchRoute(keyword = keyword, categoryId = categoryId)
+                            expertSearchRoute(keyword = keyword, categoryId = categoryId, locationId = locationId)
                         ) {
                             popUpTo(nestedNavController.graph.findStartDestination().id) {
                                 saveState = true
@@ -102,7 +102,7 @@ fun MainScaffold(
             }
 
             composable(
-                route = "${AppRoute.Tab.EXPERT_SEARCH}?keyword={keyword}&categoryId={categoryId}",
+                route = "${AppRoute.Tab.EXPERT_SEARCH}?keyword={keyword}&categoryId={categoryId}&locationId={locationId}",
                 arguments = listOf(
                     navArgument("keyword") {
                         type = NavType.StringType
@@ -113,14 +113,21 @@ fun MainScaffold(
                         type = NavType.LongType
                         defaultValue = -1L
                     },
+                    navArgument("locationId") {
+                        type = NavType.LongType
+                        defaultValue = -1L
+                    },
                 ),
             ) { backStackEntry ->
                 val keyword = backStackEntry.arguments?.getString("keyword")
                 val categoryIdRaw = backStackEntry.arguments?.getLong("categoryId") ?: -1L
                 val categoryId = categoryIdRaw.takeIf { it != -1L }
+                val locationIdRaw = backStackEntry.arguments?.getLong("locationId") ?: -1L
+                val locationId = locationIdRaw.takeIf { it != -1L }
                 ExpertSearchScreen(
                     initialKeyword = keyword,
                     initialCategoryId = categoryId,
+                    initialLocationId = locationId,
                     onNavigateExpertDetail = onNavigateExpertDetail,
                 )
             }
@@ -129,7 +136,7 @@ fun MainScaffold(
                 LoginGate(isLoggedIn = isLoggedIn, onNavigateLogin = onNavigateLogin) {
                     ReceivedQuoteScreen(
                         onNavigateExpertSearch = {
-                            nestedNavController.navigate(expertSearchRoute(null, null)) {
+                            nestedNavController.navigate(expertSearchRoute(null, null, null)) {
                                 popUpTo(nestedNavController.graph.findStartDestination().id) {
                                     saveState = true
                                 }
@@ -160,8 +167,9 @@ fun MainScaffold(
     }
 }
 
-private fun expertSearchRoute(keyword: String?, categoryId: Long?): String {
+private fun expertSearchRoute(keyword: String?, categoryId: Long?, locationId: Long?): String {
     val k = keyword?.takeIf { it.isNotEmpty() }.orEmpty()
     val c = categoryId?.toString() ?: "-1"
-    return "${AppRoute.Tab.EXPERT_SEARCH}?keyword=$k&categoryId=$c"
+    val l = locationId?.toString() ?: "-1"
+    return "${AppRoute.Tab.EXPERT_SEARCH}?keyword=$k&categoryId=$c&locationId=$l"
 }

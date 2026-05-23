@@ -41,7 +41,9 @@ import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kyung.kung_android.BuildConfig
 import kyung.kung_android.data.user.dto.UserProfileResponse
+import kyung.kung_android.ui.common.InitialAvatar
 import kyung.kung_android.ui.common.LoginGate
+import kyung.kung_android.ui.common.SectionTitle
 import kyung.kung_android.ui.theme.KungColors
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -202,7 +204,7 @@ private fun UserCard(
                 .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            InitialAvatar(name = user?.name ?: "?")
+            InitialAvatar(name = user?.name ?: "?", size = 56.dp)
             Spacer(modifier = Modifier.width(12.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Text(
@@ -257,19 +259,3 @@ private fun MyPageRow(
     }
 }
 
-@Composable
-private fun InitialAvatar(name: String) {
-    Box(
-        modifier = Modifier
-            .size(56.dp)
-            .clip(CircleShape)
-            .background(KungColors.Purple),
-        contentAlignment = Alignment.Center,
-    ) {
-        Text(
-            text = name.firstOrNull()?.toString() ?: "?",
-            color = KungColors.White,
-            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-        )
-    }
-}

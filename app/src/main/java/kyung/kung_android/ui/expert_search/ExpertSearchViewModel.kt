@@ -103,6 +103,11 @@ class ExpertSearchViewModel @Inject constructor(
         search()
     }
 
+    fun applyLocationFromHome(locationId: Long) {
+        _local.update { it.copy(selectedLocationId = locationId) }
+        search()
+    }
+
     private fun search() {
         searchJob?.cancel()
         val current = _local.value
@@ -116,7 +121,12 @@ class ExpertSearchViewModel @Inject constructor(
                 )
                 _local.update { it.copy(experts = experts, isLoading = false) }
             } catch (e: ApiException) {
-                _local.update { it.copy(isLoading = false, error = e.message ?: "검색에 실패했습니다.") }
+                if (e.isAuthError) {
+                    // 비로그인 진입은 자유 (백엔드 SecurityConfig 수정 전 임시 마스킹)
+                    _local.update { it.copy(isLoading = false, experts = emptyList(), error = null) }
+                } else {
+                    _local.update { it.copy(isLoading = false, error = e.message ?: "검색에 실패했습니다.") }
+                }
             } catch (t: Throwable) {
                 _local.update { it.copy(isLoading = false, error = "네트워크 오류가 발생했습니다.") }
             }

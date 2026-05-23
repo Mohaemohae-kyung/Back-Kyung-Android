@@ -42,6 +42,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import kyung.kung_android.ui.common.SectionTitle
 
 private val REASONS = listOf(
     "NO_LONGER_USE" to "더 이상 사용하지 않아요",
@@ -197,10 +198,3 @@ private fun WarningBox() {
     }
 }
 
-@Composable
-private fun SectionTitle(text: String) {
-    Text(
-        text = text,
-        style = MaterialTheme.typography.titleSmall,
-    )
-}

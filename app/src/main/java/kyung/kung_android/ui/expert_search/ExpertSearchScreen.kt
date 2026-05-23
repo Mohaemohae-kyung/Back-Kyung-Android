@@ -20,22 +20,32 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Verified
-import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -47,21 +57,27 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kyung.kung_android.data.expert.dto.ExpertSearchResponse
 import kyung.kung_android.domain.category.model.Categories
+import kyung.kung_android.domain.category.model.Category
+import kyung.kung_android.domain.location.model.Region
 import kyung.kung_android.domain.location.model.Regions
+import kyung.kung_android.ui.common.InitialAvatar
 import kyung.kung_android.ui.theme.KungColors
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ExpertSearchScreen(
     initialKeyword: String? = null,
     initialCategoryId: Long? = null,
+    initialLocationId: Long? = null,
     onNavigateExpertDetail: (Long) -> Unit = {},
     viewModel: ExpertSearchViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
 
-    LaunchedEffect(initialKeyword, initialCategoryId) {
+    LaunchedEffect(initialKeyword, initialCategoryId, initialLocationId) {
         initialKeyword?.takeIf { it.isNotEmpty() }?.let(viewModel::applyKeywordFromHome)
         initialCategoryId?.let(viewModel::applyCategoryFromHome)
+        initialLocationId?.let(viewModel::applyLocationFromHome)
     }
 
     Column(modifier = Modifier.fillMaxSize()) {
@@ -79,6 +95,11 @@ fun ExpertSearchScreen(
         )
 
         Box(modifier = Modifier.fillMaxSize()) {
+            PullToRefreshBox(
+                isRefreshing = state.isLoading && state.experts.isNotEmpty(),
+                onRefresh = { viewModel.onSubmit() },
+                modifier = Modifier.fillMaxSize(),
+            ) {
             when {
                 state.isLoading && state.experts.isEmpty() -> {
                     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -90,7 +111,7 @@ fun ExpertSearchScreen(
                 }
                 else -> {
                     LazyColumn(
-                        contentPadding = PaddingValues(16.dp),
+                        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 96.dp),
                         verticalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
                         items(state.experts, key = { it.expertProfileId }) { expert ->
@@ -103,6 +124,7 @@ fun ExpertSearchScreen(
                         }
                     }
                 }
+            }
             }
         }
     }
@@ -141,6 +163,9 @@ private fun FilterChipRow(
     onCategorySelected: (Long?) -> Unit,
     onLocationSelected: (Long?) -> Unit,
 ) {
+    var showCategorySheet by remember { mutableStateOf(false) }
+    var showLocationSheet by remember { mutableStateOf(false) }
+
     val selectedCategoryName = selectedCategoryId?.let(Categories::byId)?.name
     val selectedRegionName = selectedLocationId?.let(Regions::byId)?.name
 
@@ -151,29 +176,170 @@ private fun FilterChipRow(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        AssistChip(
-            onClick = { onCategorySelected(cycleCategoryId(selectedCategoryId)) },
-            label = { Text(selectedCategoryName?.let { "$it ▾" } ?: "카테고리 ▾") },
+        FilterChip(
+            selected = selectedCategoryId != null,
+            onClick = {
+                if (selectedCategoryId != null) onCategorySelected(null)
+                else showCategorySheet = true
+            },
+            label = { Text(selectedCategoryName ?: "카테고리") },
+            trailingIcon = {
+                Icon(
+                    imageVector = if (selectedCategoryId != null) Icons.Filled.Close else Icons.Filled.KeyboardArrowDown,
+                    contentDescription = if (selectedCategoryId != null) "카테고리 해제" else null,
+                    modifier = Modifier.size(18.dp),
+                )
+            },
+            colors = FilterChipDefaults.filterChipColors(
+                selectedContainerColor = KungColors.PurpleBg,
+                selectedLabelColor = KungColors.Purple,
+                selectedTrailingIconColor = KungColors.Purple,
+            ),
         )
-        AssistChip(
-            onClick = { onLocationSelected(cycleLocationId(selectedLocationId)) },
-            label = { Text(selectedRegionName?.let { "$it ▾" } ?: "지역 ▾") },
+        FilterChip(
+            selected = selectedLocationId != null,
+            onClick = {
+                if (selectedLocationId != null) onLocationSelected(null)
+                else showLocationSheet = true
+            },
+            label = { Text(selectedRegionName ?: "지역") },
+            trailingIcon = {
+                Icon(
+                    imageVector = if (selectedLocationId != null) Icons.Filled.Close else Icons.Filled.KeyboardArrowDown,
+                    contentDescription = if (selectedLocationId != null) "지역 해제" else null,
+                    modifier = Modifier.size(18.dp),
+                )
+            },
+            colors = FilterChipDefaults.filterChipColors(
+                selectedContainerColor = KungColors.PurpleBg,
+                selectedLabelColor = KungColors.Purple,
+                selectedTrailingIconColor = KungColors.Purple,
+            ),
+        )
+    }
+
+    if (showCategorySheet) {
+        CategoryPickerSheet(
+            selectedId = selectedCategoryId,
+            onDismiss = { showCategorySheet = false },
+            onSelected = { id ->
+                showCategorySheet = false
+                onCategorySelected(id)
+            },
+        )
+    }
+    if (showLocationSheet) {
+        LocationPickerSheet(
+            selectedId = selectedLocationId,
+            onDismiss = { showLocationSheet = false },
+            onSelected = { id ->
+                showLocationSheet = false
+                onLocationSelected(id)
+            },
         )
     }
 }
 
-// 임시: 바텀시트가 도입되기 전까지 chip 한 번 누르면 다음 선택지로 순환.
-// 후속 PR에서 BottomSheet 선택 UI로 교체.
-private fun cycleCategoryId(current: Long?): Long? {
-    val ids: List<Long?> = listOf(null) + Categories.ALL.map { it.id }
-    val idx = ids.indexOf(current).let { if (it == -1) 0 else it }
-    return ids[(idx + 1) % ids.size]
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun CategoryPickerSheet(
+    selectedId: Long?,
+    onDismiss: () -> Unit,
+    onSelected: (Long?) -> Unit,
+) {
+    ModalBottomSheet(onDismissRequest = onDismiss) {
+        SheetTitle("카테고리 선택")
+        LazyColumn {
+            item {
+                PickerRow(
+                    label = "전체",
+                    selected = selectedId == null,
+                    onClick = { onSelected(null) },
+                )
+                HorizontalDivider()
+            }
+            items(Categories.ALL, key = { it.id }) { category: Category ->
+                PickerRow(
+                    label = category.name,
+                    selected = selectedId == category.id,
+                    onClick = { onSelected(category.id) },
+                )
+                HorizontalDivider()
+            }
+            item { Spacer(modifier = Modifier.size(16.dp)) }
+        }
+    }
 }
 
-private fun cycleLocationId(current: Long?): Long? {
-    val ids: List<Long?> = listOf(null) + Regions.ALL.map { it.id }
-    val idx = ids.indexOf(current).let { if (it == -1) 0 else it }
-    return ids[(idx + 1) % ids.size]
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun LocationPickerSheet(
+    selectedId: Long?,
+    onDismiss: () -> Unit,
+    onSelected: (Long?) -> Unit,
+) {
+    ModalBottomSheet(onDismissRequest = onDismiss) {
+        SheetTitle("지역 선택")
+        LazyColumn {
+            item {
+                PickerRow(
+                    label = "전국",
+                    selected = selectedId == null,
+                    onClick = { onSelected(null) },
+                )
+                HorizontalDivider()
+            }
+            items(Regions.ALL, key = { it.id }) { region: Region ->
+                PickerRow(
+                    label = region.name,
+                    selected = selectedId == region.id,
+                    onClick = { onSelected(region.id) },
+                )
+                HorizontalDivider()
+            }
+            item { Spacer(modifier = Modifier.size(16.dp)) }
+        }
+    }
+}
+
+@Composable
+private fun SheetTitle(text: String) {
+    Text(
+        text = text,
+        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+        modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp),
+    )
+}
+
+@Composable
+private fun PickerRow(
+    label: String,
+    selected: Boolean,
+    onClick: () -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(horizontal = 20.dp, vertical = 14.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodyLarge,
+            color = if (selected) KungColors.Purple else MaterialTheme.colorScheme.onSurface,
+            fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
+            modifier = Modifier.weight(1f),
+        )
+        if (selected) {
+            Icon(
+                imageVector = Icons.Filled.Check,
+                contentDescription = null,
+                tint = KungColors.Purple,
+                modifier = Modifier.size(20.dp),
+            )
+        }
+    }
 }
 
 @Composable
@@ -203,6 +369,8 @@ private fun ExpertCard(
                     Text(
                         text = expert.displayName,
                         style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
+                        maxLines = 1,
+                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
                     )
                     if (expert.verifiedYn == "Y") {
                         Spacer(modifier = Modifier.width(4.dp))
@@ -241,23 +409,6 @@ private fun ExpertCard(
                 )
             }
         }
-    }
-}
-
-@Composable
-private fun InitialAvatar(name: String) {
-    Box(
-        modifier = Modifier
-            .size(48.dp)
-            .clip(CircleShape)
-            .background(KungColors.Purple),
-        contentAlignment = Alignment.Center,
-    ) {
-        Text(
-            text = name.firstOrNull()?.toString() ?: "?",
-            color = KungColors.White,
-            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-        )
     }
 }
 

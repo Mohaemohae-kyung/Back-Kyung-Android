@@ -43,6 +43,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kyung.kung_android.data.expert.dto.ExpertDetailResponse
+import kyung.kung_android.ui.common.SectionTitle
 import kyung.kung_android.ui.theme.KungColors
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -50,9 +51,11 @@ import kyung.kung_android.ui.theme.KungColors
 fun ExpertDetailScreen(
     onBack: () -> Unit,
     onNavigateQuoteRequest: (expertId: Long, expertServiceId: Long) -> Unit,
+    onNavigateLogin: () -> Unit = {},
     viewModel: ExpertDetailViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val isLoggedIn by viewModel.isLoggedIn.collectAsStateWithLifecycle()
 
     LifecycleResumeEffect(Unit) {
         viewModel.loadExpert()
@@ -83,6 +86,10 @@ fun ExpertDetailScreen(
             BottomCta(
                 enabled = state.expert?.expertServiceIds?.isNotEmpty() == true,
                 onClick = {
+                    if (!isLoggedIn) {
+                        onNavigateLogin()
+                        return@BottomCta
+                    }
                     val firstServiceId = state.expert?.expertServiceIds?.firstOrNull() ?: return@BottomCta
                     onNavigateQuoteRequest(state.expertId, firstServiceId)
                 },
@@ -123,7 +130,7 @@ private fun ExpertDetailContent(
         item { ProfileCard(expert = expert) }
         item { HorizontalDivider() }
         item {
-            SectionLabel("소개")
+            SectionTitle("소개")
             Text(
                 text = expert.introduction.orEmpty().ifBlank { "—" },
                 style = MaterialTheme.typography.bodyMedium,
@@ -131,7 +138,7 @@ private fun ExpertDetailContent(
         }
         item { HorizontalDivider() }
         item {
-            SectionLabel("활동 정보")
+            SectionTitle("활동 정보")
             InfoRow(label = "카테고리", value = expert.mainCategoryName ?: "—")
             InfoRow(label = "활동 지역", value = expert.mainLocationName ?: "—")
             InfoRow(label = "경력", value = expert.careerYears?.let { "${it}년" } ?: "—")
@@ -198,14 +205,6 @@ private fun ProfileCard(expert: ExpertDetailResponse) {
     }
 }
 
-@Composable
-private fun SectionLabel(text: String) {
-    Text(
-        text = text,
-        style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
-        modifier = Modifier.padding(bottom = 8.dp),
-    )
-}
 
 @Composable
 private fun InfoRow(label: String, value: String) {
