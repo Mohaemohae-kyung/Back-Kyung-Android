@@ -14,6 +14,7 @@ import kotlinx.coroutines.launch
 import kyung.kung_android.data.network.ApiException
 import kyung.kung_android.domain.expert.ExpertRepository
 import kyung.kung_android.domain.expert_service.ExpertServiceRepository
+import kyung.kung_android.domain.user.UserRepository
 import javax.inject.Inject
 
 data class ExpertRegisterUiState(
@@ -47,6 +48,7 @@ sealed interface ExpertRegisterEffect {
 class ExpertRegisterViewModel @Inject constructor(
     private val expertRepository: ExpertRepository,
     private val expertServiceRepository: ExpertServiceRepository,
+    private val userRepository: UserRepository,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(ExpertRegisterUiState())
@@ -82,15 +84,14 @@ class ExpertRegisterViewModel @Inject constructor(
                     mainCategoryId = requireNotNull(current.mainCategoryId),
                     mainLocationId = requireNotNull(current.mainLocationId),
                 )
-                runCatching {
-                    expertServiceRepository.createService(
-                        categoryId = requireNotNull(current.mainCategoryId),
-                        locationId = requireNotNull(current.mainLocationId),
-                        serviceTitle = current.displayName,
-                        serviceDescription = current.introduction,
-                        price = 0,
-                    )
-                }
+                expertServiceRepository.createService(
+                    categoryId = requireNotNull(current.mainCategoryId),
+                    locationId = requireNotNull(current.mainLocationId),
+                    serviceTitle = current.displayName,
+                    serviceDescription = current.introduction,
+                    price = 0,
+                )
+                runCatching { userRepository.getMe() }
                 _effects.emit(ExpertRegisterEffect.NavigateBack)
             } catch (e: ApiException) {
                 _state.update { it.copy(errorMessage = e.message ?: "등록에 실패했어요.") }
