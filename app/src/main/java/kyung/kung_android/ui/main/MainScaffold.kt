@@ -33,12 +33,26 @@ fun MainScaffold(
     onNavigatePostDetail: (Long) -> Unit = {},
     onNavigatePostWrite: () -> Unit = {},
     onNavigateChatDetail: (Long) -> Unit = {},
+    forceTab: String? = null,
+    onForceTabConsumed: () -> Unit = {},
     viewModel: MainScaffoldViewModel = hiltViewModel(),
 ) {
     val nestedNavController = rememberNavController()
     val navBackStackEntry by nestedNavController.currentBackStackEntryAsState()
     val currentBaseRoute = navBackStackEntry?.destination?.route?.substringBefore("?")
     val isLoggedIn by viewModel.isLoggedIn.collectAsStateWithLifecycle()
+
+    androidx.compose.runtime.LaunchedEffect(forceTab) {
+        val tab = forceTab ?: return@LaunchedEffect
+        nestedNavController.navigate(tab) {
+            popUpTo(nestedNavController.graph.findStartDestination().id) {
+                saveState = true
+            }
+            launchSingleTop = true
+            restoreState = true
+        }
+        onForceTabConsumed()
+    }
 
     Scaffold(
         bottomBar = {

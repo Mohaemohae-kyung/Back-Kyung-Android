@@ -4,7 +4,6 @@ import kyung.kung_android.data.expert.api.ExpertApi
 import kyung.kung_android.data.expert.dto.ExpertDetailResponse
 import kyung.kung_android.data.expert.dto.ExpertProfileCreateRequest
 import kyung.kung_android.data.expert.dto.ExpertSearchResponse
-import kyung.kung_android.data.expert.dto.FavoriteToggleResponse
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -26,9 +25,6 @@ class ExpertRepository @Inject constructor(
 
     suspend fun getExpertDetail(expertId: Long): ExpertDetailResponse =
         expertApi.getExpertDetail(expertId)
-
-    suspend fun toggleFavorite(expertProfileId: Long): FavoriteToggleResponse =
-        expertApi.toggleFavorite(expertProfileId)
 
     suspend fun createProfile(
         displayName: String,

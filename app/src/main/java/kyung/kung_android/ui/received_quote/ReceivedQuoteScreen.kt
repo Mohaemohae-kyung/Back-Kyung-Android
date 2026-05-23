@@ -27,6 +27,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -34,6 +36,7 @@ import kyung.kung_android.data.request.dto.ServiceRequestResponse
 import kyung.kung_android.ui.theme.KungColors
 import java.time.format.DateTimeFormatter
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ReceivedQuoteScreen(
     onNavigateExpertSearch: () -> Unit,
@@ -47,26 +50,32 @@ fun ReceivedQuoteScreen(
         onPauseOrDispose { }
     }
 
-    if (state.inProgress.isEmpty() && state.pastRequests.isEmpty() && !state.isLoading) {
-        EmptyState(onNavigateExpertSearch = onNavigateExpertSearch)
-        return
-    }
-
-    LazyColumn(
+    PullToRefreshBox(
+        isRefreshing = state.isLoading && (state.inProgress.isNotEmpty() || state.pastRequests.isNotEmpty()),
+        onRefresh = { viewModel.load() },
         modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(16.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        if (state.inProgress.isNotEmpty()) {
-            item { SectionLabel("진행 중") }
-            items(state.inProgress, key = { it.requestId }) {
-                QuoteCard(request = it, onClick = { onNavigateQuoteDetail(it.requestId) })
-            }
+        if (state.inProgress.isEmpty() && state.pastRequests.isEmpty() && !state.isLoading) {
+            EmptyState(onNavigateExpertSearch = onNavigateExpertSearch)
+            return@PullToRefreshBox
         }
-        if (state.pastRequests.isNotEmpty()) {
-            item { SectionLabel("지난 요청") }
-            items(state.pastRequests, key = { it.requestId }) {
-                QuoteCard(request = it, onClick = { onNavigateQuoteDetail(it.requestId) })
+
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            if (state.inProgress.isNotEmpty()) {
+                item { SectionLabel("진행 중") }
+                items(state.inProgress, key = { it.requestId }) {
+                    QuoteCard(request = it, onClick = { onNavigateQuoteDetail(it.requestId) })
+                }
+            }
+            if (state.pastRequests.isNotEmpty()) {
+                item { SectionLabel("지난 요청") }
+                items(state.pastRequests, key = { it.requestId }) {
+                    QuoteCard(request = it, onClick = { onNavigateQuoteDetail(it.requestId) })
+                }
             }
         }
     }

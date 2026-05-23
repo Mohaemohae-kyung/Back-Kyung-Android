@@ -1,5 +1,8 @@
 package kyung.kung_android.domain.user
 
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kyung.kung_android.data.user.api.UserApi
 import kyung.kung_android.data.user.dto.UserProfileResponse
 import kyung.kung_android.data.user.dto.UserProfileUpdateRequest
@@ -12,21 +15,32 @@ class UserRepository @Inject constructor(
     private val userApi: UserApi,
 ) {
 
-    suspend fun getMe(): UserProfileResponse = userApi.getMe()
+    private val _currentUser = MutableStateFlow<UserProfileResponse?>(null)
+    val currentUser: StateFlow<UserProfileResponse?> = _currentUser.asStateFlow()
+
+    suspend fun getMe(): UserProfileResponse {
+        val user = userApi.getMe()
+        _currentUser.value = user
+        return user
+    }
 
     suspend fun updateMyProfile(
         name: String? = null,
         phone: String? = null,
         nickname: String? = null,
         profileImageFileId: Long? = null,
-    ): UserProfileResponse = userApi.updateMyProfile(
-        UserProfileUpdateRequest(
-            name = name?.trim()?.takeIf { it.isNotEmpty() },
-            phone = phone?.trim()?.takeIf { it.isNotEmpty() },
-            nickname = nickname?.trim()?.takeIf { it.isNotEmpty() },
-            profileImageFileId = profileImageFileId,
+    ): UserProfileResponse {
+        val updated = userApi.updateMyProfile(
+            UserProfileUpdateRequest(
+                name = name?.trim()?.takeIf { it.isNotEmpty() },
+                phone = phone?.trim()?.takeIf { it.isNotEmpty() },
+                nickname = nickname?.trim()?.takeIf { it.isNotEmpty() },
+                profileImageFileId = profileImageFileId,
+            )
         )
-    )
+        _currentUser.value = updated
+        return updated
+    }
 
     suspend fun withdraw(password: String, reason: String?) {
         userApi.withdraw(
@@ -35,5 +49,10 @@ class UserRepository @Inject constructor(
                 reason = reason?.trim()?.takeIf { it.isNotEmpty() },
             )
         )
+        _currentUser.value = null
+    }
+
+    fun clearCache() {
+        _currentUser.value = null
     }
 }

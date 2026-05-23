@@ -24,6 +24,7 @@ import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -71,18 +72,23 @@ fun FavoriteExpertsScreen(
             )
         },
     ) { padding ->
+        PullToRefreshBox(
+            isRefreshing = state.isLoading && state.favorites.isNotEmpty(),
+            onRefresh = { viewModel.load() },
+            modifier = Modifier.fillMaxSize().padding(padding),
+        ) {
         when {
             state.isLoading && state.favorites.isEmpty() -> {
-                Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
+                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator()
                 }
             }
             state.favorites.isEmpty() -> EmptyState(
-                modifier = Modifier.fillMaxSize().padding(padding),
+                modifier = Modifier.fillMaxSize(),
                 onNavigateExpertSearch = onNavigateExpertSearch,
             )
             else -> LazyColumn(
-                modifier = Modifier.fillMaxSize().padding(padding),
+                modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
@@ -94,6 +100,7 @@ fun FavoriteExpertsScreen(
                     )
                 }
             }
+        }
         }
     }
 }

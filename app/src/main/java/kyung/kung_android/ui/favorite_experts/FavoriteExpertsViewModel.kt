@@ -9,7 +9,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kyung.kung_android.data.favorite.dto.FavoriteExpertResponse
-import kyung.kung_android.domain.expert.ExpertRepository
 import kyung.kung_android.domain.favorite.FavoriteRepository
 import javax.inject.Inject
 
@@ -22,7 +21,6 @@ data class FavoriteExpertsUiState(
 @HiltViewModel
 class FavoriteExpertsViewModel @Inject constructor(
     private val favoriteRepository: FavoriteRepository,
-    private val expertRepository: ExpertRepository,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(FavoriteExpertsUiState())
@@ -44,7 +42,7 @@ class FavoriteExpertsViewModel @Inject constructor(
         val prev = _state.value.favorites
         _state.update { it.copy(favorites = prev.filterNot { e -> e.expertProfileId == expertProfileId }) }
         viewModelScope.launch {
-            runCatching { expertRepository.toggleFavorite(expertProfileId) }
+            runCatching { favoriteRepository.toggleFavorite(expertProfileId) }
                 .onFailure {
                     _state.update { it.copy(favorites = prev, error = "해제에 실패했어요.") }
                 }

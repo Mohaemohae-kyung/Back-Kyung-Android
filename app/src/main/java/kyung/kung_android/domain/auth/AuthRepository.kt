@@ -8,6 +8,7 @@ import kyung.kung_android.data.auth.dto.LoginRequest
 import kyung.kung_android.data.auth.dto.LoginResponse
 import kyung.kung_android.data.auth.dto.SignupRequest
 import kyung.kung_android.data.auth.dto.SignupResponse
+import kyung.kung_android.domain.user.UserRepository
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -16,6 +17,7 @@ class AuthRepository @Inject constructor(
     private val authApi: AuthApi,
     private val authenticatedAuthApi: AuthenticatedAuthApi,
     private val tokenStore: TokenStore,
+    private val userRepository: UserRepository,
 ) {
 
     suspend fun signup(
@@ -50,6 +52,7 @@ class AuthRepository @Inject constructor(
     suspend fun logout(): Result<Unit> {
         val serverResult = runCatching { authenticatedAuthApi.logout() }.map { }
         tokenStore.clear()
+        userRepository.clearCache()
         return serverResult
     }
 

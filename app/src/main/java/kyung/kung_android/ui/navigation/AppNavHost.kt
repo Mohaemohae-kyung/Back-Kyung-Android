@@ -4,6 +4,8 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kyung.kung_android.ui.auth.login.LoginScreen
 import kyung.kung_android.ui.auth.signup.SignupScreen
 import androidx.navigation.NavType
@@ -35,7 +37,10 @@ fun AppNavHost(
         navController = navController,
         startDestination = startDestination,
     ) {
-        composable(AppRoute.MAIN) {
+        composable(AppRoute.MAIN) { backStackEntry ->
+            val forceTab by backStackEntry.savedStateHandle
+                .getStateFlow<String?>(AppRoute.ARG_FORCE_TAB, null)
+                .collectAsStateWithLifecycle()
             MainScaffold(
                 onNavigateLogin = { navController.navigate(AppRoute.LOGIN) },
                 onNavigateMyPage = { navController.navigate(AppRoute.MY_PAGE) },
@@ -47,6 +52,10 @@ fun AppNavHost(
                 onNavigatePostWrite = { navController.navigate(AppRoute.POST_EDITOR) },
                 onNavigateChatDetail = { chatRoomId ->
                     navController.navigate("${AppRoute.CHAT_DETAIL}/$chatRoomId")
+                },
+                forceTab = forceTab,
+                onForceTabConsumed = {
+                    backStackEntry.savedStateHandle[AppRoute.ARG_FORCE_TAB] = null
                 },
             )
         }
@@ -94,6 +103,8 @@ fun AppNavHost(
             QuoteRequestScreen(
                 onBack = { navController.popBackStack() },
                 onSuccess = {
+                    navController.getBackStackEntry(AppRoute.MAIN)
+                        .savedStateHandle[AppRoute.ARG_FORCE_TAB] = AppRoute.Tab.RECEIVED_QUOTE
                     navController.popBackStack(AppRoute.MAIN, inclusive = false)
                 },
             )

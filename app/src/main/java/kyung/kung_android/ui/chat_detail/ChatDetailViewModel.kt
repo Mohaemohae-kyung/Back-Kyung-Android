@@ -4,11 +4,17 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import kyung.kung_android.data.chat.dto.ChatMessageResponse
 import kyung.kung_android.data.chat.stomp.ChatStompClient
 import kyung.kung_android.domain.chat.ChatRepository
@@ -40,7 +46,7 @@ class ChatDetailViewModel @Inject constructor(
     private val _state = MutableStateFlow(ChatDetailUiState(chatRoomId = chatRoomId))
     val state: StateFlow<ChatDetailUiState> = _state.asStateFlow()
 
-    private var session: StompSession? = null
+    @Volatile private var session: StompSession? = null
 
     init {
         viewModelScope.launch {
@@ -48,7 +54,7 @@ class ChatDetailViewModel @Inject constructor(
             runCatching { userRepository.getMe() }
                 .onSuccess { me -> _state.update { it.copy(currentUserId = me.userId) } }
             loadHistory()
-            connectStomp()
+            connectWithRetry()
         }
     }
 
@@ -62,18 +68,33 @@ class ChatDetailViewModel @Inject constructor(
             }
     }
 
-    private fun connectStomp() {
-        viewModelScope.launch {
+    private suspend fun connectWithRetry() {
+        var attempt = 0
+        while (viewModelScope.isActive) {
             try {
                 val s = stompClient.connect()
                 session = s
-                _state.update { it.copy(isConnected = true) }
-                stompClient.subscribeRoom(s, chatRoomId).collect { msg ->
-                    _state.update { it.copy(messages = it.messages + msg) }
-                }
+                attempt = 0
+                _state.update { it.copy(isConnected = true, error = null) }
+
+                stompClient.subscribeRoom(s, chatRoomId)
+                    .catch { /* stream error */ }
+                    .onCompletion { _state.update { it.copy(isConnected = false) } }
+                    .collect { msg ->
+                        _state.update { it.copy(messages = it.messages + msg) }
+                    }
+            } catch (ce: CancellationException) {
+                throw ce
             } catch (t: Throwable) {
-                _state.update { it.copy(isConnected = false, error = "채팅 연결에 실패했어요.") }
+                _state.update { it.copy(isConnected = false) }
             }
+
+            session = null
+            if (!viewModelScope.isActive) return
+
+            attempt = (attempt + 1).coerceAtMost(MAX_BACKOFF_STEP)
+            val backoff = BACKOFF_BASE_MS * (1L shl (attempt - 1).coerceAtLeast(0))
+            delay(backoff.coerceAtMost(MAX_BACKOFF_MS))
         }
     }
 
@@ -105,6 +126,12 @@ class ChatDetailViewModel @Inject constructor(
     override fun onCleared() {
         super.onCleared()
         val s = session ?: return
-        viewModelScope.launch { stompClient.disconnect(s) }
+        runBlocking { runCatching { stompClient.disconnect(s) } }
+    }
+
+    private companion object {
+        const val BACKOFF_BASE_MS = 1_000L
+        const val MAX_BACKOFF_MS = 15_000L
+        const val MAX_BACKOFF_STEP = 5
     }
 }

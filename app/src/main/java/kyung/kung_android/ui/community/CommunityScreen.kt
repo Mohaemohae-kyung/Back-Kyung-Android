@@ -20,10 +20,12 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
@@ -40,6 +42,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
 import kyung.kung_android.data.community.dto.PostResponse
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CommunityScreen(
     onNavigatePostDetail: (Long) -> Unit,
@@ -70,33 +73,44 @@ fun CommunityScreen(
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
-        when {
-            state.isLoading && state.posts.isEmpty() -> {
-                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator()
-                }
-            }
-            state.posts.isEmpty() -> {
-                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text(text = state.error ?: "아직 게시글이 없어요")
-                }
-            }
-            else -> {
-                LazyColumn(
-                    state = listState,
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
-                ) {
-                    items(state.posts, key = { it.postId }) { post ->
-                        PostCard(post = post, onClick = { onNavigatePostDetail(post.postId) })
+        PullToRefreshBox(
+            isRefreshing = state.isLoading && state.posts.isNotEmpty(),
+            onRefresh = { viewModel.refresh() },
+            modifier = Modifier.fillMaxSize(),
+        ) {
+            when {
+                state.isLoading && state.posts.isEmpty() -> {
+                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator()
                     }
-                    if (state.isLoadingMore) {
+                }
+                state.posts.isEmpty() -> {
+                    LazyColumn(modifier = Modifier.fillMaxSize()) {
                         item {
                             Box(
-                                modifier = Modifier.fillMaxWidth().padding(16.dp),
+                                modifier = Modifier.fillMaxWidth().padding(top = 120.dp),
                                 contentAlignment = Alignment.Center,
-                            ) { CircularProgressIndicator() }
+                            ) { Text(text = state.error ?: "아직 게시글이 없어요") }
+                        }
+                    }
+                }
+                else -> {
+                    LazyColumn(
+                        state = listState,
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                    ) {
+                        items(state.posts, key = { it.postId }) { post ->
+                            PostCard(post = post, onClick = { onNavigatePostDetail(post.postId) })
+                        }
+                        if (state.isLoadingMore) {
+                            item {
+                                Box(
+                                    modifier = Modifier.fillMaxWidth().padding(16.dp),
+                                    contentAlignment = Alignment.Center,
+                                ) { CircularProgressIndicator() }
+                            }
                         }
                     }
                 }

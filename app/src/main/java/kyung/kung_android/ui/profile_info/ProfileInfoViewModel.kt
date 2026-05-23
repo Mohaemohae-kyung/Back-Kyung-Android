@@ -4,8 +4,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kyung.kung_android.data.user.dto.UserProfileResponse
@@ -19,39 +21,54 @@ data class ProfileInfoUiState(
     val error: String? = null,
 )
 
+private data class LocalState(
+    val isLoading: Boolean = false,
+    val isUpdating: Boolean = false,
+    val error: String? = null,
+)
+
 @HiltViewModel
 class ProfileInfoViewModel @Inject constructor(
     private val userRepository: UserRepository,
 ) : ViewModel() {
 
-    private val _state = MutableStateFlow(ProfileInfoUiState())
-    val state: StateFlow<ProfileInfoUiState> = _state.asStateFlow()
+    private val _local = MutableStateFlow(LocalState())
 
-    init {
-        load()
-    }
+    val state: StateFlow<ProfileInfoUiState> = combine(
+        userRepository.currentUser,
+        _local,
+    ) { user, local ->
+        ProfileInfoUiState(
+            user = user,
+            isLoading = local.isLoading,
+            isUpdating = local.isUpdating,
+            error = local.error,
+        )
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, ProfileInfoUiState())
 
-    private fun load() {
-        _state.update { it.copy(isLoading = true, error = null) }
+    fun load() {
+        _local.update { it.copy(isLoading = true, error = null) }
         viewModelScope.launch {
             try {
-                val user = userRepository.getMe()
-                _state.update { it.copy(user = user, isLoading = false) }
+                userRepository.getMe()
             } catch (t: Throwable) {
-                _state.update { it.copy(isLoading = false, error = "사용자 정보를 불러오지 못했어요.") }
+                _local.update { it.copy(error = "사용자 정보를 불러오지 못했어요.") }
+            } finally {
+                _local.update { it.copy(isLoading = false) }
             }
         }
     }
 
     fun updatePhone(phone: String) {
-        if (phone.isBlank() || _state.value.isUpdating) return
-        _state.update { it.copy(isUpdating = true, error = null) }
+        if (phone.isBlank() || _local.value.isUpdating) return
+        _local.update { it.copy(isUpdating = true, error = null) }
         viewModelScope.launch {
             try {
-                val updated = userRepository.updateMyProfile(phone = phone)
-                _state.update { it.copy(user = updated, isUpdating = false) }
+                userRepository.updateMyProfile(phone = phone)
             } catch (t: Throwable) {
-                _state.update { it.copy(isUpdating = false, error = "변경에 실패했어요.") }
+                _local.update { it.copy(error = "변경에 실패했어요.") }
+            } finally {
+                _local.update { it.copy(isUpdating = false) }
             }
         }
     }

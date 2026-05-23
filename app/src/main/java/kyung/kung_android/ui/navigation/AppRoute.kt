@@ -22,6 +22,7 @@ object AppRoute {
     const val PAYMENT_HISTORY = "payment_history"
 
     const val ARG_CHAT_ROOM_ID = "chatRoomId"
+    const val ARG_FORCE_TAB = "forceTab"
 
     // 5탭 nested NavHost 내부 라우트
     object Tab {

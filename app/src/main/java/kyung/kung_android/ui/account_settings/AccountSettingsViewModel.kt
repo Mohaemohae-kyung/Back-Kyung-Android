@@ -7,9 +7,11 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -32,6 +34,14 @@ sealed interface AccountSettingsEvent {
     data object LoggedOut : AccountSettingsEvent
 }
 
+private data class LocalState(
+    val isLoading: Boolean = false,
+    val isUploadingImage: Boolean = false,
+    val isUpdating: Boolean = false,
+    val isLoggingOut: Boolean = false,
+    val error: String? = null,
+)
+
 @HiltViewModel
 class AccountSettingsViewModel @Inject constructor(
     private val userRepository: UserRepository,
@@ -39,62 +49,74 @@ class AccountSettingsViewModel @Inject constructor(
     private val fileRepository: FileRepository,
 ) : ViewModel() {
 
-    private val _state = MutableStateFlow(AccountSettingsUiState())
-    val state: StateFlow<AccountSettingsUiState> = _state.asStateFlow()
+    private val _local = MutableStateFlow(LocalState())
+
+    val state: StateFlow<AccountSettingsUiState> = combine(
+        userRepository.currentUser,
+        _local,
+    ) { user, local ->
+        AccountSettingsUiState(
+            user = user,
+            isLoading = local.isLoading,
+            isUploadingImage = local.isUploadingImage,
+            isUpdating = local.isUpdating,
+            isLoggingOut = local.isLoggingOut,
+            error = local.error,
+        )
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, AccountSettingsUiState())
 
     private val _events = Channel<AccountSettingsEvent>(Channel.BUFFERED)
     val events = _events.receiveAsFlow()
 
-    init {
-        load()
-    }
-
-    private fun load() {
-        _state.update { it.copy(isLoading = true, error = null) }
+    fun load() {
+        _local.update { it.copy(isLoading = true, error = null) }
         viewModelScope.launch {
             try {
-                val user = userRepository.getMe()
-                _state.update { it.copy(user = user, isLoading = false) }
+                userRepository.getMe()
             } catch (t: Throwable) {
-                _state.update { it.copy(isLoading = false, error = "사용자 정보를 불러오지 못했어요.") }
+                _local.update { it.copy(error = "사용자 정보를 불러오지 못했어요.") }
+            } finally {
+                _local.update { it.copy(isLoading = false) }
             }
         }
     }
 
     fun onPickProfileImage(uri: Uri) {
-        _state.update { it.copy(isUploadingImage = true, error = null) }
+        _local.update { it.copy(isUploadingImage = true, error = null) }
         viewModelScope.launch {
             try {
                 val uploaded = withContext(Dispatchers.IO) {
                     fileRepository.uploadImage(uri = uri, domain = "PROFILE")
                 }
-                val updated = userRepository.updateMyProfile(profileImageFileId = uploaded.fileId)
-                _state.update { it.copy(user = updated, isUploadingImage = false) }
+                userRepository.updateMyProfile(profileImageFileId = uploaded.fileId)
             } catch (t: Throwable) {
-                _state.update { it.copy(isUploadingImage = false, error = "사진 업로드에 실패했어요.") }
+                _local.update { it.copy(error = "사진 업로드에 실패했어요.") }
+            } finally {
+                _local.update { it.copy(isUploadingImage = false) }
             }
         }
     }
 
     fun updateName(name: String) {
-        if (name.isBlank() || _state.value.isUpdating) return
-        _state.update { it.copy(isUpdating = true, error = null) }
+        if (name.isBlank() || _local.value.isUpdating) return
+        _local.update { it.copy(isUpdating = true, error = null) }
         viewModelScope.launch {
             try {
-                val updated = userRepository.updateMyProfile(name = name)
-                _state.update { it.copy(user = updated, isUpdating = false) }
+                userRepository.updateMyProfile(name = name)
             } catch (t: Throwable) {
-                _state.update { it.copy(isUpdating = false, error = "활동명 변경에 실패했어요.") }
+                _local.update { it.copy(error = "활동명 변경에 실패했어요.") }
+            } finally {
+                _local.update { it.copy(isUpdating = false) }
             }
         }
     }
 
     fun logout() {
-        if (_state.value.isLoggingOut) return
-        _state.update { it.copy(isLoggingOut = true) }
+        if (_local.value.isLoggingOut) return
+        _local.update { it.copy(isLoggingOut = true) }
         viewModelScope.launch {
             authRepository.logout()
-            _state.update { it.copy(isLoggingOut = false) }
+            _local.update { it.copy(isLoggingOut = false) }
             _events.send(AccountSettingsEvent.LoggedOut)
         }
     }

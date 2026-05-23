@@ -17,9 +17,11 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -32,6 +34,7 @@ import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kyung.kung_android.ui.theme.KungColors
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChatListScreen(
     onNavigateChat: (Long) -> Unit,
@@ -44,29 +47,42 @@ fun ChatListScreen(
         onPauseOrDispose { }
     }
 
-    when {
-        state.isLoading && state.rooms.isEmpty() -> {
-            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator()
+    PullToRefreshBox(
+        isRefreshing = state.isLoading && state.rooms.isNotEmpty(),
+        onRefresh = { viewModel.load() },
+        modifier = Modifier.fillMaxSize(),
+    ) {
+        when {
+            state.isLoading && state.rooms.isEmpty() -> {
+                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator()
+                }
             }
-        }
-        state.rooms.isEmpty() -> {
-            Box(Modifier.fillMaxSize().padding(24.dp), contentAlignment = Alignment.Center) {
-                Text(
-                    text = state.error ?: "아직 채팅이 없어요",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+            state.rooms.isEmpty() -> {
+                LazyColumn(modifier = Modifier.fillMaxSize()) {
+                    item {
+                        Box(
+                            modifier = Modifier.fillMaxWidth().padding(top = 120.dp),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Text(
+                                text = state.error ?: "아직 채팅이 없어요",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                    }
+                }
             }
-        }
-        else -> {
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(vertical = 8.dp),
-            ) {
-                items(state.rooms, key = { it.chatRoomId }) { room ->
-                    ChatRoomItem(room = room, onClick = { onNavigateChat(room.chatRoomId) })
-                    HorizontalDivider()
+            else -> {
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(vertical = 8.dp),
+                ) {
+                    items(state.rooms, key = { it.chatRoomId }) { room ->
+                        ChatRoomItem(room = room, onClick = { onNavigateChat(room.chatRoomId) })
+                        HorizontalDivider()
+                    }
                 }
             }
         }

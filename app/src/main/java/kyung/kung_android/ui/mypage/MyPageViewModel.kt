@@ -4,9 +4,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kyung.kung_android.data.user.dto.UserProfileResponse
@@ -30,26 +32,34 @@ class MyPageViewModel @Inject constructor(
     private val userRepository: UserRepository,
 ) : ViewModel() {
 
-    private val _state = MutableStateFlow(MyPageUiState())
-    val state: StateFlow<MyPageUiState> = _state.asStateFlow()
+    private val _loading = MutableStateFlow(false)
+    private val _error = MutableStateFlow<String?>(null)
 
-    init {
-        viewModelScope.launch {
-            authRepository.isLoggedIn.collectLatest { loggedIn ->
-                _state.update { it.copy(isLoggedIn = loggedIn, user = if (!loggedIn) null else it.user) }
-                if (loggedIn) loadUser()
-            }
-        }
-    }
+    val state: StateFlow<MyPageUiState> = combine(
+        authRepository.isLoggedIn,
+        userRepository.currentUser,
+        _loading,
+        _error,
+    ) { loggedIn, user, loading, error ->
+        MyPageUiState(
+            isLoggedIn = loggedIn,
+            user = user,
+            isLoading = loading,
+            error = error,
+        )
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, MyPageUiState())
 
     fun loadUser() {
-        _state.update { it.copy(isLoading = true, error = null) }
+        if (!authRepository.isLoggedIn.value) return
+        _loading.value = true
+        _error.value = null
         viewModelScope.launch {
             try {
-                val user = userRepository.getMe()
-                _state.update { it.copy(user = user, isLoading = false) }
+                userRepository.getMe()
             } catch (t: Throwable) {
-                _state.update { it.copy(isLoading = false, error = "사용자 정보를 불러오지 못했어요.") }
+                _error.value = "사용자 정보를 불러오지 못했어요."
+            } finally {
+                _loading.value = false
             }
         }
     }
@@ -57,7 +67,6 @@ class MyPageViewModel @Inject constructor(
     fun onLoggedOut() {
         viewModelScope.launch {
             authRepository.logout()
-            _state.update { MyPageUiState(isLoggedIn = false) }
         }
     }
 }

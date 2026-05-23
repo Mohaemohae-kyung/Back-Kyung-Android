@@ -20,6 +20,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -60,23 +61,35 @@ fun PaymentHistoryScreen(
             )
         },
     ) { padding ->
+        PullToRefreshBox(
+            isRefreshing = state.isLoading && state.payments.isNotEmpty(),
+            onRefresh = { viewModel.load() },
+            modifier = Modifier.fillMaxSize().padding(padding),
+        ) {
         when {
             state.isLoading && state.payments.isEmpty() -> {
-                Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
+                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator()
                 }
             }
             state.payments.isEmpty() -> {
-                Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
-                    Text(
-                        text = state.error ?: "거래내역이 없어요",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
+                LazyColumn(modifier = Modifier.fillMaxSize()) {
+                    item {
+                        Box(
+                            modifier = Modifier.fillMaxWidth().padding(top = 120.dp),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Text(
+                                text = state.error ?: "거래내역이 없어요",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                    }
                 }
             }
             else -> LazyColumn(
-                modifier = Modifier.fillMaxSize().padding(padding),
+                modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
@@ -84,6 +97,7 @@ fun PaymentHistoryScreen(
                     PaymentCard(item = item)
                 }
             }
+        }
         }
     }
 }
