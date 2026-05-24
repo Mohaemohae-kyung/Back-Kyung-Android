@@ -85,12 +85,14 @@ fun ExpertDetailScreen(
                     }
                 },
                 actions = {
-                    IconButton(onClick = viewModel::onFavoriteToggle) {
-                        Icon(
-                            imageVector = if (state.isFavorited) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
-                            contentDescription = if (state.isFavorited) "찜 해제" else "찜",
-                            tint = if (state.isFavorited) KungColors.Coral else MaterialTheme.colorScheme.onSurface,
-                        )
+                    if (state.expert != null && !state.isMine) {
+                        IconButton(onClick = viewModel::onFavoriteToggle) {
+                            Icon(
+                                imageVector = if (state.isFavorited) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
+                                contentDescription = if (state.isFavorited) "찜 해제" else "찜",
+                                tint = if (state.isFavorited) KungColors.Coral else MaterialTheme.colorScheme.onSurface,
+                            )
+                        }
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
