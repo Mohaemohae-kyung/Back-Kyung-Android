@@ -7,6 +7,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kyung.kung_android.data.user.dto.UserProfileResponse
 import kyung.kung_android.domain.auth.AuthRepository
 import kyung.kung_android.domain.user.UserRepository
 import javax.inject.Inject
@@ -19,6 +20,9 @@ class MainScaffoldViewModel @Inject constructor(
 
     val isLoggedIn: StateFlow<Boolean> = authRepository.isLoggedIn
         .stateIn(viewModelScope, SharingStarted.Eagerly, false)
+
+    val currentUser: StateFlow<UserProfileResponse?> = userRepository.currentUser
+        .stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
     val isExpert: StateFlow<Boolean> = userRepository.currentUser
         .map { it?.role == "EXPERT" || it?.role == "ADMIN" }
