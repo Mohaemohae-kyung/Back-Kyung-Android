@@ -98,49 +98,34 @@ fun HomeScreen(
     }
 
     Box(modifier = modifier.fillMaxSize()) {
-        kyung.kung_android.ui.common.KungPullToRefresh(
-            isLoading = state.isLoadingRecommended,
-            onRefresh = { viewModel.loadRecommendations() },
-            modifier = Modifier.fillMaxSize(),
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(bottom = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(bottom = 96.dp),
-                verticalArrangement = Arrangement.spacedBy(24.dp),
-            ) {
-                item {
-                    HomeTopBar(
-                        isLoggedIn = isLoggedIn,
-                        isExpert = isExpert,
-                        onNavigateMyPage = onNavigateMyPage,
-                        onNavigateExpertRegister = onNavigateExpertRegister,
-                    )
-                }
-                item {
-                    HomeHeroCard(
-                        onSubmit = { keyword -> onNavigateExpertSearch(keyword.takeIf { it.isNotEmpty() }, null, null) },
-                        onLocationSelected = { locationId -> onNavigateExpertSearch(null, null, locationId) },
-                    )
-                }
-                item {
-                    HomeQuickTags(
-                        onTagClick = { keyword -> onNavigateExpertSearch(keyword, null, null) },
-                    )
-                }
-                item {
-                    HomeCategoryGrid(
-                        onCategoryClick = { category -> onNavigateExpertSearch(null, category.id, null) },
-                    )
-                }
-                item {
-                    HomeRecommendedExpertsSection(
-                        experts = state.recommended,
-                        isLoading = state.isLoadingRecommended,
-                        onExpertClick = onNavigateExpertDetail,
-                        onShowAll = { onNavigateExpertSearch(null, null, null) },
-                    )
-                }
-            }
+            HomeTopBar(
+                isLoggedIn = isLoggedIn,
+                isExpert = isExpert,
+                onNavigateMyPage = onNavigateMyPage,
+                onNavigateExpertRegister = onNavigateExpertRegister,
+            )
+            HomeHeroCard(
+                onSubmit = { keyword -> onNavigateExpertSearch(keyword.takeIf { it.isNotEmpty() }, null, null) },
+                onLocationSelected = { locationId -> onNavigateExpertSearch(null, null, locationId) },
+            )
+            HomeQuickTags(
+                onTagClick = { keyword -> onNavigateExpertSearch(keyword, null, null) },
+            )
+            HomeCategoryGrid(
+                onCategoryClick = { category -> onNavigateExpertSearch(null, category.id, null) },
+            )
+            HomeRecommendedExpertsSection(
+                experts = state.recommended.take(12),
+                isLoading = state.isLoadingRecommended,
+                onExpertClick = onNavigateExpertDetail,
+                onShowAll = { onNavigateExpertSearch(null, null, null) },
+            )
         }
 
         FloatingActionButton(
