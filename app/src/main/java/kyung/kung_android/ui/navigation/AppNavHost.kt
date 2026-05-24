@@ -14,6 +14,8 @@ import kyung.kung_android.ui.account_settings.AccountSettingsScreen
 import kyung.kung_android.ui.account_withdraw.AccountWithdrawScreen
 import kyung.kung_android.ui.chat_detail.ChatDetailScreen
 import kyung.kung_android.ui.chatbot.ChatBotScreen
+import kyung.kung_android.ui.checkout.CheckoutScreen
+import kyung.kung_android.ui.checkout.PaymentSuccessScreen
 import kyung.kung_android.ui.common.PlaceholderScreen
 import kyung.kung_android.ui.expert_detail.ExpertDetailScreen
 import kyung.kung_android.ui.expert_register.ExpertRegisterScreen
@@ -123,6 +125,32 @@ fun AppNavHost(
                 onNavigateChat = { chatRoomId ->
                     navController.navigate("${AppRoute.CHAT_DETAIL}/$chatRoomId")
                 },
+                onNavigateCheckout = { requestId ->
+                    navController.navigate("${AppRoute.CHECKOUT}/$requestId")
+                },
+            )
+        }
+
+        composable(
+            route = "${AppRoute.CHECKOUT}/{requestId}",
+            arguments = listOf(navArgument("requestId") { type = NavType.LongType }),
+        ) {
+            CheckoutScreen(
+                onBack = { navController.popBackStack() },
+                onPaymentSuccess = { paymentId ->
+                    navController.navigate("${AppRoute.PAYMENT_SUCCESS}/$paymentId") {
+                        popUpTo("${AppRoute.CHECKOUT}/{requestId}") { inclusive = true }
+                    }
+                },
+            )
+        }
+
+        composable(
+            route = "${AppRoute.PAYMENT_SUCCESS}/{paymentId}",
+            arguments = listOf(navArgument("paymentId") { type = NavType.LongType }),
+        ) {
+            PaymentSuccessScreen(
+                onClose = { navController.popBackStack(AppRoute.MAIN, inclusive = false) },
             )
         }
 
