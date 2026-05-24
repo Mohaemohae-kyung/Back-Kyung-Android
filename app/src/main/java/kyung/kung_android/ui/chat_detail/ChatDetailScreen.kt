@@ -40,9 +40,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
+import coil3.compose.AsyncImage
 import kyung.kung_android.data.expert.dto.ExpertDetailResponse
 import kyung.kung_android.data.request.dto.ServiceRequestResponse
+import kyung.kung_android.ui.common.InitialAvatar
 import kyung.kung_android.ui.common.KungPrimaryButton
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
@@ -117,9 +120,28 @@ fun ChatDetailScreen(
                     verticalArrangement = Arrangement.spacedBy(6.dp),
                 ) {
                     items(state.messages, key = { it.chatMessageId }) { msg ->
+                        val isMine = state.currentUserId != null && msg.senderId == state.currentUserId
+                        val otherName: String
+                        val otherImageUrl: String?
+                        when (msg.senderId) {
+                            state.linkedExpert?.ownerUserId -> {
+                                otherName = state.linkedExpert?.displayName ?: "고수"
+                                otherImageUrl = state.linkedExpert?.profileImageUrl
+                            }
+                            state.linkedRequest?.userId -> {
+                                otherName = state.linkedRequest?.requesterName ?: "사용자"
+                                otherImageUrl = null
+                            }
+                            else -> {
+                                otherName = "상대"
+                                otherImageUrl = null
+                            }
+                        }
                         MessageBubble(
                             message = msg,
-                            isMine = state.currentUserId != null && msg.senderId == state.currentUserId,
+                            isMine = isMine,
+                            otherName = otherName,
+                            otherImageUrl = otherImageUrl,
                         )
                     }
                 }
@@ -149,16 +171,15 @@ private fun ConnectionBanner() {
 private fun MessageBubble(
     message: ChatMessageResponse,
     isMine: Boolean,
+    otherName: String,
+    otherImageUrl: String?,
 ) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = if (isMine) Arrangement.End else Arrangement.Start,
-    ) {
-        val shape = if (isMine) {
-            RoundedCornerShape(topStart = 18.dp, topEnd = 18.dp, bottomStart = 18.dp, bottomEnd = 4.dp)
-        } else {
-            RoundedCornerShape(topStart = 18.dp, topEnd = 18.dp, bottomStart = 4.dp, bottomEnd = 18.dp)
-        }
+    val shape = if (isMine) {
+        RoundedCornerShape(topStart = 18.dp, topEnd = 18.dp, bottomStart = 18.dp, bottomEnd = 4.dp)
+    } else {
+        RoundedCornerShape(topStart = 18.dp, topEnd = 18.dp, bottomStart = 4.dp, bottomEnd = 18.dp)
+    }
+    val bubble: @Composable () -> Unit = {
         Box(
             modifier = Modifier
                 .widthIn(max = 280.dp)
@@ -171,6 +192,39 @@ private fun MessageBubble(
                 color = if (isMine) KungColors.White else KungColors.Charcoal,
                 style = MaterialTheme.typography.bodyMedium.copy(lineHeight = 20.sp),
             )
+        }
+    }
+    if (isMine) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.End,
+        ) { bubble() }
+    } else {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.Start,
+            verticalAlignment = Alignment.Top,
+        ) {
+            if (otherImageUrl != null) {
+                AsyncImage(
+                    model = otherImageUrl,
+                    contentDescription = null,
+                    modifier = Modifier.size(32.dp).clip(CircleShape),
+                    contentScale = ContentScale.Crop,
+                )
+            } else {
+                InitialAvatar(name = otherName, size = 32.dp)
+            }
+            Spacer(modifier = Modifier.size(8.dp))
+            Column {
+                Text(
+                    text = otherName,
+                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
+                    color = KungColors.Slate,
+                )
+                Spacer(modifier = Modifier.size(4.dp))
+                bubble()
+            }
         }
     }
 }
