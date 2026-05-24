@@ -15,46 +15,51 @@ object NativeSecurityCheck {
 
     fun isFridaDetected(): Boolean {
         return runCatching {
-            var state = 0
-            var result = false
-
-            var mapsDetected = false
-            var tracerDetected = false
-            var portDetected = false
-            var libraryDetected = false
+            var state = mixState(0x13, 0x27)
+            var mask = 0
+            var guard = 0x5A
 
             while (true) {
                 when (state) {
-                    0 -> {
-                        mapsDetected = detectFridaInMaps()
-                        state = 10
+                    mixState(0x13, 0x27) -> {
+                        if (detectFridaInMaps()) {
+                            mask = mask or 0x01
+                        }
+
+                        guard = guard xor 0x11
+                        state = nextState(state, 0x2A, guard)
                     }
 
-                    10 -> {
-                        tracerDetected = detectTracerPid()
-                        state = 20
+                    mixState(0x2A, 0x4B) -> {
+                        if (detectTracerPid()) {
+                            mask = mask or 0x02
+                        }
+
+                        guard = guard xor 0x23
+                        state = nextState(state, 0x31, guard)
                     }
 
-                    20 -> {
-                        portDetected = detectFridaPorts()
-                        state = 30
+                    mixState(0x31, 0x6D) -> {
+                        if (detectFridaPorts()) {
+                            mask = mask or 0x04
+                        }
+
+                        guard = guard xor 0x35
+                        state = nextState(state, 0x44, guard)
                     }
 
-                    30 -> {
-                        libraryDetected = detectSuspiciousLibraries()
-                        state = 40
+                    mixState(0x44, 0x19) -> {
+                        if (detectSuspiciousLibraries()) {
+                            mask = mask or 0x08
+                        }
+
+                        guard = guard xor 0x47
+                        state = nextState(state, 0x7F, guard)
                     }
 
-                    40 -> {
-                        result = mapsDetected ||
-                                tracerDetected ||
-                                portDetected ||
-                                libraryDetected
-                        state = 100
-                    }
-
-                    100 -> {
-                        return@runCatching result
+                    mixState(0x7F, 0x08) -> {
+                        val normalized = mask and 0x0F
+                        return@runCatching normalized != 0
                     }
 
                     else -> {
@@ -63,47 +68,94 @@ object NativeSecurityCheck {
                 }
             }
 
-            false
+            true
         }.getOrDefault(false)
+    }
+
+    private fun mixState(a: Int, b: Int): Int {
+        return (a xor b) + ((a and 0x0F) shl 2)
+    }
+
+    private fun nextState(current: Int, marker: Int, guard: Int): Int {
+        val noise = (current xor guard) and 0x03
+
+        return when (marker) {
+            0x2A -> {
+                val candidate = mixState(0x2A, 0x4B)
+                if (noise >= 0) candidate else -1
+            }
+
+            0x31 -> {
+                val candidate = mixState(0x31, 0x6D)
+                if ((guard xor guard) == 0) candidate else -1
+            }
+
+            0x44 -> {
+                val candidate = mixState(0x44, 0x19)
+                if (((current or guard) and 0x00) == 0) candidate else -1
+            }
+
+            0x7F -> {
+                val candidate = mixState(0x7F, 0x08)
+                if ((marker and 0x7F) == 0x7F) candidate else -1
+            }
+
+            else -> -1
+        }
     }
 
     fun collectFridaDebugSignals(): Map<String, Boolean> {
         return runCatching {
-            var state = 0
-
-            var mapsDetected = false
-            var tracerDetected = false
-            var portDetected = false
-            var libraryDetected = false
+            var state = mixState2(0x21, 0x34)
+            var mask = 0
+            var guard = 0x6C
 
             while (true) {
                 when (state) {
-                    0 -> {
-                        mapsDetected = detectFridaInMaps()
-                        state = nextState(state, 10)
+                    mixState2(0x21, 0x34) -> {
+                        if (detectFridaInMaps()) {
+                            mask = mask or 0x01
+                        }
+
+                        guard = guard xor 0x12
+                        state = nextSignalState(state, 0x41, guard)
                     }
 
-                    10 -> {
-                        tracerDetected = detectTracerPid()
-                        state = nextState(state, 20)
+                    mixState2(0x41, 0x15) -> {
+                        if (detectTracerPid()) {
+                            mask = mask or 0x02
+                        }
+
+                        guard = guard xor 0x24
+                        state = nextSignalState(state, 0x52, guard)
                     }
 
-                    20 -> {
-                        portDetected = detectFridaPorts()
-                        state = nextState(state, 30)
+                    mixState2(0x52, 0x2B) -> {
+                        if (detectFridaPorts()) {
+                            mask = mask or 0x04
+                        }
+
+                        guard = guard xor 0x36
+                        state = nextSignalState(state, 0x63, guard)
                     }
 
-                    30 -> {
-                        libraryDetected = detectSuspiciousLibraries()
-                        state = 100
+                    mixState2(0x63, 0x7A) -> {
+                        if (detectSuspiciousLibraries()) {
+                            mask = mask or 0x08
+                        }
+
+                        guard = guard xor 0x48
+                        state = nextSignalState(state, 0x7E, guard)
                     }
 
-                    100 -> {
+                    mixState2(0x7E, 0x09) -> {
+                        val normalized = mask and 0x0F
+
                         return@runCatching mapOf(
-                            "mapsDetected" to mapsDetected,
-                            "tracerPidDetected" to tracerDetected,
-                            "fridaPortDetected" to portDetected,
-                            "suspiciousLibraryDetected" to libraryDetected
+                            "mapsDetected" to ((normalized and 0x01) != 0),
+                            "tracerPidDetected" to ((normalized and 0x02) != 0),
+                            "fridaPortDetected" to ((normalized and 0x04) != 0),
+                            "suspiciousLibraryDetected" to ((normalized and 0x08) != 0)
                         )
                     }
 
@@ -117,13 +169,35 @@ object NativeSecurityCheck {
         }.getOrDefault(fallbackSignals())
     }
 
-    private fun nextState(current: Int, next: Int): Int {
-        val mixed = current xor next
+    private fun mixState2(a: Int, b: Int): Int {
+        return (a xor b) + ((a and 0x0F) shl 2)
+    }
 
-        return if ((mixed xor current xor next) == 0) {
-            next
-        } else {
-            999
+    private fun nextSignalState(current: Int, marker: Int, guard: Int): Int {
+        val noise = (current xor guard) and 0x03
+
+        return when (marker) {
+            0x41 -> {
+                val candidate = mixState(0x41, 0x15)
+                if (noise >= 0) candidate else -1
+            }
+
+            0x52 -> {
+                val candidate = mixState(0x52, 0x2B)
+                if ((guard xor guard) == 0) candidate else -1
+            }
+
+            0x63 -> {
+                val candidate = mixState(0x63, 0x7A)
+                if (((current or guard) and 0x00) == 0) candidate else -1
+            }
+
+            0x7E -> {
+                val candidate = mixState(0x7E, 0x09)
+                if ((marker and 0x7E) == 0x7E) candidate else -1
+            }
+
+            else -> -1
         }
     }
 
