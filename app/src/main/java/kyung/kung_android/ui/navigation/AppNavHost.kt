@@ -156,6 +156,9 @@ fun AppNavHost(
                 onNavigateAccountSettings = { navController.navigate(AppRoute.ACCOUNT_SETTINGS) },
                 onNavigateFavorites = { navController.navigate(AppRoute.FAVORITE_EXPERTS) },
                 onNavigatePaymentHistory = { navController.navigate(AppRoute.PAYMENT_HISTORY) },
+                onNavigateExpertSelf = { id ->
+                    if (id != null) navController.navigate("${AppRoute.EXPERT_DETAIL}/$id")
+                },
             )
         }
 

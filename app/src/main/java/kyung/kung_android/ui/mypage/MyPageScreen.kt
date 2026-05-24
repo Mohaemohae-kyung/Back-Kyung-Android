@@ -91,7 +91,8 @@ fun MyPageScreen(
                 isExpert = state.isExpert,
                 modifier = Modifier.padding(padding),
                 onExpertBannerClick = {
-                    if (state.isExpert) onNavigateExpertSelf(null) else onNavigateExpertRegister()
+                    val id = state.user?.expertServiceId
+                    if (state.isExpert && id != null) onNavigateExpertSelf(id) else onNavigateExpertRegister()
                 },
                 onAccountSettingsClick = onNavigateAccountSettings,
                 onFavoritesClick = onNavigateFavorites,
