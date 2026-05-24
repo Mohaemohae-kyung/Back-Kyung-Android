@@ -16,12 +16,14 @@ import kyung.kung_android.data.network.ApiException
 import kyung.kung_android.domain.auth.AuthRepository
 import kyung.kung_android.domain.expert.ExpertRepository
 import kyung.kung_android.domain.favorite.FavoriteRepository
+import kyung.kung_android.domain.user.UserRepository
 import javax.inject.Inject
 
 data class ExpertDetailUiState(
     val expertId: Long = 0L,
     val expert: ExpertDetailResponse? = null,
     val isFavorited: Boolean = false,
+    val isMine: Boolean = false,
     val isLoading: Boolean = false,
     val error: String? = null,
 )
@@ -37,6 +39,7 @@ class ExpertDetailViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val expertRepository: ExpertRepository,
     private val favoriteRepository: FavoriteRepository,
+    userRepository: UserRepository,
     authRepository: AuthRepository,
 ) : ViewModel() {
 
@@ -47,12 +50,17 @@ class ExpertDetailViewModel @Inject constructor(
     val state: StateFlow<ExpertDetailUiState> = combine(
         _local,
         favoriteRepository.favoriteIds,
-    ) { local, favoriteIds ->
+        userRepository.currentUser,
+    ) { local, favoriteIds, me ->
         val profileId = local.expert?.expertProfileId
+        val isMine = local.expert?.ownerUserId != null &&
+            me?.userId != null &&
+            local.expert.ownerUserId == me.userId
         ExpertDetailUiState(
             expertId = expertId,
             expert = local.expert,
             isFavorited = profileId != null && profileId in favoriteIds,
+            isMine = isMine,
             isLoading = local.isLoading,
             error = local.error,
         )

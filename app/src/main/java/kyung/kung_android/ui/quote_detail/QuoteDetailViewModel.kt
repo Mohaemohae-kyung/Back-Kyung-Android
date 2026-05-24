@@ -13,22 +13,34 @@ import kyung.kung_android.data.expert.dto.ExpertDetailResponse
 import kyung.kung_android.data.request.dto.ServiceRequestResponse
 import kyung.kung_android.domain.expert.ExpertRepository
 import kyung.kung_android.domain.request.ServiceRequestRepository
+import kyung.kung_android.domain.user.UserRepository
 import javax.inject.Inject
 
 data class QuoteDetailUiState(
     val requestId: Long = 0L,
     val quote: ServiceRequestResponse? = null,
     val expert: ExpertDetailResponse? = null,
-    val isLoading: Boolean = false,
-    val isCancelling: Boolean = false,
+    val myUserId: Long? = null,
+    val myRole: String? = null,
+    val isLoading: Boolean = true,
+    val isActing: Boolean = false,
     val error: String? = null,
-)
+) {
+    /** 본인이 이 견적의 요청자(USER) 입장 */
+    val isRequester: Boolean
+        get() = quote?.userId != null && myUserId != null && quote.userId == myUserId
+
+    /** 본인이 이 견적을 받은 EXPERT 입장 (요청자가 아니고 EXPERT/ADMIN 역할) */
+    val isReceivingExpert: Boolean
+        get() = !isRequester && (myRole == "EXPERT" || myRole == "ADMIN")
+}
 
 @HiltViewModel
 class QuoteDetailViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val serviceRequestRepository: ServiceRequestRepository,
     private val expertRepository: ExpertRepository,
+    private val userRepository: UserRepository,
 ) : ViewModel() {
 
     private val requestId: Long = savedStateHandle.get<Long>("requestId") ?: 0L
@@ -36,14 +48,27 @@ class QuoteDetailViewModel @Inject constructor(
     private val _state = MutableStateFlow(QuoteDetailUiState(requestId = requestId))
     val state: StateFlow<QuoteDetailUiState> = _state.asStateFlow()
 
-    fun onCancel() {
+    init {
         viewModelScope.launch {
-            _state.update { it.copy(isCancelling = true) }
+            userRepository.currentUser.collect { me ->
+                _state.update { it.copy(myUserId = me?.userId, myRole = me?.role) }
+            }
+        }
+    }
+
+    fun onCancel() = act { serviceRequestRepository.cancel(requestId) }
+    fun onApprove() = act { serviceRequestRepository.approve(requestId) }
+    fun onReject() = act { serviceRequestRepository.reject(requestId) }
+
+    private fun act(call: suspend () -> ServiceRequestResponse) {
+        if (_state.value.isActing) return
+        _state.update { it.copy(isActing = true, error = null) }
+        viewModelScope.launch {
             try {
-                val updated = serviceRequestRepository.cancel(requestId)
-                _state.update { it.copy(quote = updated, isCancelling = false) }
+                val updated = call()
+                _state.update { it.copy(quote = updated, isActing = false) }
             } catch (t: Throwable) {
-                _state.update { it.copy(isCancelling = false, error = "취소에 실패했어요.") }
+                _state.update { it.copy(isActing = false, error = "처리에 실패했어요.") }
             }
         }
     }

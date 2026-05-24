@@ -18,6 +18,9 @@ interface ServiceRequestApi {
     @GET("/api/service-requests/me")
     suspend fun getMyServiceRequests(): List<ServiceRequestResponse>
 
+    @GET("/api/service-requests/received")
+    suspend fun getReceivedServiceRequests(): List<ServiceRequestResponse>
+
     @GET("/api/service-requests/{requestId}")
     suspend fun getServiceRequest(
         @Path("requestId") requestId: Long,
@@ -25,6 +28,16 @@ interface ServiceRequestApi {
 
     @PATCH("/api/service-requests/{requestId}/cancel")
     suspend fun cancelServiceRequest(
+        @Path("requestId") requestId: Long,
+    ): ServiceRequestResponse
+
+    @PATCH("/api/service-requests/{requestId}/approve")
+    suspend fun approveServiceRequest(
+        @Path("requestId") requestId: Long,
+    ): ServiceRequestResponse
+
+    @PATCH("/api/service-requests/{requestId}/reject")
+    suspend fun rejectServiceRequest(
         @Path("requestId") requestId: Long,
     ): ServiceRequestResponse
 }

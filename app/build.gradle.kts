@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -6,6 +8,14 @@ plugins {
     alias(libs.plugins.hilt)
     alias(libs.plugins.ksp)
 }
+
+val localProperties = Properties().apply {
+    val f = rootProject.file("local.properties")
+    if (f.exists()) f.inputStream().use { load(it) }
+}
+
+val prodBaseUrl: String = "https://can-fly.shop/"
+val debugBaseUrl: String = localProperties.getProperty("BASE_URL", prodBaseUrl)
 
 android {
     namespace = "kyung.kung_android"
@@ -33,11 +43,11 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            buildConfigField("String", "BASE_URL", "\"https://can-fly.shop/\"")
+            buildConfigField("String", "BASE_URL", "\"$prodBaseUrl\"")
         }
         debug {
             isMinifyEnabled = false
-            buildConfigField("String", "BASE_URL", "\"https://can-fly.shop/\"")
+            buildConfigField("String", "BASE_URL", "\"$debugBaseUrl\"")
         }
     }
 

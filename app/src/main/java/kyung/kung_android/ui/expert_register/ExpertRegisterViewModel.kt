@@ -12,8 +12,10 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kyung.kung_android.data.network.ApiException
+import kyung.kung_android.domain.category.model.Categories
 import kyung.kung_android.domain.expert.ExpertRepository
 import kyung.kung_android.domain.expert_service.ExpertServiceRepository
+import kyung.kung_android.domain.location.model.Regions
 import kyung.kung_android.domain.user.UserRepository
 import javax.inject.Inject
 
@@ -53,6 +55,29 @@ class ExpertRegisterViewModel @Inject constructor(
 
     private val _state = MutableStateFlow(ExpertRegisterUiState())
     val state: StateFlow<ExpertRegisterUiState> = _state.asStateFlow()
+
+    init {
+        val me = userRepository.currentUser.value
+        val serviceId = me?.expertServiceId
+        if (serviceId != null && (me.role == "EXPERT" || me.role == "ADMIN")) {
+            viewModelScope.launch {
+                runCatching { expertRepository.getExpertDetail(serviceId) }
+                    .onSuccess { d ->
+                        _state.update {
+                            it.copy(
+                                displayName = d.displayName,
+                                introduction = d.introduction.orEmpty(),
+                                careerYears = d.careerYears?.let { y ->
+                                    if (y % 1.0 == 0.0) y.toInt().toString() else y.toString()
+                                } ?: "",
+                                mainCategoryId = Categories.ALL.firstOrNull { it.name == d.mainCategoryName }?.id,
+                                mainLocationId = Regions.ALL.firstOrNull { it.name == d.mainLocationName }?.id,
+                            )
+                        }
+                    }
+            }
+        }
+    }
 
     private val _effects = MutableSharedFlow<ExpertRegisterEffect>(extraBufferCapacity = 1)
     val effects: SharedFlow<ExpertRegisterEffect> = _effects.asSharedFlow()

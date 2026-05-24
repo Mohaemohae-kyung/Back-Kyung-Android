@@ -20,6 +20,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -59,7 +60,14 @@ fun ReceivedQuoteScreen(
         onRefresh = { viewModel.load() },
         modifier = Modifier.fillMaxSize(),
     ) {
-        if (state.inProgress.isEmpty() && state.pastRequests.isEmpty() && !state.isLoading) {
+        if (state.isLoading && state.inProgress.isEmpty() && state.pastRequests.isEmpty()) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator()
+            }
+            return@KungPullToRefresh
+        }
+
+        if (state.inProgress.isEmpty() && state.pastRequests.isEmpty()) {
             EmptyState(onNavigateExpertSearch = onNavigateExpertSearch)
             return@KungPullToRefresh
         }

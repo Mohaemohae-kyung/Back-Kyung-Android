@@ -34,6 +34,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
+import coil3.compose.AsyncImage
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.text.font.FontWeight
@@ -57,6 +59,7 @@ fun MyPageScreen(
     onNavigateAccountSettings: () -> Unit = {},
     onNavigateFavorites: () -> Unit = {},
     onNavigatePaymentHistory: () -> Unit = {},
+    onNavigateExpertTransactions: () -> Unit = {},
     onNavigateExpertSelf: (expertProfileId: Long?) -> Unit = {},
     viewModel: MyPageViewModel = hiltViewModel(),
 ) {
@@ -89,11 +92,13 @@ fun MyPageScreen(
                 isExpert = state.isExpert,
                 modifier = Modifier.padding(padding),
                 onExpertBannerClick = {
-                    if (state.isExpert) onNavigateExpertSelf(null) else onNavigateExpertRegister()
+                    val id = state.user?.expertServiceId
+                    if (state.isExpert && id != null) onNavigateExpertSelf(id) else onNavigateExpertRegister()
                 },
                 onAccountSettingsClick = onNavigateAccountSettings,
                 onFavoritesClick = onNavigateFavorites,
                 onPaymentHistoryClick = onNavigatePaymentHistory,
+                onExpertTransactionsClick = onNavigateExpertTransactions,
             )
         }
     }
@@ -107,6 +112,7 @@ private fun LoggedInContent(
     onAccountSettingsClick: () -> Unit,
     onFavoritesClick: () -> Unit,
     onPaymentHistoryClick: () -> Unit,
+    onExpertTransactionsClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     LazyColumn(
@@ -132,7 +138,7 @@ private fun LoggedInContent(
             SectionTitle("거래내역")
             MyPageRow(
                 title = "매칭온페이 거래내역",
-                onClick = onPaymentHistoryClick,
+                onClick = if (isExpert) onExpertTransactionsClick else onPaymentHistoryClick,
             )
         }
 
@@ -222,7 +228,16 @@ private fun UserCard(
                 .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            InitialAvatar(name = user?.name ?: "?", size = 56.dp)
+            if (user?.profileImageUrl != null) {
+                AsyncImage(
+                    model = user.profileImageUrl,
+                    contentDescription = null,
+                    modifier = Modifier.size(56.dp).clip(CircleShape),
+                    contentScale = ContentScale.Crop,
+                )
+            } else {
+                InitialAvatar(name = user?.name ?: "?", size = 56.dp)
+            }
             Spacer(modifier = Modifier.width(12.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Text(

@@ -15,6 +15,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -47,6 +48,7 @@ import java.util.Locale
 @Composable
 fun PaymentHistoryScreen(
     onBack: () -> Unit,
+    onNavigateTransactionDetail: (paymentId: Long) -> Unit = {},
     viewModel: PaymentHistoryViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -109,7 +111,10 @@ fun PaymentHistoryScreen(
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 items(state.payments, key = { it.paymentId }) { item ->
-                    PaymentCard(item = item)
+                    PaymentCard(
+                        item = item,
+                        onClick = { onNavigateTransactionDetail(item.paymentId) },
+                    )
                 }
             }
         }
@@ -118,9 +123,9 @@ fun PaymentHistoryScreen(
 }
 
 @Composable
-private fun PaymentCard(item: PaymentResponse) {
+private fun PaymentCard(item: PaymentResponse, onClick: () -> Unit) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth().clickable(onClick = onClick),
         shape = RoundedCornerShape(18.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),

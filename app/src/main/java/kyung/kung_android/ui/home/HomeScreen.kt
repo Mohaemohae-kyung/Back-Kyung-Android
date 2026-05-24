@@ -21,13 +21,14 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.ui.layout.ContentScale
+import coil3.compose.AsyncImage
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Apps
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Brush
-import androidx.compose.material.icons.filled.Handshake
 import androidx.compose.material.icons.filled.HeadsetMic
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Place
@@ -60,6 +61,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
@@ -69,6 +71,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import kyung.kung_android.R
 import kyung.kung_android.data.expert.dto.ExpertSearchResponse
 import kyung.kung_android.domain.category.model.Categories
 import kyung.kung_android.domain.category.model.Category
@@ -97,48 +100,35 @@ fun HomeScreen(
     }
 
     Box(modifier = modifier.fillMaxSize()) {
-        kyung.kung_android.ui.common.KungPullToRefresh(
-            isLoading = state.isLoadingRecommended,
-            onRefresh = { viewModel.loadRecommendations() },
-            modifier = Modifier.fillMaxSize(),
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(bottom = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(bottom = 96.dp),
-                verticalArrangement = Arrangement.spacedBy(24.dp),
-            ) {
-                item {
-                    HomeTopBar(
-                        isLoggedIn = isLoggedIn,
-                        isExpert = isExpert,
-                        onNavigateMyPage = onNavigateMyPage,
-                        onNavigateExpertRegister = onNavigateExpertRegister,
-                    )
-                }
-                item {
-                    HomeHeroCard(
-                        onSubmit = { keyword -> onNavigateExpertSearch(keyword.takeIf { it.isNotEmpty() }, null, null) },
-                        onLocationSelected = { locationId -> onNavigateExpertSearch(null, null, locationId) },
-                    )
-                }
-                item {
-                    HomeQuickTags(
-                        onTagClick = { keyword -> onNavigateExpertSearch(keyword, null, null) },
-                    )
-                }
-                item {
-                    HomeCategoryGrid(
-                        onCategoryClick = { category -> onNavigateExpertSearch(null, category.id, null) },
-                    )
-                }
-                item {
-                    HomeRecommendedExpertsSection(
-                        experts = state.recommended,
-                        isLoading = state.isLoadingRecommended,
-                        onExpertClick = onNavigateExpertDetail,
-                    )
-                }
-            }
+            HomeTopBar(
+                isLoggedIn = isLoggedIn,
+                isExpert = isExpert,
+                onNavigateMyPage = onNavigateMyPage,
+                onNavigateExpertRegister = onNavigateExpertRegister,
+            )
+            HomeHeroCard(
+                onSubmit = { keyword -> onNavigateExpertSearch(keyword.takeIf { it.isNotEmpty() }, null, null) },
+                onLocationSelected = { locationId -> onNavigateExpertSearch(null, null, locationId) },
+            )
+            HomeQuickTags(
+                onTagClick = { keyword -> onNavigateExpertSearch(keyword, null, null) },
+            )
+            HomeCategoryGrid(
+                onCategoryClick = { category -> onNavigateExpertSearch(null, category.id, null) },
+            )
+            HomeRecommendedExpertsSection(
+                experts = state.recommended.take(12),
+                isLoading = state.isLoadingRecommended,
+                onExpertClick = onNavigateExpertDetail,
+                onShowAll = { onNavigateExpertSearch(null, null, null) },
+                modifier = Modifier.weight(1f),
+            )
         }
 
         FloatingActionButton(
@@ -180,7 +170,7 @@ private fun HomeTopBar(
             contentAlignment = Alignment.Center,
         ) {
             Icon(
-                imageVector = Icons.Filled.Handshake,
+                painter = painterResource(R.drawable.ic_brand_logo),
                 contentDescription = null,
                 tint = KungColors.White,
                 modifier = Modifier.size(20.dp),
@@ -230,43 +220,21 @@ private fun HomeHeroCard(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp)
-            .shadow(elevation = 14.dp, shape = RoundedCornerShape(24.dp), clip = false)
-            .clip(RoundedCornerShape(24.dp))
+            .shadow(elevation = 10.dp, shape = RoundedCornerShape(20.dp), clip = false)
+            .clip(RoundedCornerShape(20.dp))
             .background(Brush.linearGradient(KungColors.HeroGradient))
-            .padding(20.dp),
+            .padding(horizontal = 18.dp, vertical = 14.dp),
     ) {
         Column {
-            Row(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(20.dp))
-                    .background(Color.White.copy(alpha = 0.18f))
-                    .padding(horizontal = 10.dp, vertical = 5.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(4.dp),
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.AutoAwesome,
-                    contentDescription = null,
-                    tint = KungColors.White,
-                    modifier = Modifier.size(13.dp),
-                )
-                Text(
-                    text = "지금 가장 빠르게 매칭",
-                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
-                    color = KungColors.White,
-                )
-            }
-            Spacer(modifier = Modifier.height(14.dp))
             Text(
-                text = "원하는 고수,\n바로 찾아드릴게요",
-                style = MaterialTheme.typography.headlineMedium.copy(
+                text = "필요한 서비스를 고수에게 바로 요청하세요",
+                style = MaterialTheme.typography.titleMedium.copy(
                     fontWeight = FontWeight.ExtraBold,
-                    lineHeight = 34.sp,
-                    letterSpacing = (-0.6).sp,
+                    letterSpacing = (-0.4).sp,
                 ),
                 color = KungColors.White,
             )
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(10.dp))
             HeroSearchPill(
                 value = searchText,
                 onValueChange = { searchText = it },
@@ -513,10 +481,12 @@ private fun HomeRecommendedExpertsSection(
     experts: List<ExpertSearchResponse>,
     isLoading: Boolean,
     onExpertClick: (Long) -> Unit,
+    onShowAll: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     if (!isLoading && experts.isEmpty()) return
 
-    Column {
+    Column(modifier = modifier) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -531,11 +501,16 @@ private fun HomeRecommendedExpertsSection(
                 ),
                 modifier = Modifier.weight(1f),
             )
-            Text(
-                text = "AI 추천",
-                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
-                color = KungColors.Purple,
-            )
+            TextButton(
+                onClick = onShowAll,
+                contentPadding = PaddingValues(horizontal = 4.dp, vertical = 0.dp),
+            ) {
+                Text(
+                    text = "전체 보기",
+                    style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
+                    color = KungColors.Purple,
+                )
+            }
         }
         Spacer(modifier = Modifier.height(14.dp))
 
@@ -582,7 +557,16 @@ private fun RecommendedExpertCard(
                 .padding(14.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            InitialAvatar(name = expert.displayName, size = 60.dp)
+            if (expert.profileImageUrl != null) {
+                AsyncImage(
+                    model = expert.profileImageUrl,
+                    contentDescription = null,
+                    modifier = Modifier.size(60.dp).clip(CircleShape),
+                    contentScale = ContentScale.Crop,
+                )
+            } else {
+                InitialAvatar(name = expert.displayName, size = 60.dp)
+            }
             Spacer(modifier = Modifier.height(10.dp))
             Text(
                 text = expert.displayName,

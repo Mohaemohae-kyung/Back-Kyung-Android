@@ -14,6 +14,10 @@ import kyung.kung_android.ui.account_settings.AccountSettingsScreen
 import kyung.kung_android.ui.account_withdraw.AccountWithdrawScreen
 import kyung.kung_android.ui.chat_detail.ChatDetailScreen
 import kyung.kung_android.ui.chatbot.ChatBotScreen
+import kyung.kung_android.ui.checkout.CheckoutScreen
+import kyung.kung_android.ui.checkout.PaymentSuccessScreen
+import kyung.kung_android.ui.expert_transactions.ExpertTransactionsScreen
+import kyung.kung_android.ui.transaction_detail.TransactionDetailScreen
 import kyung.kung_android.ui.common.PlaceholderScreen
 import kyung.kung_android.ui.expert_detail.ExpertDetailScreen
 import kyung.kung_android.ui.expert_register.ExpertRegisterScreen
@@ -46,6 +50,7 @@ fun AppNavHost(
                 onNavigateMyPage = { navController.navigate(AppRoute.MY_PAGE) },
                 onNavigateChatbot = { navController.navigate(AppRoute.CHATBOT) },
                 onNavigateExpertRegister = { navController.navigate(AppRoute.EXPERT_REGISTER) },
+                onNavigateSignup = { navController.navigate(AppRoute.SIGNUP) },
                 onNavigateExpertDetail = { id -> navController.navigate("${AppRoute.EXPERT_DETAIL}/$id") },
                 onNavigateQuoteDetail = { id -> navController.navigate("${AppRoute.QUOTE_DETAIL}/$id") },
                 onNavigatePostDetail = { id -> navController.navigate("${AppRoute.POST_DETAIL}/$id") },
@@ -62,9 +67,14 @@ fun AppNavHost(
 
         composable(
             route = "${AppRoute.CHAT_DETAIL}/{${AppRoute.ARG_CHAT_ROOM_ID}}",
-            arguments = listOf(navArgument(AppRoute.ARG_CHAT_ROOM_ID) { type = NavType.LongType }),
+            arguments = listOf(navArgument( AppRoute.ARG_CHAT_ROOM_ID) { type = NavType.LongType }),
         ) {
-            ChatDetailScreen(onNavigateBack = { navController.popBackStack() })
+            ChatDetailScreen(
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateCheckout = { requestId ->
+                    navController.navigate("${AppRoute.CHECKOUT}/$requestId")
+                },
+            )
         }
 
         composable(
@@ -91,6 +101,7 @@ fun AppNavHost(
                     navController.navigate("${AppRoute.QUOTE_REQUEST}/$expertId/$expertServiceId")
                 },
                 onNavigateLogin = { navController.navigate(AppRoute.LOGIN) },
+                onNavigateEditProfile = { navController.navigate(AppRoute.EXPERT_REGISTER) },
             )
         }
 
@@ -112,15 +123,51 @@ fun AppNavHost(
         }
 
         composable(
-            route = "${AppRoute.QUOTE_DETAIL}/{requestId}",
-            arguments = listOf(navArgument("requestId") { type = NavType.LongType }),
-        ) {
+            route = "${AppRoute.QUOTE_DETAIL}/{requestId}?context={context}",
+            arguments = listOf(
+                navArgument("requestId") { type = NavType.LongType },
+                navArgument("context") {
+                    type = NavType.StringType
+                    nullable = true
+                    defaultValue = null
+                },
+            ),
+        ) { entry ->
+            val context = entry.arguments?.getString("context")
+            val title = if (context == "transaction") "거래 상세" else "견적 상세"
             QuoteDetailScreen(
                 onBack = { navController.popBackStack() },
                 onNavigateExpertDetail = { id -> navController.navigate("${AppRoute.EXPERT_DETAIL}/$id") },
                 onNavigateChat = { chatRoomId ->
                     navController.navigate("${AppRoute.CHAT_DETAIL}/$chatRoomId")
                 },
+                onNavigateCheckout = { requestId ->
+                    navController.navigate("${AppRoute.CHECKOUT}/$requestId")
+                },
+                topBarTitle = title,
+            )
+        }
+
+        composable(
+            route = "${AppRoute.CHECKOUT}/{requestId}",
+            arguments = listOf(navArgument("requestId") { type = NavType.LongType }),
+        ) {
+            CheckoutScreen(
+                onBack = { navController.popBackStack() },
+                onPaymentSuccess = { paymentId ->
+                    navController.navigate("${AppRoute.PAYMENT_SUCCESS}/$paymentId") {
+                        popUpTo("${AppRoute.CHECKOUT}/{requestId}") { inclusive = true }
+                    }
+                },
+            )
+        }
+
+        composable(
+            route = "${AppRoute.PAYMENT_SUCCESS}/{paymentId}",
+            arguments = listOf(navArgument("paymentId") { type = NavType.LongType }),
+        ) {
+            PaymentSuccessScreen(
+                onClose = { navController.popBackStack(AppRoute.MAIN, inclusive = false) },
             )
         }
 
@@ -155,6 +202,10 @@ fun AppNavHost(
                 onNavigateAccountSettings = { navController.navigate(AppRoute.ACCOUNT_SETTINGS) },
                 onNavigateFavorites = { navController.navigate(AppRoute.FAVORITE_EXPERTS) },
                 onNavigatePaymentHistory = { navController.navigate(AppRoute.PAYMENT_HISTORY) },
+                onNavigateExpertTransactions = { navController.navigate(AppRoute.EXPERT_TRANSACTIONS) },
+                onNavigateExpertSelf = { id ->
+                    if (id != null) navController.navigate("${AppRoute.EXPERT_DETAIL}/$id")
+                },
             )
         }
 
@@ -202,7 +253,28 @@ fun AppNavHost(
         }
 
         composable(AppRoute.PAYMENT_HISTORY) {
-            PaymentHistoryScreen(onBack = { navController.popBackStack() })
+            PaymentHistoryScreen(
+                onBack = { navController.popBackStack() },
+                onNavigateTransactionDetail = { paymentId ->
+                    navController.navigate("${AppRoute.TRANSACTION_DETAIL}/$paymentId")
+                },
+            )
+        }
+
+        composable(
+            route = "${AppRoute.TRANSACTION_DETAIL}/{paymentId}",
+            arguments = listOf(navArgument("paymentId") { type = NavType.LongType }),
+        ) {
+            TransactionDetailScreen(onBack = { navController.popBackStack() })
+        }
+
+        composable(AppRoute.EXPERT_TRANSACTIONS) {
+            ExpertTransactionsScreen(
+                onBack = { navController.popBackStack() },
+                onNavigateQuoteDetail = { requestId ->
+                    navController.navigate("${AppRoute.QUOTE_DETAIL}/$requestId?context=transaction")
+                },
+            )
         }
     }
 }
