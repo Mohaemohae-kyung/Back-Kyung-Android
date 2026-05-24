@@ -22,6 +22,8 @@ object AppRoute {
     const val PAYMENT_HISTORY = "payment_history"
     const val CHECKOUT = "checkout"
     const val PAYMENT_SUCCESS = "payment_success"
+    const val TRANSACTION_DETAIL = "transaction_detail"
+    const val EXPERT_TRANSACTIONS = "expert_transactions"
 
     const val ARG_CHAT_ROOM_ID = "chatRoomId"
     const val ARG_FORCE_TAB = "forceTab"

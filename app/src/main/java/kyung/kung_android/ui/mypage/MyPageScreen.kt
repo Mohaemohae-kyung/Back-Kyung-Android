@@ -59,6 +59,7 @@ fun MyPageScreen(
     onNavigateAccountSettings: () -> Unit = {},
     onNavigateFavorites: () -> Unit = {},
     onNavigatePaymentHistory: () -> Unit = {},
+    onNavigateExpertTransactions: () -> Unit = {},
     onNavigateExpertSelf: (expertProfileId: Long?) -> Unit = {},
     viewModel: MyPageViewModel = hiltViewModel(),
 ) {
@@ -97,6 +98,7 @@ fun MyPageScreen(
                 onAccountSettingsClick = onNavigateAccountSettings,
                 onFavoritesClick = onNavigateFavorites,
                 onPaymentHistoryClick = onNavigatePaymentHistory,
+                onExpertTransactionsClick = onNavigateExpertTransactions,
             )
         }
     }
@@ -110,6 +112,7 @@ private fun LoggedInContent(
     onAccountSettingsClick: () -> Unit,
     onFavoritesClick: () -> Unit,
     onPaymentHistoryClick: () -> Unit,
+    onExpertTransactionsClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     LazyColumn(
@@ -133,10 +136,17 @@ private fun LoggedInContent(
 
         item {
             SectionTitle("거래내역")
-            MyPageRow(
-                title = "매칭온페이 거래내역",
-                onClick = onPaymentHistoryClick,
-            )
+            if (isExpert) {
+                MyPageRow(
+                    title = "완료된 거래",
+                    onClick = onExpertTransactionsClick,
+                )
+            } else {
+                MyPageRow(
+                    title = "매칭온페이 거래내역",
+                    onClick = onPaymentHistoryClick,
+                )
+            }
         }
 
         item {

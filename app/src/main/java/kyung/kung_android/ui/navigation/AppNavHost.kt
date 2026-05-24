@@ -16,6 +16,8 @@ import kyung.kung_android.ui.chat_detail.ChatDetailScreen
 import kyung.kung_android.ui.chatbot.ChatBotScreen
 import kyung.kung_android.ui.checkout.CheckoutScreen
 import kyung.kung_android.ui.checkout.PaymentSuccessScreen
+import kyung.kung_android.ui.expert_transactions.ExpertTransactionsScreen
+import kyung.kung_android.ui.transaction_detail.TransactionDetailScreen
 import kyung.kung_android.ui.common.PlaceholderScreen
 import kyung.kung_android.ui.expert_detail.ExpertDetailScreen
 import kyung.kung_android.ui.expert_register.ExpertRegisterScreen
@@ -190,6 +192,7 @@ fun AppNavHost(
                 onNavigateAccountSettings = { navController.navigate(AppRoute.ACCOUNT_SETTINGS) },
                 onNavigateFavorites = { navController.navigate(AppRoute.FAVORITE_EXPERTS) },
                 onNavigatePaymentHistory = { navController.navigate(AppRoute.PAYMENT_HISTORY) },
+                onNavigateExpertTransactions = { navController.navigate(AppRoute.EXPERT_TRANSACTIONS) },
                 onNavigateExpertSelf = { id ->
                     if (id != null) navController.navigate("${AppRoute.EXPERT_DETAIL}/$id")
                 },
@@ -240,7 +243,28 @@ fun AppNavHost(
         }
 
         composable(AppRoute.PAYMENT_HISTORY) {
-            PaymentHistoryScreen(onBack = { navController.popBackStack() })
+            PaymentHistoryScreen(
+                onBack = { navController.popBackStack() },
+                onNavigateTransactionDetail = { paymentId ->
+                    navController.navigate("${AppRoute.TRANSACTION_DETAIL}/$paymentId")
+                },
+            )
+        }
+
+        composable(
+            route = "${AppRoute.TRANSACTION_DETAIL}/{paymentId}",
+            arguments = listOf(navArgument("paymentId") { type = NavType.LongType }),
+        ) {
+            TransactionDetailScreen(onBack = { navController.popBackStack() })
+        }
+
+        composable(AppRoute.EXPERT_TRANSACTIONS) {
+            ExpertTransactionsScreen(
+                onBack = { navController.popBackStack() },
+                onNavigateQuoteDetail = { requestId ->
+                    navController.navigate("${AppRoute.QUOTE_DETAIL}/$requestId")
+                },
+            )
         }
     }
 }
