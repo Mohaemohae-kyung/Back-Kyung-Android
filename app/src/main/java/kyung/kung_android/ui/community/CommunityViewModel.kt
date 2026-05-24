@@ -17,7 +17,7 @@ import javax.inject.Inject
 
 data class BoardState<T>(
     val posts: List<T> = emptyList(),
-    val isLoading: Boolean = false,
+    val isLoading: Boolean = true,
     val isLoadingMore: Boolean = false,
     val hasMore: Boolean = true,
     val error: String? = null,

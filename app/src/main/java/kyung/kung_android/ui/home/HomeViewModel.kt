@@ -14,7 +14,7 @@ import javax.inject.Inject
 
 data class HomeUiState(
     val recommended: List<ExpertSearchResponse> = emptyList(),
-    val isLoadingRecommended: Boolean = false,
+    val isLoadingRecommended: Boolean = true,
 )
 
 @HiltViewModel

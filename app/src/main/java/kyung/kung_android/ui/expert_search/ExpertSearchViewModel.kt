@@ -23,7 +23,7 @@ data class ExpertSearchUiState(
     val selectedLocationId: Long? = null,
     val experts: List<ExpertSearchResponse> = emptyList(),
     val favoritedExpertIds: Set<Long> = emptySet(),
-    val isLoading: Boolean = false,
+    val isLoading: Boolean = true,
     val error: String? = null,
 )
 
@@ -32,7 +32,7 @@ private data class LocalState(
     val selectedCategoryId: Long? = null,
     val selectedLocationId: Long? = null,
     val experts: List<ExpertSearchResponse> = emptyList(),
-    val isLoading: Boolean = false,
+    val isLoading: Boolean = true,
     val error: String? = null,
 )
 

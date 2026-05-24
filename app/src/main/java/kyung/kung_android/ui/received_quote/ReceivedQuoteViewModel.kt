@@ -15,7 +15,7 @@ import javax.inject.Inject
 data class ReceivedQuoteUiState(
     val inProgress: List<ServiceRequestResponse> = emptyList(),
     val pastRequests: List<ServiceRequestResponse> = emptyList(),
-    val isLoading: Boolean = false,
+    val isLoading: Boolean = true,
     val error: String? = null,
 )
 
