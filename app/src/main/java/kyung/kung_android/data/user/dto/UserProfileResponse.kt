@@ -11,4 +11,5 @@ data class UserProfileResponse(
     val nickname: String? = null,
     val role: String,
     val profileImageUrl: String? = null,
+    val expertServiceId: Long? = null,
 )

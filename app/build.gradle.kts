@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -6,6 +8,14 @@ plugins {
     alias(libs.plugins.hilt)
     alias(libs.plugins.ksp)
 }
+
+val localProperties = Properties().apply {
+    val f = rootProject.file("local.properties")
+    if (f.exists()) f.inputStream().use { load(it) }
+}
+
+val prodBaseUrl: String = "https://can-fly.shop/"
+val debugBaseUrl: String = localProperties.getProperty("BASE_URL", prodBaseUrl)
 
 android {
     namespace = "kyung.kung_android"
@@ -33,7 +43,7 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            buildConfigField("String", "BASE_URL", "\"https://can-fly.shop/\"")
+            buildConfigField("String", "BASE_URL", "\"$prodBaseUrl\"")
             buildConfigField("Boolean", "SSL_PINNING_ENABLED", "false") // 실제 pin 값 존재 X 일단 비활성화함. 추후 변경 요망
             buildConfigField("String", "PINNING_HOST", "\"can-fly.shop/\"")
             buildConfigField("String", "PIN_CURRENT", "\"sha256/current_pin_here=\"")
@@ -41,7 +51,7 @@ android {
         }
         debug {
             isMinifyEnabled = false
-            buildConfigField("String", "BASE_URL", "\"https://can-fly.shop/\"")
+            buildConfigField("String", "BASE_URL", "\"$debugBaseUrl\"")
             buildConfigField("Boolean", "SSL_PINNING_ENABLED", "false")
             buildConfigField("String", "PINNING_HOST", "\"\"")
             buildConfigField("String", "PIN_CURRENT", "\"\"")

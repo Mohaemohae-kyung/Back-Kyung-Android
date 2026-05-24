@@ -21,4 +21,8 @@ class ChatRepository @Inject constructor(
 
     suspend fun getLatestMessage(chatRoomId: Long): ChatMessageResponse? =
         chatApi.getMessages(chatRoomId, page = 0, size = 1).firstOrNull()
+
+    suspend fun markRead(chatRoomId: Long) {
+        chatApi.markRead(chatRoomId)
+    }
 }

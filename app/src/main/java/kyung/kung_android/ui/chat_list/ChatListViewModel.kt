@@ -21,7 +21,7 @@ data class ChatRoomCard(
 
 data class ChatListUiState(
     val rooms: List<ChatRoomCard> = emptyList(),
-    val isLoading: Boolean = false,
+    val isLoading: Boolean = true,
     val error: String? = null,
 )
 

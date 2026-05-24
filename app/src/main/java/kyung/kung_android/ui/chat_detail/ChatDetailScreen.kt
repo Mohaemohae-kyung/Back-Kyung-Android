@@ -36,10 +36,17 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
+import coil3.compose.AsyncImage
+import kyung.kung_android.data.expert.dto.ExpertDetailResponse
+import kyung.kung_android.data.request.dto.ServiceRequestResponse
+import kyung.kung_android.ui.common.InitialAvatar
+import kyung.kung_android.ui.common.KungPrimaryButton
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -52,6 +59,7 @@ import kyung.kung_android.ui.theme.KungColors
 @Composable
 fun ChatDetailScreen(
     onNavigateBack: () -> Unit,
+    onNavigateCheckout: (requestId: Long) -> Unit = {},
     viewModel: ChatDetailViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -97,6 +105,14 @@ fun ChatDetailScreen(
                 if (!state.isConnected) {
                     ConnectionBanner()
                 }
+                state.linkedRequest?.let { req ->
+                    QuoteInfoCard(
+                        request = req,
+                        expert = state.linkedExpert,
+                        showPayButton = state.isRequester && req.status == "CHATTING",
+                        onPayClick = { onNavigateCheckout(req.requestId) },
+                    )
+                }
                 LazyColumn(
                     state = listState,
                     modifier = Modifier.fillMaxSize(),
@@ -104,9 +120,28 @@ fun ChatDetailScreen(
                     verticalArrangement = Arrangement.spacedBy(6.dp),
                 ) {
                     items(state.messages, key = { it.chatMessageId }) { msg ->
+                        val isMine = state.currentUserId != null && msg.senderId == state.currentUserId
+                        val otherName: String
+                        val otherImageUrl: String?
+                        when (msg.senderId) {
+                            state.linkedExpert?.ownerUserId -> {
+                                otherName = state.linkedExpert?.displayName ?: "고수"
+                                otherImageUrl = state.linkedExpert?.profileImageUrl
+                            }
+                            state.linkedRequest?.userId -> {
+                                otherName = state.linkedRequest?.requesterName ?: "사용자"
+                                otherImageUrl = null
+                            }
+                            else -> {
+                                otherName = "상대"
+                                otherImageUrl = null
+                            }
+                        }
                         MessageBubble(
                             message = msg,
-                            isMine = state.currentUserId != null && msg.senderId == state.currentUserId,
+                            isMine = isMine,
+                            otherName = otherName,
+                            otherImageUrl = otherImageUrl,
                         )
                     }
                 }
@@ -136,21 +171,20 @@ private fun ConnectionBanner() {
 private fun MessageBubble(
     message: ChatMessageResponse,
     isMine: Boolean,
+    otherName: String,
+    otherImageUrl: String?,
 ) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = if (isMine) Arrangement.End else Arrangement.Start,
-    ) {
-        val shape = if (isMine) {
-            RoundedCornerShape(topStart = 18.dp, topEnd = 18.dp, bottomStart = 18.dp, bottomEnd = 4.dp)
-        } else {
-            RoundedCornerShape(topStart = 18.dp, topEnd = 18.dp, bottomStart = 4.dp, bottomEnd = 18.dp)
-        }
+    val shape = if (isMine) {
+        RoundedCornerShape(topStart = 18.dp, topEnd = 18.dp, bottomStart = 18.dp, bottomEnd = 4.dp)
+    } else {
+        RoundedCornerShape(topStart = 18.dp, topEnd = 18.dp, bottomStart = 4.dp, bottomEnd = 18.dp)
+    }
+    val bubble: @Composable () -> Unit = {
         Box(
             modifier = Modifier
                 .widthIn(max = 280.dp)
                 .clip(shape)
-                .background(if (isMine) KungColors.Purple else KungColors.White)
+                .background(if (isMine) KungColors.Purple else KungColors.PurpleBg)
                 .padding(horizontal = 14.dp, vertical = 10.dp),
         ) {
             Text(
@@ -158,6 +192,39 @@ private fun MessageBubble(
                 color = if (isMine) KungColors.White else KungColors.Charcoal,
                 style = MaterialTheme.typography.bodyMedium.copy(lineHeight = 20.sp),
             )
+        }
+    }
+    if (isMine) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.End,
+        ) { bubble() }
+    } else {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.Start,
+            verticalAlignment = Alignment.Top,
+        ) {
+            if (otherImageUrl != null) {
+                AsyncImage(
+                    model = otherImageUrl,
+                    contentDescription = null,
+                    modifier = Modifier.size(32.dp).clip(CircleShape),
+                    contentScale = ContentScale.Crop,
+                )
+            } else {
+                InitialAvatar(name = otherName, size = 32.dp)
+            }
+            Spacer(modifier = Modifier.size(8.dp))
+            Column {
+                Text(
+                    text = otherName,
+                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
+                    color = KungColors.Slate,
+                )
+                Spacer(modifier = Modifier.size(4.dp))
+                bubble()
+            }
         }
     }
 }
@@ -220,6 +287,69 @@ private fun ChatInputBar(
                 contentDescription = "전송",
                 tint = if (sendEnabled) KungColors.White else KungColors.Hint,
                 modifier = Modifier.size(20.dp),
+            )
+        }
+    }
+}
+
+@Composable
+private fun QuoteInfoCard(
+    request: ServiceRequestResponse,
+    expert: ExpertDetailResponse?,
+    showPayButton: Boolean,
+    onPayClick: () -> Unit,
+) {
+    val numberFmt = remember { java.text.NumberFormat.getNumberInstance(java.util.Locale.KOREA) }
+    val dateFmt = remember { java.time.format.DateTimeFormatter.ofPattern("yyyy.MM.dd") }
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 14.dp, vertical = 10.dp)
+            .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(16.dp))
+            .padding(14.dp),
+    ) {
+        val otherName = expert?.displayName ?: request.requesterName ?: "상대방"
+        Text(
+            text = "상대방 · $otherName",
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Spacer(modifier = Modifier.size(6.dp))
+        Text(
+            text = request.title,
+            style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
+        )
+        Spacer(modifier = Modifier.size(8.dp))
+        Row {
+            Text(
+                text = "예산",
+                modifier = Modifier.widthIn(min = 48.dp),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Text(
+                text = request.budget?.let { "${numberFmt.format(it)}원" } ?: "협의",
+                style = MaterialTheme.typography.bodySmall,
+            )
+        }
+        Spacer(modifier = Modifier.size(2.dp))
+        Row {
+            Text(
+                text = "일정",
+                modifier = Modifier.widthIn(min = 48.dp),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Text(
+                text = request.preferredDate?.toLocalDate()?.format(dateFmt) ?: "협의",
+                style = MaterialTheme.typography.bodySmall,
+            )
+        }
+        if (showPayButton) {
+            Spacer(modifier = Modifier.size(10.dp))
+            KungPrimaryButton(
+                text = "결제하기",
+                onClick = onPayClick,
             )
         }
     }

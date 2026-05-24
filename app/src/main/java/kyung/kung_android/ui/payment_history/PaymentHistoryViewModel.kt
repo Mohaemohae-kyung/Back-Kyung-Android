@@ -14,7 +14,7 @@ import javax.inject.Inject
 
 data class PaymentHistoryUiState(
     val payments: List<PaymentResponse> = emptyList(),
-    val isLoading: Boolean = false,
+    val isLoading: Boolean = true,
     val error: String? = null,
 )
 

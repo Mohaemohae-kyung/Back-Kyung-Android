@@ -34,14 +34,18 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import coil3.compose.AsyncImage
 import kyung.kung_android.data.expert.dto.ExpertDetailResponse
 import kyung.kung_android.ui.common.InitialAvatar
 import kyung.kung_android.ui.common.KungPrimaryButton
@@ -55,6 +59,7 @@ fun ExpertDetailScreen(
     onBack: () -> Unit,
     onNavigateQuoteRequest: (expertId: Long, expertServiceId: Long) -> Unit,
     onNavigateLogin: () -> Unit = {},
+    onNavigateEditProfile: () -> Unit = {},
     viewModel: ExpertDetailViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -80,12 +85,14 @@ fun ExpertDetailScreen(
                     }
                 },
                 actions = {
-                    IconButton(onClick = viewModel::onFavoriteToggle) {
-                        Icon(
-                            imageVector = if (state.isFavorited) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
-                            contentDescription = if (state.isFavorited) "찜 해제" else "찜",
-                            tint = if (state.isFavorited) KungColors.Coral else MaterialTheme.colorScheme.onSurface,
-                        )
+                    if (state.expert != null && !state.isMine) {
+                        IconButton(onClick = viewModel::onFavoriteToggle) {
+                            Icon(
+                                imageVector = if (state.isFavorited) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
+                                contentDescription = if (state.isFavorited) "찜 해제" else "찜",
+                                tint = if (state.isFavorited) KungColors.Coral else MaterialTheme.colorScheme.onSurface,
+                            )
+                        }
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -94,17 +101,26 @@ fun ExpertDetailScreen(
             )
         },
         bottomBar = {
-            BottomCta(
-                enabled = state.expert?.expertServiceIds?.isNotEmpty() == true,
-                onClick = {
-                    if (!isLoggedIn) {
-                        onNavigateLogin()
-                        return@BottomCta
-                    }
-                    val firstServiceId = state.expert?.expertServiceIds?.firstOrNull() ?: return@BottomCta
-                    onNavigateQuoteRequest(state.expertId, firstServiceId)
-                },
-            )
+            when {
+                state.expert == null -> Unit
+                state.isMine -> BottomCta(
+                    text = "프로필 수정하기",
+                    enabled = true,
+                    onClick = onNavigateEditProfile,
+                )
+                else -> BottomCta(
+                    text = "견적 요청하기",
+                    enabled = state.expert?.expertServiceIds?.isNotEmpty() == true,
+                    onClick = {
+                        if (!isLoggedIn) {
+                            onNavigateLogin()
+                            return@BottomCta
+                        }
+                        val firstServiceId = state.expert?.expertServiceIds?.firstOrNull() ?: return@BottomCta
+                        onNavigateQuoteRequest(state.expertId, firstServiceId)
+                    },
+                )
+            }
         },
     ) { padding ->
         when {
@@ -171,7 +187,16 @@ private fun ProfileCard(expert: ExpertDetailResponse) {
                 .padding(18.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            InitialAvatar(name = expert.displayName, size = 76.dp)
+            if (expert.profileImageUrl != null) {
+                AsyncImage(
+                    model = expert.profileImageUrl,
+                    contentDescription = null,
+                    modifier = Modifier.size(76.dp).clip(CircleShape),
+                    contentScale = ContentScale.Crop,
+                )
+            } else {
+                InitialAvatar(name = expert.displayName, size = 76.dp)
+            }
             Spacer(modifier = Modifier.width(16.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -228,6 +253,7 @@ private fun InfoRow(label: String, value: String) {
 
 @Composable
 private fun BottomCta(
+    text: String,
     enabled: Boolean,
     onClick: () -> Unit,
 ) {
@@ -238,7 +264,7 @@ private fun BottomCta(
             .padding(horizontal = 16.dp, vertical = 12.dp),
     ) {
         KungPrimaryButton(
-            text = "견적 요청하기",
+            text = text,
             onClick = onClick,
             enabled = enabled,
         )
