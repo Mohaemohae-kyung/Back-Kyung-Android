@@ -123,9 +123,18 @@ fun AppNavHost(
         }
 
         composable(
-            route = "${AppRoute.QUOTE_DETAIL}/{requestId}",
-            arguments = listOf(navArgument("requestId") { type = NavType.LongType }),
-        ) {
+            route = "${AppRoute.QUOTE_DETAIL}/{requestId}?context={context}",
+            arguments = listOf(
+                navArgument("requestId") { type = NavType.LongType },
+                navArgument("context") {
+                    type = NavType.StringType
+                    nullable = true
+                    defaultValue = null
+                },
+            ),
+        ) { entry ->
+            val context = entry.arguments?.getString("context")
+            val title = if (context == "transaction") "거래 상세" else "견적 상세"
             QuoteDetailScreen(
                 onBack = { navController.popBackStack() },
                 onNavigateExpertDetail = { id -> navController.navigate("${AppRoute.EXPERT_DETAIL}/$id") },
@@ -135,6 +144,7 @@ fun AppNavHost(
                 onNavigateCheckout = { requestId ->
                     navController.navigate("${AppRoute.CHECKOUT}/$requestId")
                 },
+                topBarTitle = title,
             )
         }
 
@@ -262,7 +272,7 @@ fun AppNavHost(
             ExpertTransactionsScreen(
                 onBack = { navController.popBackStack() },
                 onNavigateQuoteDetail = { requestId ->
-                    navController.navigate("${AppRoute.QUOTE_DETAIL}/$requestId")
+                    navController.navigate("${AppRoute.QUOTE_DETAIL}/$requestId?context=transaction")
                 },
             )
         }

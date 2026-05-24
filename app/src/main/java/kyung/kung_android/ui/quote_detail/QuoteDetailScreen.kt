@@ -67,6 +67,7 @@ fun QuoteDetailScreen(
     onNavigateExpertDetail: (Long) -> Unit,
     onNavigateChat: (chatRoomId: Long) -> Unit,
     onNavigateCheckout: (requestId: Long) -> Unit = {},
+    topBarTitle: String = "견적 상세",
     viewModel: QuoteDetailViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -82,7 +83,7 @@ fun QuoteDetailScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = "견적 상세",
+                        text = topBarTitle,
                         style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.ExtraBold),
                     )
                 },

@@ -136,17 +136,10 @@ private fun LoggedInContent(
 
         item {
             SectionTitle("거래내역")
-            if (isExpert) {
-                MyPageRow(
-                    title = "완료된 거래",
-                    onClick = onExpertTransactionsClick,
-                )
-            } else {
-                MyPageRow(
-                    title = "매칭온페이 거래내역",
-                    onClick = onPaymentHistoryClick,
-                )
-            }
+            MyPageRow(
+                title = "매칭온페이 거래내역",
+                onClick = if (isExpert) onExpertTransactionsClick else onPaymentHistoryClick,
+            )
         }
 
         item {
