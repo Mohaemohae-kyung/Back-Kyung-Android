@@ -1,10 +1,7 @@
 package kyung.kung_android.ui.main
 
 import android.net.Uri
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -18,13 +15,8 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import coil3.compose.AsyncImage
-import kyung.kung_android.ui.common.InitialAvatar
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -64,7 +56,6 @@ fun MainScaffold(
     val currentBaseRoute = navBackStackEntry?.destination?.route?.substringBefore("?")
     val isLoggedIn by viewModel.isLoggedIn.collectAsStateWithLifecycle()
     val isExpert by viewModel.isExpert.collectAsStateWithLifecycle()
-    val currentUser by viewModel.currentUser.collectAsStateWithLifecycle()
 
     androidx.compose.runtime.LaunchedEffect(forceTab) {
         val tab = forceTab ?: return@LaunchedEffect
@@ -104,37 +95,11 @@ fun MainScaffold(
                         )
                     },
                     actions = {
-                        val avatarUrl = currentUser?.profileImageUrl
-                        val displayName = currentUser?.nickname?.takeIf { it.isNotBlank() }
-                            ?: currentUser?.name
-                            ?: "?"
-                        if (avatarUrl != null) {
-                            AsyncImage(
-                                model = avatarUrl,
+                        IconButton(onClick = onNavigateMyPage) {
+                            Icon(
+                                imageVector = Icons.Filled.Person,
                                 contentDescription = "마이페이지",
-                                contentScale = ContentScale.Crop,
-                                modifier = Modifier
-                                    .padding(end = 8.dp)
-                                    .size(32.dp)
-                                    .clip(CircleShape)
-                                    .clickable(onClick = onNavigateMyPage),
                             )
-                        } else if (currentUser != null) {
-                            androidx.compose.foundation.layout.Box(
-                                modifier = Modifier
-                                    .padding(end = 8.dp)
-                                    .clip(CircleShape)
-                                    .clickable(onClick = onNavigateMyPage),
-                            ) {
-                                InitialAvatar(name = displayName, size = 32.dp)
-                            }
-                        } else {
-                            IconButton(onClick = onNavigateMyPage) {
-                                Icon(
-                                    imageVector = Icons.Filled.Person,
-                                    contentDescription = "마이페이지",
-                                )
-                            }
                         }
                     },
                     colors = TopAppBarDefaults.topAppBarColors(
