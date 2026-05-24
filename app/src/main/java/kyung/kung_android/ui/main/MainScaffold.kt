@@ -45,6 +45,7 @@ fun MainScaffold(
     onNavigateSignup: () -> Unit = {},
     onNavigateQuoteDetail: (Long) -> Unit = {},
     onNavigatePostDetail: (Long) -> Unit = {},
+    onNavigateNoticeDetail: (Long) -> Unit = {},
     onNavigatePostWrite: () -> Unit = {},
     onNavigateChatDetail: (Long) -> Unit = {},
     forceTab: String? = null,
@@ -213,6 +214,7 @@ fun MainScaffold(
             composable(AppRoute.Tab.COMMUNITY) {
                 CommunityScreen(
                     onNavigatePostDetail = onNavigatePostDetail,
+                    onNavigateNoticeDetail = onNavigateNoticeDetail,
                     onNavigatePostWrite = {
                         if (isLoggedIn) onNavigatePostWrite() else onNavigateLogin()
                     },

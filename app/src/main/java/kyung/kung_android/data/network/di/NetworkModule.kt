@@ -12,6 +12,7 @@ import kyung.kung_android.data.network.AuthInterceptor
 import kyung.kung_android.data.network.TokenAuthenticator
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
+import okhttp3.CertificatePinner
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Converter
 import retrofit2.Retrofit
@@ -61,10 +62,12 @@ object NetworkModule {
         logging: HttpLoggingInterceptor,
         authInterceptor: AuthInterceptor,
         tokenAuthenticator: TokenAuthenticator,
+        certificatePinner: CertificatePinner,
     ): OkHttpClient = OkHttpClient.Builder()
         .connectTimeout(15, TimeUnit.SECONDS)
         .readTimeout(20, TimeUnit.SECONDS)
         .writeTimeout(20, TimeUnit.SECONDS)
+        .certificatePinner(certificatePinner)
         .addInterceptor(authInterceptor)
         .addInterceptor(logging)
         .authenticator(tokenAuthenticator)
@@ -75,12 +78,28 @@ object NetworkModule {
     @NoAuthClient
     fun provideNoAuthOkHttpClient(
         logging: HttpLoggingInterceptor,
+        certificatePinner: CertificatePinner,
     ): OkHttpClient = OkHttpClient.Builder()
         .connectTimeout(15, TimeUnit.SECONDS)
         .readTimeout(20, TimeUnit.SECONDS)
         .writeTimeout(20, TimeUnit.SECONDS)
+        .certificatePinner(certificatePinner)
         .addInterceptor(logging)
         .build()
+
+    @Provides
+    @Singleton
+    fun provideCertificatePinner(): CertificatePinner {
+        val builder = CertificatePinner.Builder()
+
+        if (BuildConfig.SSL_PINNING_ENABLED) {
+            builder
+                .add(BuildConfig.PINNING_HOST, BuildConfig.PIN_CURRENT)
+                .add(BuildConfig.PINNING_HOST, BuildConfig.PIN_BACKUP)
+        }
+
+        return builder.build()
+    }
 
     @Provides
     @Singleton

@@ -44,10 +44,18 @@ android {
                 "proguard-rules.pro"
             )
             buildConfigField("String", "BASE_URL", "\"$prodBaseUrl\"")
+            buildConfigField("Boolean", "SSL_PINNING_ENABLED", "false") // 실제 pin 값 존재 X 일단 비활성화함. 추후 변경 요망
+            buildConfigField("String", "PINNING_HOST", "\"can-fly.shop/\"")
+            buildConfigField("String", "PIN_CURRENT", "\"sha256/current_pin_here=\"")
+            buildConfigField("String", "PIN_BACKUP", "\"sha256/backup_pin_here=\"")
         }
         debug {
             isMinifyEnabled = false
             buildConfigField("String", "BASE_URL", "\"$debugBaseUrl\"")
+            buildConfigField("Boolean", "SSL_PINNING_ENABLED", "false")
+            buildConfigField("String", "PINNING_HOST", "\"\"")
+            buildConfigField("String", "PIN_CURRENT", "\"\"")
+            buildConfigField("String", "PIN_BACKUP", "\"\"")
         }
     }
 
