@@ -6,6 +6,8 @@ import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
+import kotlinx.serialization.json.JsonDecoder
+import kotlinx.serialization.json.jsonPrimitive
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
@@ -20,6 +22,12 @@ object LocalDateTimeSerializer : KSerializer<LocalDateTime> {
     }
 
     override fun deserialize(decoder: Decoder): LocalDateTime {
-        return LocalDateTime.parse(decoder.decodeString(), formatter)
+        val raw = if (decoder is JsonDecoder) {
+            decoder.decodeJsonElement().jsonPrimitive.content
+        } else {
+            decoder.decodeString()
+        }
+        return runCatching { LocalDateTime.parse(raw, formatter) }
+            .getOrElse { LocalDateTime.parse(raw.substringBefore('.'), formatter) }
     }
 }

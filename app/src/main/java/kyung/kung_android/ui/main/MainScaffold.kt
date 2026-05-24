@@ -42,6 +42,7 @@ fun MainScaffold(
     onNavigateExpertDetail: (Long) -> Unit = {},
     onNavigateChatbot: () -> Unit = {},
     onNavigateExpertRegister: () -> Unit = {},
+    onNavigateSignup: () -> Unit = {},
     onNavigateQuoteDetail: (Long) -> Unit = {},
     onNavigatePostDetail: (Long) -> Unit = {},
     onNavigatePostWrite: () -> Unit = {},
@@ -215,6 +216,8 @@ fun MainScaffold(
                     onNavigatePostWrite = {
                         if (isLoggedIn) onNavigatePostWrite() else onNavigateLogin()
                     },
+                    onNavigateSignup = onNavigateSignup,
+                    onNavigateExpertRegister = onNavigateExpertRegister,
                 )
             }
         }

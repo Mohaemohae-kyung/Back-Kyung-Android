@@ -46,6 +46,7 @@ fun AppNavHost(
                 onNavigateMyPage = { navController.navigate(AppRoute.MY_PAGE) },
                 onNavigateChatbot = { navController.navigate(AppRoute.CHATBOT) },
                 onNavigateExpertRegister = { navController.navigate(AppRoute.EXPERT_REGISTER) },
+                onNavigateSignup = { navController.navigate(AppRoute.SIGNUP) },
                 onNavigateExpertDetail = { id -> navController.navigate("${AppRoute.EXPERT_DETAIL}/$id") },
                 onNavigateQuoteDetail = { id -> navController.navigate("${AppRoute.QUOTE_DETAIL}/$id") },
                 onNavigatePostDetail = { id -> navController.navigate("${AppRoute.POST_DETAIL}/$id") },
@@ -62,7 +63,7 @@ fun AppNavHost(
 
         composable(
             route = "${AppRoute.CHAT_DETAIL}/{${AppRoute.ARG_CHAT_ROOM_ID}}",
-            arguments = listOf(navArgument(AppRoute.ARG_CHAT_ROOM_ID) { type = NavType.LongType }),
+            arguments = listOf(navArgument( AppRoute.ARG_CHAT_ROOM_ID) { type = NavType.LongType }),
         ) {
             ChatDetailScreen(onNavigateBack = { navController.popBackStack() })
         }

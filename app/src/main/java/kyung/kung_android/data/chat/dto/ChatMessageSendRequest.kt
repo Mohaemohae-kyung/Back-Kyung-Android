@@ -7,5 +7,5 @@ data class ChatMessageSendRequest(
     val roomId: String,
     val senderId: String,
     val message: String,
-    val type: String = "TEXT",
+    val type: String,
 )

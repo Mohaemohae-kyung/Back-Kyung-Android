@@ -27,7 +27,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Apps
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Brush
-import androidx.compose.material.icons.filled.Handshake
 import androidx.compose.material.icons.filled.HeadsetMic
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Place
@@ -60,6 +59,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
@@ -69,6 +69,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import kyung.kung_android.R
 import kyung.kung_android.data.expert.dto.ExpertSearchResponse
 import kyung.kung_android.domain.category.model.Categories
 import kyung.kung_android.domain.category.model.Category
@@ -180,7 +181,7 @@ private fun HomeTopBar(
             contentAlignment = Alignment.Center,
         ) {
             Icon(
-                imageVector = Icons.Filled.Handshake,
+                painter = painterResource(R.drawable.ic_brand_logo),
                 contentDescription = null,
                 tint = KungColors.White,
                 modifier = Modifier.size(20.dp),
@@ -251,14 +252,14 @@ private fun HomeHeroCard(
                     modifier = Modifier.size(13.dp),
                 )
                 Text(
-                    text = "지금 가장 빠르게 매칭",
+                    text = "원하는 고수를 빠르게 만나는 방법",
                     style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
                     color = KungColors.White,
                 )
             }
             Spacer(modifier = Modifier.height(14.dp))
             Text(
-                text = "원하는 고수,\n바로 찾아드릴게요",
+                text = "필요한 서비스를\n고수에게 바로 요청하세요",
                 style = MaterialTheme.typography.headlineMedium.copy(
                     fontWeight = FontWeight.ExtraBold,
                     lineHeight = 34.sp,
@@ -517,26 +518,16 @@ private fun HomeRecommendedExpertsSection(
     if (!isLoading && experts.isEmpty()) return
 
     Column {
-        Row(
+        Text(
+            text = "오늘의 추천 고수",
+            style = MaterialTheme.typography.titleMedium.copy(
+                fontWeight = FontWeight.ExtraBold,
+                letterSpacing = (-0.3).sp,
+            ),
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text(
-                text = "오늘의 추천 고수",
-                style = MaterialTheme.typography.titleMedium.copy(
-                    fontWeight = FontWeight.ExtraBold,
-                    letterSpacing = (-0.3).sp,
-                ),
-                modifier = Modifier.weight(1f),
-            )
-            Text(
-                text = "AI 추천",
-                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
-                color = KungColors.Purple,
-            )
-        }
+        )
         Spacer(modifier = Modifier.height(14.dp))
 
         if (isLoading && experts.isEmpty()) {

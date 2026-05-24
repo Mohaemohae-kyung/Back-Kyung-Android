@@ -90,9 +90,10 @@ class QuoteRequestViewModel @Inject constructor(
                 )
                 _effects.emit(QuoteRequestEffect.NavigateToReceivedQuote)
             } catch (e: ApiException) {
-                _state.update { it.copy(errorMessage = e.message ?: "요청 전송에 실패했어요.") }
+                _state.update { it.copy(errorMessage = e.message.ifBlank { "요청 전송에 실패했어요." }) }
             } catch (t: Throwable) {
-                _state.update { it.copy(errorMessage = "네트워크 오류가 발생했어요.") }
+                val detail = t.message?.takeIf { it.isNotBlank() } ?: t.javaClass.simpleName
+                _state.update { it.copy(errorMessage = "요청 전송에 실패했어요. ($detail)") }
             } finally {
                 _state.update { it.copy(isSubmitting = false) }
             }

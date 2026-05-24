@@ -54,6 +54,7 @@ class ChatDetailViewModel @Inject constructor(
             runCatching { userRepository.getMe() }
                 .onSuccess { me -> _state.update { it.copy(currentUserId = me.userId) } }
             loadHistory()
+            markRead()
             connectWithRetry()
         }
     }
@@ -66,6 +67,10 @@ class ChatDetailViewModel @Inject constructor(
             .onFailure {
                 _state.update { it.copy(isLoading = false, error = "이전 메시지를 불러오지 못했어요.") }
             }
+    }
+
+    private suspend fun markRead() {
+        runCatching { chatRepository.markRead(chatRoomId) }
     }
 
     private suspend fun connectWithRetry() {
@@ -82,6 +87,7 @@ class ChatDetailViewModel @Inject constructor(
                     .onCompletion { _state.update { it.copy(isConnected = false) } }
                     .collect { msg ->
                         _state.update { it.copy(messages = it.messages + msg) }
+                        runCatching { chatRepository.markRead(chatRoomId) }
                     }
             } catch (ce: CancellationException) {
                 throw ce

@@ -71,6 +71,6 @@ class ChatStompClient @Inject constructor(
         val base = BuildConfig.BASE_URL.trimEnd('/')
         val scheme = if (base.startsWith("https")) "wss" else "ws"
         val host = base.removePrefix("https://").removePrefix("http://")
-        return "$scheme://$host/ws-stomp"
+        return "$scheme://$host/ws-stomp-android"
     }
 }
