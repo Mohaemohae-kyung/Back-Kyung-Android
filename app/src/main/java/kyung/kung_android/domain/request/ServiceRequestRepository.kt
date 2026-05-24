@@ -32,6 +32,8 @@ class ServiceRequestRepository @Inject constructor(
 
     suspend fun getMyRequests(): List<ServiceRequestResponse> = api.getMyServiceRequests()
 
+    suspend fun getReceivedRequests(): List<ServiceRequestResponse> = api.getReceivedServiceRequests()
+
     suspend fun getRequest(requestId: Long): ServiceRequestResponse =
         api.getServiceRequest(requestId)
 

@@ -18,6 +18,9 @@ interface ServiceRequestApi {
     @GET("/api/service-requests/me")
     suspend fun getMyServiceRequests(): List<ServiceRequestResponse>
 
+    @GET("/api/service-requests/received")
+    suspend fun getReceivedServiceRequests(): List<ServiceRequestResponse>
+
     @GET("/api/service-requests/{requestId}")
     suspend fun getServiceRequest(
         @Path("requestId") requestId: Long,
