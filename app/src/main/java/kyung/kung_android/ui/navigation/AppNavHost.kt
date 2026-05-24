@@ -17,6 +17,7 @@ import kyung.kung_android.ui.chatbot.ChatBotScreen
 import kyung.kung_android.ui.checkout.CheckoutScreen
 import kyung.kung_android.ui.checkout.PaymentSuccessScreen
 import kyung.kung_android.ui.expert_transactions.ExpertTransactionsScreen
+import kyung.kung_android.ui.notice_detail.NoticeDetailScreen
 import kyung.kung_android.ui.transaction_detail.TransactionDetailScreen
 import kyung.kung_android.ui.common.PlaceholderScreen
 import kyung.kung_android.ui.expert_detail.ExpertDetailScreen
@@ -54,6 +55,7 @@ fun AppNavHost(
                 onNavigateExpertDetail = { id -> navController.navigate("${AppRoute.EXPERT_DETAIL}/$id") },
                 onNavigateQuoteDetail = { id -> navController.navigate("${AppRoute.QUOTE_DETAIL}/$id") },
                 onNavigatePostDetail = { id -> navController.navigate("${AppRoute.POST_DETAIL}/$id") },
+                onNavigateNoticeDetail = { id -> navController.navigate("${AppRoute.NOTICE_DETAIL}/$id") },
                 onNavigatePostWrite = { navController.navigate(AppRoute.POST_EDITOR) },
                 onNavigateChatDetail = { chatRoomId ->
                     navController.navigate("${AppRoute.CHAT_DETAIL}/$chatRoomId")
@@ -275,6 +277,13 @@ fun AppNavHost(
                     navController.navigate("${AppRoute.QUOTE_DETAIL}/$requestId?context=transaction")
                 },
             )
+        }
+
+        composable(
+            route = "${AppRoute.NOTICE_DETAIL}/{postId}",
+            arguments = listOf(navArgument("postId") { type = NavType.LongType }),
+        ) {
+            NoticeDetailScreen(onBack = { navController.popBackStack() })
         }
     }
 }

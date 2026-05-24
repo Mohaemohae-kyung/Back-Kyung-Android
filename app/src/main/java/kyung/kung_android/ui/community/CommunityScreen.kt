@@ -69,6 +69,7 @@ import kyung.kung_android.ui.theme.KungColors
 @Composable
 fun CommunityScreen(
     onNavigatePostDetail: (Long) -> Unit,
+    onNavigateNoticeDetail: (Long) -> Unit,
     onNavigatePostWrite: () -> Unit,
     onNavigateSignup: () -> Unit,
     onNavigateExpertRegister: () -> Unit,
@@ -138,7 +139,7 @@ fun CommunityScreen(
                                 isLoading = state.center.isLoading,
                                 isLoadingMore = state.center.isLoadingMore,
                                 error = state.center.error,
-                                onPostClick = onNavigatePostDetail,
+                                onPostClick = onNavigateNoticeDetail,
                             )
                         }
                     }
