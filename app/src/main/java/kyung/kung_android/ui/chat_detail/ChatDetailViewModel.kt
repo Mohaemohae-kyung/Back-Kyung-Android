@@ -17,7 +17,11 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kyung.kung_android.data.chat.dto.ChatMessageResponse
 import kyung.kung_android.data.chat.stomp.ChatStompClient
+import kyung.kung_android.data.expert.dto.ExpertDetailResponse
+import kyung.kung_android.data.request.dto.ServiceRequestResponse
 import kyung.kung_android.domain.chat.ChatRepository
+import kyung.kung_android.domain.expert.ExpertRepository
+import kyung.kung_android.domain.request.ServiceRequestRepository
 import kyung.kung_android.domain.user.UserRepository
 import kyung.kung_android.ui.navigation.AppRoute
 import org.hildan.krossbow.stomp.StompSession
@@ -27,17 +31,25 @@ data class ChatDetailUiState(
     val chatRoomId: Long = 0L,
     val currentUserId: Long? = null,
     val messages: List<ChatMessageResponse> = emptyList(),
+    val linkedRequest: ServiceRequestResponse? = null,
+    val linkedExpert: ExpertDetailResponse? = null,
     val input: String = "",
     val isLoading: Boolean = false,
     val isConnected: Boolean = false,
     val error: String? = null,
-)
+) {
+    val isRequester: Boolean
+        get() = linkedRequest?.userId != null && currentUserId != null &&
+            linkedRequest.userId == currentUserId
+}
 
 @HiltViewModel
 class ChatDetailViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val chatRepository: ChatRepository,
     private val userRepository: UserRepository,
+    private val serviceRequestRepository: ServiceRequestRepository,
+    private val expertRepository: ExpertRepository,
     private val stompClient: ChatStompClient,
 ) : ViewModel() {
 
@@ -53,9 +65,26 @@ class ChatDetailViewModel @Inject constructor(
             _state.update { it.copy(isLoading = true) }
             runCatching { userRepository.getMe() }
                 .onSuccess { me -> _state.update { it.copy(currentUserId = me.userId) } }
+            loadLinkedRequest()
             loadHistory()
             markRead()
             connectWithRetry()
+        }
+    }
+
+    private suspend fun loadLinkedRequest() {
+        val me = userRepository.currentUser.value ?: return
+        val isExpert = me.role == "EXPERT" || me.role == "ADMIN"
+        runCatching {
+            if (isExpert) serviceRequestRepository.getReceivedRequests()
+            else serviceRequestRepository.getMyRequests()
+        }.onSuccess { list ->
+            val match = list.firstOrNull { it.chatRoomId == chatRoomId } ?: return@onSuccess
+            _state.update { it.copy(linkedRequest = match) }
+            match.expertServiceId?.let { sid ->
+                runCatching { expertRepository.getExpertDetail(sid) }
+                    .onSuccess { d -> _state.update { it.copy(linkedExpert = d) } }
+            }
         }
     }
 

@@ -67,7 +67,12 @@ fun AppNavHost(
             route = "${AppRoute.CHAT_DETAIL}/{${AppRoute.ARG_CHAT_ROOM_ID}}",
             arguments = listOf(navArgument( AppRoute.ARG_CHAT_ROOM_ID) { type = NavType.LongType }),
         ) {
-            ChatDetailScreen(onNavigateBack = { navController.popBackStack() })
+            ChatDetailScreen(
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateCheckout = { requestId ->
+                    navController.navigate("${AppRoute.CHECKOUT}/$requestId")
+                },
+            )
         }
 
         composable(

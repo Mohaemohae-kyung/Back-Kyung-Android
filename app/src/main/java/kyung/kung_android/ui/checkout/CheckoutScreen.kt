@@ -164,15 +164,11 @@ private fun CheckoutContent(
         Column {
             SectionTitle("결제 수단")
             Spacer(modifier = Modifier.height(8.dp))
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                listOf("CARD" to "신용카드", "EASY_PAY" to "간편결제", "BANK_TRANSFER" to "계좌이체").forEach { (key, label) ->
-                    MethodRow(
-                        label = label,
-                        selected = state.paymentMethod == key,
-                        onClick = { onMethodSelected(key) },
-                    )
-                }
-            }
+            MethodRow(
+                label = "매칭온페이 결제",
+                selected = true,
+                onClick = {},
+            )
         }
 
         HorizontalDivider()
