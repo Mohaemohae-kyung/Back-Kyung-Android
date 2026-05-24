@@ -137,6 +137,7 @@ fun HomeScreen(
                         experts = state.recommended,
                         isLoading = state.isLoadingRecommended,
                         onExpertClick = onNavigateExpertDetail,
+                        onShowAll = { onNavigateExpertSearch(null, null, null) },
                     )
                 }
             }
@@ -514,20 +515,36 @@ private fun HomeRecommendedExpertsSection(
     experts: List<ExpertSearchResponse>,
     isLoading: Boolean,
     onExpertClick: (Long) -> Unit,
+    onShowAll: () -> Unit,
 ) {
     if (!isLoading && experts.isEmpty()) return
 
     Column {
-        Text(
-            text = "오늘의 추천 고수",
-            style = MaterialTheme.typography.titleMedium.copy(
-                fontWeight = FontWeight.ExtraBold,
-                letterSpacing = (-0.3).sp,
-            ),
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp),
-        )
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = "오늘의 추천 고수",
+                style = MaterialTheme.typography.titleMedium.copy(
+                    fontWeight = FontWeight.ExtraBold,
+                    letterSpacing = (-0.3).sp,
+                ),
+                modifier = Modifier.weight(1f),
+            )
+            TextButton(
+                onClick = onShowAll,
+                contentPadding = PaddingValues(horizontal = 4.dp, vertical = 0.dp),
+            ) {
+                Text(
+                    text = "전체 보기",
+                    style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
+                    color = KungColors.Purple,
+                )
+            }
+        }
         Spacer(modifier = Modifier.height(14.dp))
 
         if (isLoading && experts.isEmpty()) {
