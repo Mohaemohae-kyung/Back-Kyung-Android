@@ -99,14 +99,14 @@ fun ExpertDetailScreen(
             )
         },
         bottomBar = {
-            if (state.isMine) {
-                BottomCta(
+            when {
+                state.expert == null -> Unit
+                state.isMine -> BottomCta(
                     text = "프로필 수정하기",
                     enabled = true,
                     onClick = onNavigateEditProfile,
                 )
-            } else {
-                BottomCta(
+                else -> BottomCta(
                     text = "견적 요청하기",
                     enabled = state.expert?.expertServiceIds?.isNotEmpty() == true,
                     onClick = {
