@@ -27,4 +27,14 @@ interface ServiceRequestApi {
     suspend fun cancelServiceRequest(
         @Path("requestId") requestId: Long,
     ): ServiceRequestResponse
+
+    @PATCH("/api/service-requests/{requestId}/approve")
+    suspend fun approveServiceRequest(
+        @Path("requestId") requestId: Long,
+    ): ServiceRequestResponse
+
+    @PATCH("/api/service-requests/{requestId}/reject")
+    suspend fun rejectServiceRequest(
+        @Path("requestId") requestId: Long,
+    ): ServiceRequestResponse
 }

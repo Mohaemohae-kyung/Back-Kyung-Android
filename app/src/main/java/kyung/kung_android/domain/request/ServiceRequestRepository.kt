@@ -37,4 +37,10 @@ class ServiceRequestRepository @Inject constructor(
 
     suspend fun cancel(requestId: Long): ServiceRequestResponse =
         api.cancelServiceRequest(requestId)
+
+    suspend fun approve(requestId: Long): ServiceRequestResponse =
+        api.approveServiceRequest(requestId)
+
+    suspend fun reject(requestId: Long): ServiceRequestResponse =
+        api.rejectServiceRequest(requestId)
 }

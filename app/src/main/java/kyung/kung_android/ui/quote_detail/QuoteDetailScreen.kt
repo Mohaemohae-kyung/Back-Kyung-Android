@@ -62,6 +62,7 @@ fun QuoteDetailScreen(
     onBack: () -> Unit,
     onNavigateExpertDetail: (Long) -> Unit,
     onNavigateChat: (chatRoomId: Long) -> Unit,
+    onNavigateCheckout: (requestId: Long) -> Unit = {},
     viewModel: QuoteDetailViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -107,10 +108,15 @@ fun QuoteDetailScreen(
                 QuoteDetailContent(
                     quote = requireNotNull(state.quote),
                     expert = state.expert,
-                    isCancelling = state.isCancelling,
+                    isRequester = state.isRequester,
+                    isReceivingExpert = state.isReceivingExpert,
+                    isActing = state.isActing,
                     onNavigateExpertDetail = onNavigateExpertDetail,
                     onNavigateChat = onNavigateChat,
+                    onNavigateCheckout = onNavigateCheckout,
                     onRequestCancel = { showCancelDialog = true },
+                    onApprove = { viewModel.onApprove() },
+                    onReject = { viewModel.onReject() },
                     modifier = Modifier.padding(padding),
                 )
             }
@@ -139,10 +145,15 @@ fun QuoteDetailScreen(
 private fun QuoteDetailContent(
     quote: ServiceRequestResponse,
     expert: ExpertDetailResponse?,
-    isCancelling: Boolean,
+    isRequester: Boolean,
+    isReceivingExpert: Boolean,
+    isActing: Boolean,
     onNavigateExpertDetail: (Long) -> Unit,
     onNavigateChat: (Long) -> Unit,
+    onNavigateCheckout: (Long) -> Unit,
     onRequestCancel: () -> Unit,
+    onApprove: () -> Unit,
+    onReject: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     LazyColumn(
@@ -194,9 +205,14 @@ private fun QuoteDetailContent(
         item {
             ActionArea(
                 quote = quote,
-                isCancelling = isCancelling,
+                isRequester = isRequester,
+                isReceivingExpert = isReceivingExpert,
+                isActing = isActing,
                 onNavigateChat = onNavigateChat,
+                onNavigateCheckout = onNavigateCheckout,
                 onRequestCancel = onRequestCancel,
+                onApprove = onApprove,
+                onReject = onReject,
             )
         }
     }
@@ -256,39 +272,71 @@ private fun InfoRow(label: String, value: String) {
 @Composable
 private fun ActionArea(
     quote: ServiceRequestResponse,
-    isCancelling: Boolean,
+    isRequester: Boolean,
+    isReceivingExpert: Boolean,
+    isActing: Boolean,
     onNavigateChat: (Long) -> Unit,
+    onNavigateCheckout: (Long) -> Unit,
     onRequestCancel: () -> Unit,
+    onApprove: () -> Unit,
+    onReject: () -> Unit,
 ) {
-    when (quote.status) {
-        "PENDING" -> {
+    when {
+        isReceivingExpert && quote.status == "PENDING" -> {
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                OutlinedButton(
+                    onClick = onReject,
+                    enabled = !isActing,
+                    shape = RoundedCornerShape(16.dp),
+                    modifier = Modifier.weight(1f).height(54.dp),
+                ) { Text(if (isActing) "처리 중..." else "거절") }
+                Box(modifier = Modifier.weight(1f)) {
+                    KungPrimaryButton(
+                        text = if (isActing) "처리 중..." else "수락",
+                        onClick = onApprove,
+                        enabled = !isActing,
+                    )
+                }
+            }
+        }
+        isReceivingExpert && quote.status == "CHATTING" -> {
+            KungPrimaryButton(
+                text = "채팅방 가기",
+                onClick = { quote.chatRoomId?.let(onNavigateChat) },
+                enabled = quote.chatRoomId != null,
+            )
+        }
+        isRequester && quote.status == "PENDING" -> {
             OutlinedButton(
                 onClick = onRequestCancel,
-                enabled = !isCancelling,
+                enabled = !isActing,
                 shape = RoundedCornerShape(16.dp),
                 modifier = Modifier.fillMaxWidth().height(54.dp),
-            ) {
-                Text(if (isCancelling) "취소 중..." else "요청 취소")
-            }
+            ) { Text(if (isActing) "취소 중..." else "요청 취소") }
         }
-        "CHATTING" -> {
+        isRequester && quote.status == "CHATTING" -> {
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 KungPrimaryButton(
-                    text = "채팅방 가기",
-                    onClick = { quote.chatRoomId?.let(onNavigateChat) },
-                    enabled = quote.chatRoomId != null,
+                    text = "결제하기",
+                    onClick = { onNavigateCheckout(quote.requestId) },
                 )
                 OutlinedButton(
-                    onClick = onRequestCancel,
-                    enabled = !isCancelling,
+                    onClick = { quote.chatRoomId?.let(onNavigateChat) },
+                    enabled = quote.chatRoomId != null,
                     shape = RoundedCornerShape(16.dp),
                     modifier = Modifier.fillMaxWidth().height(54.dp),
-                ) { Text(if (isCancelling) "취소 중..." else "요청 취소") }
+                ) { Text("채팅방 가기") }
+                OutlinedButton(
+                    onClick = onRequestCancel,
+                    enabled = !isActing,
+                    shape = RoundedCornerShape(16.dp),
+                    modifier = Modifier.fillMaxWidth().height(54.dp),
+                ) { Text(if (isActing) "취소 중..." else "요청 취소") }
             }
         }
-        "REJECTED" -> StatusBanner("고수가 견적을 거절했어요")
-        "CANCELLED" -> StatusBanner("취소된 요청이에요")
-        "COMPLETED" -> StatusBanner("거래가 완료됐어요")
+        quote.status == "REJECTED" -> StatusBanner("고수가 견적을 거절했어요")
+        quote.status == "CANCELLED" -> StatusBanner("취소된 요청이에요")
+        quote.status == "COMPLETED" -> StatusBanner("거래가 완료됐어요")
         else -> {}
     }
 }
