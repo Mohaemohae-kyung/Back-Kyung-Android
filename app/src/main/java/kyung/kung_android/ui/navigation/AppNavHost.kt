@@ -92,6 +92,7 @@ fun AppNavHost(
                     navController.navigate("${AppRoute.QUOTE_REQUEST}/$expertId/$expertServiceId")
                 },
                 onNavigateLogin = { navController.navigate(AppRoute.LOGIN) },
+                onNavigateEditProfile = { navController.navigate(AppRoute.EXPERT_REGISTER) },
             )
         }
 

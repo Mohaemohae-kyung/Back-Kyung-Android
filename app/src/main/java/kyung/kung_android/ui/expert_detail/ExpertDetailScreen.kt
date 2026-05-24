@@ -59,6 +59,7 @@ fun ExpertDetailScreen(
     onBack: () -> Unit,
     onNavigateQuoteRequest: (expertId: Long, expertServiceId: Long) -> Unit,
     onNavigateLogin: () -> Unit = {},
+    onNavigateEditProfile: () -> Unit = {},
     viewModel: ExpertDetailViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -98,17 +99,26 @@ fun ExpertDetailScreen(
             )
         },
         bottomBar = {
-            BottomCta(
-                enabled = state.expert?.expertServiceIds?.isNotEmpty() == true,
-                onClick = {
-                    if (!isLoggedIn) {
-                        onNavigateLogin()
-                        return@BottomCta
-                    }
-                    val firstServiceId = state.expert?.expertServiceIds?.firstOrNull() ?: return@BottomCta
-                    onNavigateQuoteRequest(state.expertId, firstServiceId)
-                },
-            )
+            if (state.isMine) {
+                BottomCta(
+                    text = "프로필 수정하기",
+                    enabled = true,
+                    onClick = onNavigateEditProfile,
+                )
+            } else {
+                BottomCta(
+                    text = "견적 요청하기",
+                    enabled = state.expert?.expertServiceIds?.isNotEmpty() == true,
+                    onClick = {
+                        if (!isLoggedIn) {
+                            onNavigateLogin()
+                            return@BottomCta
+                        }
+                        val firstServiceId = state.expert?.expertServiceIds?.firstOrNull() ?: return@BottomCta
+                        onNavigateQuoteRequest(state.expertId, firstServiceId)
+                    },
+                )
+            }
         },
     ) { padding ->
         when {
@@ -241,6 +251,7 @@ private fun InfoRow(label: String, value: String) {
 
 @Composable
 private fun BottomCta(
+    text: String,
     enabled: Boolean,
     onClick: () -> Unit,
 ) {
@@ -251,7 +262,7 @@ private fun BottomCta(
             .padding(horizontal = 16.dp, vertical = 12.dp),
     ) {
         KungPrimaryButton(
-            text = "견적 요청하기",
+            text = text,
             onClick = onClick,
             enabled = enabled,
         )

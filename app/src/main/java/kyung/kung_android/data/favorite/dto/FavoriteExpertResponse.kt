@@ -5,8 +5,10 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class FavoriteExpertResponse(
     val expertProfileId: Long,
+    val expertServiceId: Long? = null,
     val displayName: String,
     val careerYears: Double? = null,
     val mainCategoryName: String? = null,
     val favorite: Boolean = true,
+    val profileImageUrl: String? = null,
 )
