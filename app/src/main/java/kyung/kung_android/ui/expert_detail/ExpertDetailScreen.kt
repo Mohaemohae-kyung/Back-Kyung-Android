@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -36,12 +37,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import coil3.compose.AsyncImage
 import kyung.kung_android.data.expert.dto.ExpertDetailResponse
 import kyung.kung_android.ui.common.InitialAvatar
 import kyung.kung_android.ui.common.KungPrimaryButton
@@ -171,7 +175,16 @@ private fun ProfileCard(expert: ExpertDetailResponse) {
                 .padding(18.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            InitialAvatar(name = expert.displayName, size = 76.dp)
+            if (expert.profileImageUrl != null) {
+                AsyncImage(
+                    model = expert.profileImageUrl,
+                    contentDescription = null,
+                    modifier = Modifier.size(76.dp).clip(CircleShape),
+                    contentScale = ContentScale.Crop,
+                )
+            } else {
+                InitialAvatar(name = expert.displayName, size = 76.dp)
+            }
             Spacer(modifier = Modifier.width(16.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {

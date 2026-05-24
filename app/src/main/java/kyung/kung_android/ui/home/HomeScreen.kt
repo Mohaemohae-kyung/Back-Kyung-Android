@@ -21,6 +21,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.ui.layout.ContentScale
+import coil3.compose.AsyncImage
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -582,7 +584,16 @@ private fun RecommendedExpertCard(
                 .padding(14.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            InitialAvatar(name = expert.displayName, size = 60.dp)
+            if (expert.profileImageUrl != null) {
+                AsyncImage(
+                    model = expert.profileImageUrl,
+                    contentDescription = null,
+                    modifier = Modifier.size(60.dp).clip(CircleShape),
+                    contentScale = ContentScale.Crop,
+                )
+            } else {
+                InitialAvatar(name = expert.displayName, size = 60.dp)
+            }
             Spacer(modifier = Modifier.height(10.dp))
             Text(
                 text = expert.displayName,

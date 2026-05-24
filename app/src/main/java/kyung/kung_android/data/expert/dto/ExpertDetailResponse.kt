@@ -18,4 +18,5 @@ data class ExpertDetailResponse(
     val serviceTitle: String? = null,
     val serviceDescription: String? = null,
     val price: Int? = null,
+    val profileImageUrl: String? = null,
 )
