@@ -125,6 +125,7 @@ fun HomeScreen(
                 isLoading = state.isLoadingRecommended,
                 onExpertClick = onNavigateExpertDetail,
                 onShowAll = { onNavigateExpertSearch(null, null, null) },
+                modifier = Modifier.weight(1f),
             )
         }
 
@@ -217,43 +218,21 @@ private fun HomeHeroCard(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp)
-            .shadow(elevation = 14.dp, shape = RoundedCornerShape(24.dp), clip = false)
-            .clip(RoundedCornerShape(24.dp))
+            .shadow(elevation = 10.dp, shape = RoundedCornerShape(20.dp), clip = false)
+            .clip(RoundedCornerShape(20.dp))
             .background(Brush.linearGradient(KungColors.HeroGradient))
-            .padding(20.dp),
+            .padding(horizontal = 18.dp, vertical = 14.dp),
     ) {
         Column {
-            Row(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(20.dp))
-                    .background(Color.White.copy(alpha = 0.18f))
-                    .padding(horizontal = 10.dp, vertical = 5.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(4.dp),
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.AutoAwesome,
-                    contentDescription = null,
-                    tint = KungColors.White,
-                    modifier = Modifier.size(13.dp),
-                )
-                Text(
-                    text = "원하는 고수를 빠르게 만나는 방법",
-                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
-                    color = KungColors.White,
-                )
-            }
-            Spacer(modifier = Modifier.height(14.dp))
             Text(
-                text = "필요한 서비스를\n고수에게 바로 요청하세요",
-                style = MaterialTheme.typography.headlineMedium.copy(
+                text = "필요한 서비스를 고수에게 바로 요청하세요",
+                style = MaterialTheme.typography.titleMedium.copy(
                     fontWeight = FontWeight.ExtraBold,
-                    lineHeight = 34.sp,
-                    letterSpacing = (-0.6).sp,
+                    letterSpacing = (-0.4).sp,
                 ),
                 color = KungColors.White,
             )
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(10.dp))
             HeroSearchPill(
                 value = searchText,
                 onValueChange = { searchText = it },
@@ -501,10 +480,11 @@ private fun HomeRecommendedExpertsSection(
     isLoading: Boolean,
     onExpertClick: (Long) -> Unit,
     onShowAll: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     if (!isLoading && experts.isEmpty()) return
 
-    Column {
+    Column(modifier = modifier) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
