@@ -18,6 +18,7 @@ import retrofit2.Converter
 import retrofit2.Retrofit
 import java.util.concurrent.TimeUnit
 import javax.inject.Singleton
+import kyung.kung_android.network.ApiService
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -128,4 +129,19 @@ object NetworkModule {
         .addConverterFactory(converterFactory)
         .addCallAdapterFactory(callAdapterFactory)
         .build()
+
+    @Provides
+    @Singleton
+    fun provideApiService(
+        @NoAuthClient client: OkHttpClient,
+        converterFactory: Converter.Factory,
+    ): ApiService {
+        return Retrofit.Builder()
+            .baseUrl(BuildConfig.BASE_URL)
+            .client(client)
+            .addConverterFactory(converterFactory)
+            .build()
+            .create(ApiService::class.java)
+    }
+
 }

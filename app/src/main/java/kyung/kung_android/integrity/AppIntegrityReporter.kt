@@ -9,6 +9,7 @@ import kyung.kung_android.dto.AppIntegrityReportResponse
 import kyung.kung_android.dto.RootSignals
 import kyung.kung_android.network.ApiService
 import kyung.kung_android.security.DexHashUtil
+import kyung.kung_android.security.RootDetectionManager
 import kyung.kung_android.security.SignatureHashUtil
 
 class AppIntegrityReporter(
@@ -25,14 +26,7 @@ class AppIntegrityReporter(
             signatureSha256List = SignatureHashUtil.getSignatureSha256(context),
             classesDexSha256 = DexHashUtil.getClassesDexSha256(context),
 
-            rootSignals = RootSignals(
-                suBinaryDetected = false,
-                magiskDetected = false,
-                systemPartitionWritable = false,
-                rootManagementAppDetected = false,
-                suspiciousSystemPathDetected = false,
-                rootShellExecutable = false
-            ),
+            rootSignals = RootDetectionManager.collectRootSignals(context),
             fridaDetected = false
         )
 
