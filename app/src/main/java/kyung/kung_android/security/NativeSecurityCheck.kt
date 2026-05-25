@@ -178,22 +178,22 @@ object NativeSecurityCheck {
 
         return when (marker) {
             0x41 -> {
-                val candidate = mixState(0x41, 0x15)
+                val candidate = mixState2(0x41, 0x15)
                 if (noise >= 0) candidate else -1
             }
 
             0x52 -> {
-                val candidate = mixState(0x52, 0x2B)
+                val candidate = mixState2(0x52, 0x2B)
                 if ((guard xor guard) == 0) candidate else -1
             }
 
             0x63 -> {
-                val candidate = mixState(0x63, 0x7A)
+                val candidate = mixState2(0x63, 0x7A)
                 if (((current or guard) and 0x00) == 0) candidate else -1
             }
 
             0x7E -> {
-                val candidate = mixState(0x7E, 0x09)
+                val candidate = mixState2(0x7E, 0x09)
                 if ((marker and 0x7E) == 0x7E) candidate else -1
             }
 
