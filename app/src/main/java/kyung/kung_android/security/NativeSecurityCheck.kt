@@ -12,6 +12,11 @@ object NativeSecurityCheck {
     external fun detectTracerPid(): Boolean
     external fun detectFridaPorts(): Boolean
     external fun detectSuspiciousLibraries(): Boolean
+    external fun detectSuBinary(): Boolean
+    external fun detectMagiskFiles(): Boolean
+    external fun detectWritableMount(): Boolean
+    external fun detectSuspiciousRootPaths(): Boolean
+    external fun detectRootShell(): Boolean
 
     fun isFridaDetected(): Boolean {
         return runCatching {
