@@ -13,6 +13,8 @@ import kyung.kung_android.data.auth.TokenStore
 import kyung.kung_android.integrity.AppIntegrityReporter
 import kyung.kung_android.network.ApiService
 import javax.inject.Inject
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 @AndroidEntryPoint
 class SplashActivity : ComponentActivity() {
@@ -32,12 +34,14 @@ class SplashActivity : ComponentActivity() {
 
     private suspend fun checkAppIntegrity() {
         try {
-            val reporter = AppIntegrityReporter(
-                context = this@SplashActivity,
-                apiService = apiService
-            )
+            val response = withContext(Dispatchers.IO) {
+                val reporter = AppIntegrityReporter(
+                    context = this@SplashActivity,
+                    apiService = apiService
+                )
 
-            val response = reporter.report()
+                reporter.report()
+            }
 
             Log.d("AppIntegrity", "response = $response")
             Log.d("AppIntegrity", "riskLevel = ${response.riskLevel}")
