@@ -120,29 +120,33 @@ fun ChatDetailScreen(
                     verticalArrangement = Arrangement.spacedBy(6.dp),
                 ) {
                     items(state.messages, key = { it.chatMessageId }) { msg ->
-                        val isMine = state.currentUserId != null && msg.senderId == state.currentUserId
-                        val otherName: String
-                        val otherImageUrl: String?
-                        when (msg.senderId) {
-                            state.linkedExpert?.ownerUserId -> {
-                                otherName = state.linkedExpert?.displayName ?: "고수"
-                                otherImageUrl = state.linkedExpert?.profileImageUrl
+                        if (msg.messageType == "SYSTEM") {
+                            SystemMessage(text = msg.content)
+                        } else {
+                            val isMine = state.currentUserId != null && msg.senderId == state.currentUserId
+                            val otherName: String
+                            val otherImageUrl: String?
+                            when (msg.senderId) {
+                                state.linkedExpert?.ownerUserId -> {
+                                    otherName = state.linkedExpert?.displayName ?: "고수"
+                                    otherImageUrl = state.linkedExpert?.profileImageUrl
+                                }
+                                state.linkedRequest?.userId -> {
+                                    otherName = state.linkedRequest?.requesterName ?: "사용자"
+                                    otherImageUrl = null
+                                }
+                                else -> {
+                                    otherName = "상대"
+                                    otherImageUrl = null
+                                }
                             }
-                            state.linkedRequest?.userId -> {
-                                otherName = state.linkedRequest?.requesterName ?: "사용자"
-                                otherImageUrl = null
-                            }
-                            else -> {
-                                otherName = "상대"
-                                otherImageUrl = null
-                            }
+                            MessageBubble(
+                                message = msg,
+                                isMine = isMine,
+                                otherName = otherName,
+                                otherImageUrl = otherImageUrl,
+                            )
                         }
-                        MessageBubble(
-                            message = msg,
-                            isMine = isMine,
-                            otherName = otherName,
-                            otherImageUrl = otherImageUrl,
-                        )
                     }
                 }
             }
@@ -163,6 +167,24 @@ private fun ConnectionBanner() {
             text = "연결이 끊어졌어요. 다시 연결하는 중...",
             style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold),
             color = KungColors.ErrorDark,
+        )
+    }
+}
+
+@Composable
+private fun SystemMessage(text: String) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.Center,
+    ) {
+        Text(
+            text = text,
+            style = MaterialTheme.typography.labelSmall,
+            color = KungColors.Charcoal.copy(alpha = 0.55f),
+            modifier = Modifier
+                .clip(RoundedCornerShape(12.dp))
+                .background(KungColors.PurpleBg.copy(alpha = 0.6f))
+                .padding(horizontal = 12.dp, vertical = 6.dp),
         )
     }
 }
