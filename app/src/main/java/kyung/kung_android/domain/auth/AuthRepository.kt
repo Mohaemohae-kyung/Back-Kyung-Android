@@ -6,6 +6,7 @@ import kyung.kung_android.data.auth.api.AuthApi
 import kyung.kung_android.data.auth.api.AuthenticatedAuthApi
 import kyung.kung_android.data.auth.dto.LoginRequest
 import kyung.kung_android.data.auth.dto.LoginResponse
+import kyung.kung_android.data.auth.dto.PasswordChangeRequest
 import kyung.kung_android.data.auth.dto.SignupRequest
 import kyung.kung_android.data.auth.dto.SignupResponse
 import kyung.kung_android.domain.user.UserRepository
@@ -47,6 +48,15 @@ class AuthRepository @Inject constructor(
         )
         tokenStore.saveTokens(access = res.accessToken, refresh = res.refreshToken)
         return res
+    }
+
+    suspend fun changePassword(currentPassword: String, newPassword: String) {
+        authenticatedAuthApi.changePassword(
+            PasswordChangeRequest(
+                currentPassword = currentPassword,
+                newPassword = newPassword,
+            )
+        )
     }
 
     suspend fun logout(): Result<Unit> {

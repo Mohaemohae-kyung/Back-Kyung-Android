@@ -15,6 +15,7 @@ import kyung.kung_android.ui.account_withdraw.AccountWithdrawScreen
 import kyung.kung_android.ui.chat_detail.ChatDetailScreen
 import kyung.kung_android.ui.chatbot.ChatBotScreen
 import kyung.kung_android.ui.checkout.CheckoutScreen
+import kyung.kung_android.ui.checkout.MockPgPaymentScreen
 import kyung.kung_android.ui.checkout.PaymentSuccessScreen
 import kyung.kung_android.ui.expert_transactions.ExpertTransactionsScreen
 import kyung.kung_android.ui.notice_detail.NoticeDetailScreen
@@ -28,9 +29,13 @@ import kyung.kung_android.ui.mypage.MyPageScreen
 import kyung.kung_android.ui.payment_history.PaymentHistoryScreen
 import kyung.kung_android.ui.post_detail.PostDetailScreen
 import kyung.kung_android.ui.post_editor.PostEditorScreen
+import kyung.kung_android.ui.password_change.PasswordChangeScreen
 import kyung.kung_android.ui.profile_info.ProfileInfoScreen
 import kyung.kung_android.ui.quote_detail.QuoteDetailScreen
 import kyung.kung_android.ui.quote_request.QuoteRequestScreen
+import kyung.kung_android.ui.booking.BookingCheckoutScreen
+import kyung.kung_android.ui.store_detail.StoreDetailScreen
+import kyung.kung_android.ui.store_editor.StoreEditorScreen
 
 @Composable
 fun AppNavHost(
@@ -53,6 +58,8 @@ fun AppNavHost(
                 onNavigateExpertRegister = { navController.navigate(AppRoute.EXPERT_REGISTER) },
                 onNavigateSignup = { navController.navigate(AppRoute.SIGNUP) },
                 onNavigateExpertDetail = { id -> navController.navigate("${AppRoute.EXPERT_DETAIL}/$id") },
+                onNavigateStoreDetail = { id -> navController.navigate("${AppRoute.STORE_DETAIL}/$id") },
+                onNavigateStoreEditor = { navController.navigate(AppRoute.STORE_EDITOR) },
                 onNavigateQuoteDetail = { id -> navController.navigate("${AppRoute.QUOTE_DETAIL}/$id") },
                 onNavigatePostDetail = { id -> navController.navigate("${AppRoute.POST_DETAIL}/$id") },
                 onNavigateNoticeDetail = { id -> navController.navigate("${AppRoute.NOTICE_DETAIL}/$id") },
@@ -156,10 +163,10 @@ fun AppNavHost(
         ) {
             CheckoutScreen(
                 onBack = { navController.popBackStack() },
-                onPaymentSuccess = { paymentId ->
-                    navController.navigate("${AppRoute.PAYMENT_SUCCESS}/$paymentId") {
-                        popUpTo("${AppRoute.CHECKOUT}/{requestId}") { inclusive = true }
-                    }
+                onNavigateMockPg = { orderId, amount, method, requestId ->
+                    navController.navigate(
+                        "${AppRoute.MOCK_PG}?orderId=${android.net.Uri.encode(orderId)}&amount=$amount&method=$method&requestId=$requestId"
+                    )
                 },
             )
         }
@@ -203,7 +210,9 @@ fun AppNavHost(
                 onNavigateExpertRegister = { navController.navigate(AppRoute.EXPERT_REGISTER) },
                 onNavigateAccountSettings = { navController.navigate(AppRoute.ACCOUNT_SETTINGS) },
                 onNavigateFavorites = { navController.navigate(AppRoute.FAVORITE_EXPERTS) },
-                onNavigatePaymentHistory = { navController.navigate(AppRoute.PAYMENT_HISTORY) },
+                onNavigatePaymentHistory = { type ->
+                    navController.navigate("${AppRoute.PAYMENT_HISTORY}?type=$type")
+                },
                 onNavigateExpertTransactions = { navController.navigate(AppRoute.EXPERT_TRANSACTIONS) },
                 onNavigateExpertSelf = { id ->
                     if (id != null) navController.navigate("${AppRoute.EXPERT_DETAIL}/$id")
@@ -219,6 +228,7 @@ fun AppNavHost(
             AccountSettingsScreen(
                 onBack = { navController.popBackStack() },
                 onNavigateProfileInfo = { navController.navigate(AppRoute.PROFILE_INFO) },
+                onNavigatePasswordChange = { navController.navigate(AppRoute.PASSWORD_CHANGE) },
                 onNavigateWithdraw = { navController.navigate(AppRoute.ACCOUNT_WITHDRAW) },
                 onLoggedOut = {
                     navController.popBackStack(AppRoute.MAIN, inclusive = false)
@@ -240,6 +250,13 @@ fun AppNavHost(
             ProfileInfoScreen(onBack = { navController.popBackStack() })
         }
 
+        composable(AppRoute.PASSWORD_CHANGE) {
+            PasswordChangeScreen(
+                onBack = { navController.popBackStack() },
+                onSuccess = { navController.popBackStack() },
+            )
+        }
+
         composable(AppRoute.FAVORITE_EXPERTS) {
             FavoriteExpertsScreen(
                 onBack = { navController.popBackStack() },
@@ -254,7 +271,16 @@ fun AppNavHost(
             )
         }
 
-        composable(AppRoute.PAYMENT_HISTORY) {
+        composable(
+            route = "${AppRoute.PAYMENT_HISTORY}?type={type}",
+            arguments = listOf(
+                navArgument("type") {
+                    type = NavType.StringType
+                    nullable = true
+                    defaultValue = null
+                },
+            ),
+        ) {
             PaymentHistoryScreen(
                 onBack = { navController.popBackStack() },
                 onNavigateTransactionDetail = { paymentId ->
@@ -284,6 +310,64 @@ fun AppNavHost(
             arguments = listOf(navArgument("postId") { type = NavType.LongType }),
         ) {
             NoticeDetailScreen(onBack = { navController.popBackStack() })
+        }
+
+        composable(
+            route = "${AppRoute.STORE_DETAIL}/{storeProductId}",
+            arguments = listOf(navArgument("storeProductId") { type = NavType.LongType }),
+        ) {
+            StoreDetailScreen(
+                onBack = { navController.popBackStack() },
+                onNavigateCheckout = { bookingId ->
+                    navController.navigate("${AppRoute.BOOKING_CHECKOUT}/$bookingId")
+                },
+            )
+        }
+
+        composable(AppRoute.STORE_EDITOR) {
+            StoreEditorScreen(
+                onBack = { navController.popBackStack() },
+                onSuccess = { navController.popBackStack() },
+            )
+        }
+
+        composable(
+            route = "${AppRoute.BOOKING_CHECKOUT}/{bookingId}",
+            arguments = listOf(navArgument("bookingId") { type = NavType.LongType }),
+        ) {
+            BookingCheckoutScreen(
+                onBack = { navController.popBackStack() },
+                onNavigateMockPg = { orderId, amount, method ->
+                    navController.navigate(
+                        "${AppRoute.MOCK_PG}?orderId=${android.net.Uri.encode(orderId)}&amount=$amount&method=$method"
+                    )
+                },
+            )
+        }
+
+        composable(
+            route = "${AppRoute.MOCK_PG}?orderId={orderId}&amount={amount}&method={method}&requestId={requestId}",
+            arguments = listOf(
+                navArgument("orderId") { type = NavType.StringType; nullable = true; defaultValue = null },
+                navArgument("amount") { type = NavType.StringType; nullable = true; defaultValue = null },
+                navArgument("method") { type = NavType.StringType; nullable = true; defaultValue = null },
+                navArgument("requestId") { type = NavType.StringType; nullable = true; defaultValue = null },
+            ),
+        ) { backStackEntry ->
+            val reqId = backStackEntry.arguments?.getString("requestId")?.toLongOrNull()
+            MockPgPaymentScreen(
+                onBack = { navController.popBackStack() },
+                onPaymentSuccess = { paymentId ->
+                    val popTarget = if (reqId != null) {
+                        "${AppRoute.CHECKOUT}/{requestId}"
+                    } else {
+                        "${AppRoute.BOOKING_CHECKOUT}/{bookingId}"
+                    }
+                    navController.navigate("${AppRoute.PAYMENT_SUCCESS}/$paymentId") {
+                        popUpTo(popTarget) { inclusive = true }
+                    }
+                },
+            )
         }
     }
 }

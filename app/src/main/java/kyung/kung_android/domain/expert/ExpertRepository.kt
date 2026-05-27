@@ -3,6 +3,7 @@ package kyung.kung_android.domain.expert
 import kyung.kung_android.data.expert.api.ExpertApi
 import kyung.kung_android.data.expert.dto.ExpertDetailResponse
 import kyung.kung_android.data.expert.dto.ExpertProfileCreateRequest
+import kyung.kung_android.data.expert.dto.ExpertProfileUpdateRequest
 import kyung.kung_android.data.expert.dto.ExpertSearchResponse
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -31,7 +32,9 @@ class ExpertRepository @Inject constructor(
         introduction: String,
         careerYears: Double,
         mainCategoryId: Long,
+        categoryIds: List<Long>,
         mainLocationId: Long,
+        externalPortfolioUrl: String? = null,
     ) {
         expertApi.createProfile(
             ExpertProfileCreateRequest(
@@ -39,7 +42,31 @@ class ExpertRepository @Inject constructor(
                 introduction = introduction.trim(),
                 careerYears = careerYears,
                 mainCategoryId = mainCategoryId,
+                categoryIds = categoryIds,
                 mainLocationId = mainLocationId,
+                externalPortfolioUrl = externalPortfolioUrl,
+            )
+        )
+    }
+
+    suspend fun updateProfile(
+        displayName: String,
+        introduction: String,
+        careerYears: Double,
+        mainCategoryId: Long,
+        categoryIds: List<Long>,
+        mainLocationId: Long,
+        externalPortfolioUrl: String? = null,
+    ) {
+        expertApi.updateProfile(
+            ExpertProfileUpdateRequest(
+                displayName = displayName.trim(),
+                introduction = introduction.trim(),
+                careerYears = careerYears,
+                mainCategoryId = mainCategoryId,
+                categoryIds = categoryIds,
+                mainLocationId = mainLocationId,
+                externalPortfolioUrl = externalPortfolioUrl,
             )
         )
     }

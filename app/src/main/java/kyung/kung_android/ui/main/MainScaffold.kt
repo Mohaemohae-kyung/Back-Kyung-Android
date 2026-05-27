@@ -33,6 +33,7 @@ import kyung.kung_android.ui.expert_search.ExpertSearchScreen
 import kyung.kung_android.ui.home.HomeScreen
 import kyung.kung_android.ui.navigation.AppRoute
 import kyung.kung_android.ui.received_quote.ReceivedQuoteScreen
+import kyung.kung_android.ui.store.StoreScreen
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -40,6 +41,8 @@ fun MainScaffold(
     onNavigateLogin: () -> Unit,
     onNavigateMyPage: () -> Unit,
     onNavigateExpertDetail: (Long) -> Unit = {},
+    onNavigateStoreDetail: (Long) -> Unit = {},
+    onNavigateStoreEditor: () -> Unit = {},
     onNavigateChatbot: () -> Unit = {},
     onNavigateExpertRegister: () -> Unit = {},
     onNavigateSignup: () -> Unit = {},
@@ -76,6 +79,7 @@ fun MainScaffold(
 
     val tabTitle = when (currentBaseRoute) {
         AppRoute.Tab.EXPERT_SEARCH -> "고수찾기"
+        AppRoute.Tab.STORE -> "마켓"
         AppRoute.Tab.RECEIVED_QUOTE -> "받은견적"
         AppRoute.Tab.CHAT -> "채팅"
         AppRoute.Tab.COMMUNITY -> "커뮤니티"
@@ -152,6 +156,16 @@ fun MainScaffold(
                         }
                     },
                     onNavigateExpertDetail = onNavigateExpertDetail,
+                    onNavigateStoreDetail = onNavigateStoreDetail,
+                    onNavigateStoreAll = {
+                        nestedNavController.navigate(AppRoute.Tab.STORE) {
+                            popUpTo(nestedNavController.graph.findStartDestination().id) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    },
                     onNavigateChatbot = onNavigateChatbot,
                     onNavigateExpertRegister = onNavigateExpertRegister,
                 )
@@ -185,6 +199,14 @@ fun MainScaffold(
                     initialCategoryId = categoryId,
                     initialLocationId = locationId,
                     onNavigateExpertDetail = onNavigateExpertDetail,
+                )
+            }
+
+            composable(AppRoute.Tab.STORE) {
+                StoreScreen(
+                    onNavigateStoreDetail = onNavigateStoreDetail,
+                    onNavigateStoreEditor = onNavigateStoreEditor,
+                    isExpert = isExpert,
                 )
             }
 

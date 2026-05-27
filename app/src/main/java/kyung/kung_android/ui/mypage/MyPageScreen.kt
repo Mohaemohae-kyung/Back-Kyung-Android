@@ -60,7 +60,7 @@ fun MyPageScreen(
     onNavigateExpertRegister: () -> Unit,
     onNavigateAccountSettings: () -> Unit = {},
     onNavigateFavorites: () -> Unit = {},
-    onNavigatePaymentHistory: () -> Unit = {},
+    onNavigatePaymentHistory: (type: String) -> Unit = {},
     onNavigateExpertTransactions: () -> Unit = {},
     onNavigateExpertSelf: (expertProfileId: Long?) -> Unit = {},
     viewModel: MyPageViewModel = hiltViewModel(),
@@ -94,7 +94,7 @@ fun MyPageScreen(
                 isExpert = state.isExpert,
                 modifier = Modifier.padding(padding),
                 onExpertBannerClick = {
-                    val id = state.user?.expertServiceId
+                    val id = state.user?.expertProfileId
                     if (state.isExpert && id != null) onNavigateExpertSelf(id) else onNavigateExpertRegister()
                 },
                 onAccountSettingsClick = onNavigateAccountSettings,
@@ -113,7 +113,7 @@ private fun LoggedInContent(
     onExpertBannerClick: () -> Unit,
     onAccountSettingsClick: () -> Unit,
     onFavoritesClick: () -> Unit,
-    onPaymentHistoryClick: () -> Unit,
+    onPaymentHistoryClick: (type: String) -> Unit,
     onExpertTransactionsClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -137,11 +137,23 @@ private fun LoggedInContent(
         }
 
         item {
-            SectionTitle("거래내역")
-            MyPageRow(
-                title = "매칭온페이 거래내역",
-                onClick = if (isExpert) onExpertTransactionsClick else onPaymentHistoryClick,
-            )
+            Column {
+                SectionTitle("거래내역")
+                MyPageRow(
+                    title = "마켓 거래내역",
+                    onClick = { onPaymentHistoryClick("BOOKING") },
+                )
+                MyPageRow(
+                    title = "고수찾기 거래내역",
+                    onClick = { onPaymentHistoryClick("SERVICE_REQUEST") },
+                )
+                if (isExpert) {
+                    MyPageRow(
+                        title = "받은 거래내역",
+                        onClick = onExpertTransactionsClick,
+                    )
+                }
+            }
         }
 
         item {

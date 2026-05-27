@@ -6,11 +6,13 @@ import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Storefront
 import androidx.compose.material.icons.outlined.ChatBubbleOutline
 import androidx.compose.material.icons.outlined.Description
 import androidx.compose.material.icons.outlined.Group
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Search
+import androidx.compose.material.icons.outlined.Storefront
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
@@ -72,6 +74,7 @@ internal data class MainTab(
 internal val MainTabs: List<MainTab> = listOf(
     MainTab(AppRoute.Tab.HOME, "홈", Icons.Outlined.Home, Icons.Filled.Home),
     MainTab(AppRoute.Tab.EXPERT_SEARCH, "고수찾기", Icons.Outlined.Search, Icons.Filled.Search),
+    MainTab(AppRoute.Tab.STORE, "마켓", Icons.Outlined.Storefront, Icons.Filled.Storefront),
     MainTab(AppRoute.Tab.RECEIVED_QUOTE, "받은견적", Icons.Outlined.Description, Icons.Filled.Description),
     MainTab(AppRoute.Tab.CHAT, "채팅", Icons.Outlined.ChatBubbleOutline, Icons.Filled.ChatBubble),
     MainTab(AppRoute.Tab.COMMUNITY, "커뮤니티", Icons.Outlined.Group, Icons.Filled.Group),

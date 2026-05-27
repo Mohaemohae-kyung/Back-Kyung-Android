@@ -1,6 +1,7 @@
 package kyung.kung_android.domain.checkout
 
 import kyung.kung_android.data.checkout.api.CheckoutApi
+import kyung.kung_android.data.checkout.dto.BookingCheckoutResponse
 import kyung.kung_android.data.checkout.dto.ServiceRequestCheckoutResponse
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -12,4 +13,7 @@ class CheckoutRepository @Inject constructor(
 
     suspend fun getServiceRequestCheckout(requestId: Long): ServiceRequestCheckoutResponse =
         checkoutApi.getServiceRequestCheckout(requestId)
+
+    suspend fun getBookingCheckout(bookingId: Long): BookingCheckoutResponse =
+        checkoutApi.getBookingCheckout(bookingId)
 }

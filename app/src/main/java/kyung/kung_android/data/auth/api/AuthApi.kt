@@ -2,6 +2,7 @@ package kyung.kung_android.data.auth.api
 
 import kyung.kung_android.data.auth.dto.LoginRequest
 import kyung.kung_android.data.auth.dto.LoginResponse
+import kyung.kung_android.data.auth.dto.PasswordChangeRequest
 import kyung.kung_android.data.auth.dto.ReissueRequest
 import kyung.kung_android.data.auth.dto.ReissueResponse
 import kyung.kung_android.data.auth.dto.SignupRequest
@@ -31,4 +32,7 @@ interface AuthenticatedAuthApi {
 
     @POST("api/auth/logout")
     suspend fun logout(): Unit?
+
+    @POST("api/auth/password/change")
+    suspend fun changePassword(@Body request: PasswordChangeRequest): Unit?
 }

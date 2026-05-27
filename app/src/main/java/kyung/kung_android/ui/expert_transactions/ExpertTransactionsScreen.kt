@@ -67,7 +67,7 @@ fun ExpertTransactionsScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = "매칭온페이 거래내역",
+                        text = "받은 거래내역",
                         style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.ExtraBold),
                     )
                 },

@@ -39,6 +39,7 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
 import kyung.kung_android.domain.category.model.Categories
+import kyung.kung_android.domain.category.model.Category
 import kyung.kung_android.domain.location.model.Regions
 import kyung.kung_android.ui.common.KungPrimaryButton
 import kyung.kung_android.ui.theme.KungColors
@@ -150,10 +151,36 @@ fun ExpertRegisterScreen(
                 onSelect = viewModel::onCategorySelected,
             )
 
+            state.mainCategoryId?.let { mainId ->
+                val subs = Categories.subcategoriesOf(mainId)
+                if (subs.isNotEmpty()) {
+                    FieldLabel("세부 분야 * (여러 개 선택 가능)")
+                    SubCategoryChips(
+                        subcategories = subs,
+                        selectedIds = state.subCategoryIds,
+                        onToggle = viewModel::onSubCategoryToggle,
+                    )
+                }
+            }
+
             FieldLabel("활동 지역 *")
             RegionChips(
                 selectedId = state.mainLocationId,
                 onSelect = viewModel::onLocationSelected,
+            )
+
+            FieldLabel("포트폴리오 URL")
+            OutlinedTextField(
+                value = state.externalPortfolioUrl,
+                onValueChange = viewModel::onExternalPortfolioUrlChange,
+                placeholder = { Text("예: https://my-portfolio.com") },
+                singleLine = true,
+                shape = RoundedCornerShape(14.dp),
+                colors = registerFieldColors(),
+                keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
+                    keyboardType = KeyboardType.Uri,
+                ),
+                modifier = Modifier.fillMaxWidth(),
             )
 
             state.errorMessage?.let { msg ->
@@ -167,7 +194,7 @@ fun ExpertRegisterScreen(
             Spacer(modifier = Modifier.height(8.dp))
 
             KungPrimaryButton(
-                text = "프로필 등록",
+                text = if (state.isEditMode) "프로필 수정" else "프로필 등록",
                 onClick = viewModel::onSubmit,
                 enabled = state.canSubmit,
                 loading = state.isSubmitting,
@@ -214,6 +241,37 @@ private fun CategoryChips(
                 label = {
                     Text(
                         text = category.name,
+                        style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
+                    )
+                },
+                colors = FilterChipDefaults.filterChipColors(
+                    selectedContainerColor = KungColors.PurpleBg,
+                    selectedLabelColor = KungColors.Purple,
+                ),
+            )
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class, androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
+@Composable
+private fun SubCategoryChips(
+    subcategories: List<Category>,
+    selectedIds: Set<Long>,
+    onToggle: (Long) -> Unit,
+) {
+    FlowRow(
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        subcategories.forEach { sub ->
+            FilterChip(
+                selected = sub.id in selectedIds,
+                onClick = { onToggle(sub.id) },
+                label = {
+                    Text(
+                        text = sub.name,
                         style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
                     )
                 },

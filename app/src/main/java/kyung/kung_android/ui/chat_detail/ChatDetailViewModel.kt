@@ -21,10 +21,12 @@ import kyung.kung_android.data.expert.dto.ExpertDetailResponse
 import kyung.kung_android.data.request.dto.ServiceRequestResponse
 import kyung.kung_android.domain.chat.ChatRepository
 import kyung.kung_android.domain.expert.ExpertRepository
+import kyung.kung_android.domain.payment.PaymentRepository
 import kyung.kung_android.domain.request.ServiceRequestRepository
 import kyung.kung_android.domain.user.UserRepository
 import kyung.kung_android.ui.navigation.AppRoute
 import org.hildan.krossbow.stomp.StompSession
+import java.math.BigDecimal
 import javax.inject.Inject
 
 data class ChatDetailUiState(
@@ -36,11 +38,22 @@ data class ChatDetailUiState(
     val input: String = "",
     val isLoading: Boolean = false,
     val isConnected: Boolean = false,
+    val isRequestingPayment: Boolean = false,
+    val paymentRequested: Boolean = false,
     val error: String? = null,
 ) {
     val isRequester: Boolean
         get() = linkedRequest?.userId != null && currentUserId != null &&
             linkedRequest.userId == currentUserId
+
+    /** 이 채팅의 견적을 받은 고수 입장 (의뢰인이 내가 아님) */
+    val isExpertSide: Boolean
+        get() = linkedRequest?.userId != null && currentUserId != null &&
+            linkedRequest.userId != currentUserId
+
+    /** 고수가 결제 요청을 보냈는지 (채팅에 PAYMENT_REQUEST 메시지 존재) */
+    val hasPaymentRequest: Boolean
+        get() = paymentRequested || messages.any { it.messageType == "PAYMENT_REQUEST" }
 }
 
 @HiltViewModel
@@ -50,6 +63,7 @@ class ChatDetailViewModel @Inject constructor(
     private val userRepository: UserRepository,
     private val serviceRequestRepository: ServiceRequestRepository,
     private val expertRepository: ExpertRepository,
+    private val paymentRepository: PaymentRepository,
     private val stompClient: ChatStompClient,
 ) : ViewModel() {
 
@@ -81,8 +95,8 @@ class ChatDetailViewModel @Inject constructor(
         }.onSuccess { list ->
             val match = list.firstOrNull { it.chatRoomId == chatRoomId } ?: return@onSuccess
             _state.update { it.copy(linkedRequest = match) }
-            match.expertServiceId?.let { sid ->
-                runCatching { expertRepository.getExpertDetail(sid) }
+            match.expertProfileId?.let { pid ->
+                runCatching { expertRepository.getExpertDetail(pid) }
                     .onSuccess { d -> _state.update { it.copy(linkedExpert = d) } }
             }
         }
@@ -130,6 +144,33 @@ class ChatDetailViewModel @Inject constructor(
             attempt = (attempt + 1).coerceAtMost(MAX_BACKOFF_STEP)
             val backoff = BACKOFF_BASE_MS * (1L shl (attempt - 1).coerceAtLeast(0))
             delay(backoff.coerceAtMost(MAX_BACKOFF_MS))
+        }
+    }
+
+    fun requestPayment(serviceName: String, amount: BigDecimal) {
+        val req = _state.value.linkedRequest ?: return
+        if (_state.value.isRequestingPayment) return
+        _state.update { it.copy(isRequestingPayment = true, error = null) }
+        viewModelScope.launch {
+            try {
+                serviceRequestRepository.update(
+                    requestId = req.requestId,
+                    title = serviceName,
+                    content = "결제 요청",
+                    budget = amount,
+                )
+                paymentRepository.prepareForServiceRequest(req.requestId)
+                val updated = runCatching { serviceRequestRepository.getRequest(req.requestId) }.getOrNull()
+                _state.update {
+                    it.copy(
+                        isRequestingPayment = false,
+                        paymentRequested = true,
+                        linkedRequest = updated ?: it.linkedRequest,
+                    )
+                }
+            } catch (t: Throwable) {
+                _state.update { it.copy(isRequestingPayment = false, error = "결제 요청에 실패했어요.") }
+            }
         }
     }
 

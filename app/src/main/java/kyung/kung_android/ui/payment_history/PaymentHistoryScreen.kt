@@ -63,7 +63,7 @@ fun PaymentHistoryScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = "매칭온페이 거래내역",
+                        text = state.title,
                         style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.ExtraBold),
                     )
                 },

@@ -34,6 +34,18 @@ class PaymentRepository @Inject constructor(
             )
         )
 
+    suspend fun prepareForBooking(
+        bookingId: Long,
+        paymentMethod: String = "CARD",
+    ): PaymentPrepareResponse =
+        paymentApi.prepare(
+            PaymentPrepareRequest(
+                targetType = "BOOKING",
+                targetId = bookingId,
+                paymentMethod = paymentMethod,
+            )
+        )
+
     suspend fun approveMockPg(
         orderId: String,
         amount: BigDecimal,
