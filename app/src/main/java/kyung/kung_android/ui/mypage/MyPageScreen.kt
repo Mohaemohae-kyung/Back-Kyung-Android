@@ -43,7 +43,9 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.ui.platform.LocalContext
 import kyung.kung_android.BuildConfig
+import kyung.kung_android.admin.AdminGate
 import kyung.kung_android.data.user.dto.UserProfileResponse
 import kyung.kung_android.ui.common.InitialAvatar
 import kyung.kung_android.ui.common.LoginGate
@@ -148,6 +150,17 @@ private fun LoggedInContent(
                 title = "찜한 고수",
                 onClick = onFavoritesClick,
             )
+        }
+
+        if (AdminGate.IS_ADMIN_BUILD) {
+            item {
+                val context = LocalContext.current
+                SectionTitle("관리자")
+                MyPageRow(
+                    title = "관리자 페이지",
+                    onClick = { AdminGate.open(context) },
+                )
+            }
         }
 
         item {

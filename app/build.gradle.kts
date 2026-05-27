@@ -59,6 +59,19 @@ android {
         }
     }
 
+    flavorDimensions += "distribution"
+    productFlavors {
+        create("user") {
+            dimension = "distribution"
+            isDefault = true
+        }
+        create("admin") {
+            dimension = "distribution"
+            applicationIdSuffix = ".admin"
+            versionNameSuffix = "-admin"
+        }
+    }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
