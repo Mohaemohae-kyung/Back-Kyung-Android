@@ -40,3 +40,4 @@ local-docs/
 local_readme.md
 local_*.md
 LOCAL_*.md
+app/release/
