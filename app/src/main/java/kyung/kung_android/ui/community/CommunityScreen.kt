@@ -511,14 +511,23 @@ private fun CenterRestrictedNotice(
     onExpertRegisterClick: () -> Unit,
 ) {
     val isLoggedIn = role != null
+    val isAdmin = role == "ADMIN"
     val title = if (isLoggedIn) "고수센터는 고수 회원 전용이에요" else "로그인이 필요해요"
-    val description = if (isLoggedIn) {
-        "고수로 가입하시면 고수센터 공지를\n확인하실 수 있어요."
-    } else {
-        "회원가입 후 고수로 가입하시면\n고수센터 공지를 확인하실 수 있어요."
+    val description = when {
+        isAdmin -> "고수센터 공지는 고수 회원만 열람할 수 있어요."
+        isLoggedIn -> "고수로 가입하시면 고수센터 공지를\n확인하실 수 있어요."
+        else -> "회원가입 후 고수로 가입하시면\n고수센터 공지를 확인하실 수 있어요."
     }
-    val buttonLabel = if (isLoggedIn) "고수 가입하기" else "회원가입 하기"
-    val onClick = if (isLoggedIn) onExpertRegisterClick else onSignupClick
+    val buttonLabel: String? = when {
+        isAdmin -> null
+        isLoggedIn -> "고수 가입하기"
+        else -> "회원가입 하기"
+    }
+    val onClick: (() -> Unit)? = when {
+        isAdmin -> null
+        isLoggedIn -> onExpertRegisterClick
+        else -> onSignupClick
+    }
 
     Column(
         modifier = Modifier
@@ -557,21 +566,23 @@ private fun CenterRestrictedNotice(
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
         )
-        Spacer(modifier = Modifier.height(28.dp))
-        Button(
-            onClick = onClick,
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(16.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = KungColors.Purple,
-                contentColor = KungColors.White,
-            ),
-        ) {
-            Text(
-                text = buttonLabel,
-                style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
-                modifier = Modifier.padding(vertical = 6.dp),
-            )
+        if (buttonLabel != null && onClick != null) {
+            Spacer(modifier = Modifier.height(28.dp))
+            Button(
+                onClick = onClick,
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = KungColors.Purple,
+                    contentColor = KungColors.White,
+                ),
+            ) {
+                Text(
+                    text = buttonLabel,
+                    style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
+                    modifier = Modifier.padding(vertical = 6.dp),
+                )
+            }
         }
     }
 }

@@ -60,6 +60,7 @@ fun MainScaffold(
     val currentBaseRoute = navBackStackEntry?.destination?.route?.substringBefore("?")
     val isLoggedIn by viewModel.isLoggedIn.collectAsStateWithLifecycle()
     val isExpert by viewModel.isExpert.collectAsStateWithLifecycle()
+    val isAdmin by viewModel.isAdmin.collectAsStateWithLifecycle()
 
     androidx.compose.runtime.LaunchedEffect(forceTab) {
         val tab = forceTab ?: return@LaunchedEffect
@@ -141,6 +142,7 @@ fun MainScaffold(
                 HomeScreen(
                     isLoggedIn = isLoggedIn,
                     isExpert = isExpert,
+                    isAdmin = isAdmin,
                     onNavigateLogin = onNavigateLogin,
                     onNavigateMyPage = onNavigateMyPage,
                     onNavigateExpertSearch = { keyword, categoryId, locationId ->
