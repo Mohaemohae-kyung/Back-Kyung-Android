@@ -37,6 +37,18 @@ android {
         }
     }
 
+    signingConfigs {
+        val keystoreFile = rootProject.file("Back-Kyung-Android-keystore.jks")
+        if (keystoreFile.exists()) {
+            create("release") {
+                storeFile = keystoreFile
+                storePassword = localProperties.getProperty("KEYSTORE_PASSWORD") ?: ""
+                keyAlias = localProperties.getProperty("KEY_ALIAS") ?: ""
+                keyPassword = localProperties.getProperty("KEY_PASSWORD") ?: ""
+            }
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = true
@@ -51,6 +63,7 @@ android {
             buildConfigField("String", "PIN_CURRENT", "\"sha256/current_pin_here=\"")
             buildConfigField("String", "PIN_BACKUP", "\"sha256/backup_pin_here=\"")
             buildConfigField("String", "TOSS_CLIENT_KEY", "\"$tossClientKey\"")
+            signingConfigs.findByName("release")?.let { signingConfig = it }
         }
         debug {
             isMinifyEnabled = false
