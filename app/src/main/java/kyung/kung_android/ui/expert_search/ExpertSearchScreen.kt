@@ -133,11 +133,11 @@ fun ExpertSearchScreen(
                         contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 96.dp),
                         verticalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
-                        items(state.experts, key = { it.expertServiceId }) { expert ->
+                        items(state.experts, key = { it.expertProfileId }) { expert ->
                             ExpertCard(
                                 expert = expert,
                                 isFavorited = expert.expertProfileId in state.favoritedExpertIds,
-                                onClick = { onNavigateExpertDetail(expert.expertServiceId) },
+                                onClick = { onNavigateExpertDetail(expert.expertProfileId) },
                                 onFavoriteClick = { viewModel.onFavoriteToggle(expert.expertProfileId) },
                             )
                         }
@@ -453,7 +453,7 @@ private fun ExpertCard(
                         )
                     }
                 }
-                val meta = listOfNotNull(expert.mainCategoryName, expert.mainLocationName)
+                val meta = listOfNotNull(expert.categoryNames.firstOrNull(), expert.mainLocationName)
                     .joinToString(" · ")
                 if (meta.isNotEmpty()) {
                     Text(

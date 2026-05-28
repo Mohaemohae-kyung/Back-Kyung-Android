@@ -51,7 +51,7 @@ private val NUMBER_FMT = NumberFormat.getNumberInstance(Locale.KOREA)
 @Composable
 fun CheckoutScreen(
     onBack: () -> Unit,
-    onPaymentSuccess: (paymentId: Long) -> Unit,
+    onNavigateTossPayment: (orderId: String, amount: String, method: String, requestId: Long, orderName: String) -> Unit,
     viewModel: CheckoutViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -64,7 +64,8 @@ fun CheckoutScreen(
     androidx.compose.runtime.LaunchedEffect(Unit) {
         viewModel.effects.collect { effect ->
             when (effect) {
-                is CheckoutEffect.Success -> onPaymentSuccess(effect.paymentId)
+                is CheckoutEffect.NavigateToTossPayment ->
+                    onNavigateTossPayment(effect.orderId, effect.amount, effect.paymentMethod, effect.requestId, effect.orderName)
             }
         }
     }
@@ -149,7 +150,7 @@ private fun CheckoutContent(
             SectionTitle("주문 내역")
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text = info.serviceTitle.orEmpty(),
+                text = info.requestTitle.orEmpty(),
                 style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
             )
             info.expertDisplayName?.let {
@@ -165,7 +166,7 @@ private fun CheckoutContent(
             SectionTitle("결제 수단")
             Spacer(modifier = Modifier.height(8.dp))
             MethodRow(
-                label = "매칭온페이 결제",
+                label = "신용/체크카드",
                 selected = true,
                 onClick = {},
             )

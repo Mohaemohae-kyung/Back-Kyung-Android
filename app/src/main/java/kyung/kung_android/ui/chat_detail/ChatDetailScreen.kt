@@ -24,19 +24,24 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowUpward
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -48,12 +53,14 @@ import kyung.kung_android.data.request.dto.ServiceRequestResponse
 import kyung.kung_android.ui.common.InitialAvatar
 import kyung.kung_android.ui.common.KungPrimaryButton
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kyung.kung_android.data.chat.dto.ChatMessageResponse
 import kyung.kung_android.ui.theme.KungColors
+import java.math.BigDecimal
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -64,6 +71,7 @@ fun ChatDetailScreen(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val listState = rememberLazyListState()
+    var showRequestDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(state.messages.size) {
         if (state.messages.isNotEmpty()) {
@@ -109,8 +117,12 @@ fun ChatDetailScreen(
                     QuoteInfoCard(
                         request = req,
                         expert = state.linkedExpert,
-                        showPayButton = state.isRequester && req.status == "CHATTING",
+                        showPayButton = state.isRequester && req.status == "CHATTING" && state.hasPaymentRequest,
                         onPayClick = { onNavigateCheckout(req.requestId) },
+                        showRequestButton = state.isExpertSide && req.status == "CHATTING",
+                        paymentRequested = state.hasPaymentRequest,
+                        isRequestingPayment = state.isRequestingPayment,
+                        onRequestPaymentClick = { showRequestDialog = true },
                     )
                 }
                 LazyColumn(
@@ -120,33 +132,48 @@ fun ChatDetailScreen(
                     verticalArrangement = Arrangement.spacedBy(6.dp),
                 ) {
                     items(state.messages, key = { it.chatMessageId }) { msg ->
-                        val isMine = state.currentUserId != null && msg.senderId == state.currentUserId
-                        val otherName: String
-                        val otherImageUrl: String?
-                        when (msg.senderId) {
-                            state.linkedExpert?.ownerUserId -> {
-                                otherName = state.linkedExpert?.displayName ?: "고수"
-                                otherImageUrl = state.linkedExpert?.profileImageUrl
+                        if (msg.messageType == "SYSTEM") {
+                            SystemMessage(text = msg.content)
+                        } else {
+                            val isMine = state.currentUserId != null && msg.senderId == state.currentUserId
+                            val otherName: String
+                            val otherImageUrl: String?
+                            when (msg.senderId) {
+                                state.linkedExpert?.ownerUserId -> {
+                                    otherName = state.linkedExpert?.displayName ?: "고수"
+                                    otherImageUrl = state.linkedExpert?.profileImageUrl
+                                }
+                                state.linkedRequest?.userId -> {
+                                    otherName = state.linkedRequest?.requesterName ?: "사용자"
+                                    otherImageUrl = null
+                                }
+                                else -> {
+                                    otherName = "상대"
+                                    otherImageUrl = null
+                                }
                             }
-                            state.linkedRequest?.userId -> {
-                                otherName = state.linkedRequest?.requesterName ?: "사용자"
-                                otherImageUrl = null
-                            }
-                            else -> {
-                                otherName = "상대"
-                                otherImageUrl = null
-                            }
+                            MessageBubble(
+                                message = msg,
+                                isMine = isMine,
+                                otherName = otherName,
+                                otherImageUrl = otherImageUrl,
+                            )
                         }
-                        MessageBubble(
-                            message = msg,
-                            isMine = isMine,
-                            otherName = otherName,
-                            otherImageUrl = otherImageUrl,
-                        )
                     }
                 }
             }
         }
+    }
+
+    if (showRequestDialog) {
+        PaymentRequestDialog(
+            isRequesting = state.isRequestingPayment,
+            onDismiss = { showRequestDialog = false },
+            onSubmit = { serviceName, amount ->
+                viewModel.requestPayment(serviceName, amount)
+                showRequestDialog = false
+            },
+        )
     }
 }
 
@@ -163,6 +190,24 @@ private fun ConnectionBanner() {
             text = "연결이 끊어졌어요. 다시 연결하는 중...",
             style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold),
             color = KungColors.ErrorDark,
+        )
+    }
+}
+
+@Composable
+private fun SystemMessage(text: String) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.Center,
+    ) {
+        Text(
+            text = text,
+            style = MaterialTheme.typography.labelSmall,
+            color = KungColors.Charcoal.copy(alpha = 0.55f),
+            modifier = Modifier
+                .clip(RoundedCornerShape(12.dp))
+                .background(KungColors.PurpleBg.copy(alpha = 0.6f))
+                .padding(horizontal = 12.dp, vertical = 6.dp),
         )
     }
 }
@@ -298,6 +343,10 @@ private fun QuoteInfoCard(
     expert: ExpertDetailResponse?,
     showPayButton: Boolean,
     onPayClick: () -> Unit,
+    showRequestButton: Boolean = false,
+    paymentRequested: Boolean = false,
+    isRequestingPayment: Boolean = false,
+    onRequestPaymentClick: () -> Unit = {},
 ) {
     val numberFmt = remember { java.text.NumberFormat.getNumberInstance(java.util.Locale.KOREA) }
     val dateFmt = remember { java.time.format.DateTimeFormatter.ofPattern("yyyy.MM.dd") }
@@ -352,5 +401,68 @@ private fun QuoteInfoCard(
                 onClick = onPayClick,
             )
         }
+        if (showRequestButton) {
+            Spacer(modifier = Modifier.size(10.dp))
+            KungPrimaryButton(
+                text = when {
+                    isRequestingPayment -> "요청 중..."
+                    paymentRequested -> "결제 요청 완료"
+                    else -> "결제 요청"
+                },
+                onClick = onRequestPaymentClick,
+                enabled = !isRequestingPayment && !paymentRequested,
+            )
+        }
     }
+}
+
+@Composable
+private fun PaymentRequestDialog(
+    isRequesting: Boolean,
+    onDismiss: () -> Unit,
+    onSubmit: (serviceName: String, amount: BigDecimal) -> Unit,
+) {
+    var serviceName by remember { mutableStateOf("") }
+    var amountText by remember { mutableStateOf("") }
+    val amount = amountText.toBigDecimalOrNull()
+    val canSubmit = serviceName.isNotBlank() &&
+        amount != null && amount > BigDecimal.ZERO && !isRequesting
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("결제 요청") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text(
+                    text = "서비스명과 금액을 입력해주세요.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                OutlinedTextField(
+                    value = serviceName,
+                    onValueChange = { serviceName = it },
+                    label = { Text("서비스명") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                OutlinedTextField(
+                    value = amountText,
+                    onValueChange = { input -> amountText = input.filter { it.isDigit() } },
+                    label = { Text("결제금액") },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = { if (amount != null) onSubmit(serviceName.trim(), amount) },
+                enabled = canSubmit,
+            ) { Text(if (isRequesting) "요청 중..." else "요청하기") }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text("취소") }
+        },
+    )
 }

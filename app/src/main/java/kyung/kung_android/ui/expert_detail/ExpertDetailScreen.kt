@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -28,6 +29,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -39,6 +41,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -48,6 +51,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
 import kyung.kung_android.data.expert.dto.ExpertDetailResponse
 import kyung.kung_android.ui.common.InitialAvatar
+import kyung.kung_android.ui.webview.WebViewActivity
 import kyung.kung_android.ui.common.KungPrimaryButton
 import kyung.kung_android.ui.common.SectionTitle
 import kyung.kung_android.ui.common.toCareerYearLabel
@@ -169,6 +173,19 @@ private fun ExpertDetailContent(
             InfoRow(label = "카테고리", value = expert.mainCategoryName ?: "—")
             InfoRow(label = "활동 지역", value = expert.mainLocationName ?: "—")
             InfoRow(label = "경력", value = expert.careerYears?.toCareerYearLabel() ?: "—")
+        }
+        expert.portfolioWebViewUrl?.takeIf { it.isNotBlank() }?.let { url ->
+            item { HorizontalDivider() }
+            item {
+                SectionTitle("포트폴리오")
+                Spacer(modifier = Modifier.height(8.dp))
+                val context = LocalContext.current
+                OutlinedButton(
+                    onClick = { context.startActivity(WebViewActivity.intent(context, url)) },
+                    shape = RoundedCornerShape(14.dp),
+                    modifier = Modifier.fillMaxWidth(),
+                ) { Text("포트폴리오 보기") }
+            }
         }
     }
 }

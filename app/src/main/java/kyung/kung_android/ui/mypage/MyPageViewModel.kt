@@ -23,7 +23,10 @@ data class MyPageUiState(
     val error: String? = null,
 ) {
     val isExpert: Boolean
-        get() = user?.role == "EXPERT" || user?.role == "ADMIN"
+        get() = user?.role == "EXPERT"
+
+    val isAdmin: Boolean
+        get() = user?.role == "ADMIN"
 }
 
 @HiltViewModel

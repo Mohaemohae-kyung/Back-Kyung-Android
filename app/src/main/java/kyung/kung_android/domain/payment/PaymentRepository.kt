@@ -1,9 +1,6 @@
 package kyung.kung_android.domain.payment
 
-import kyung.kung_android.data.payment.api.MockPgApi
 import kyung.kung_android.data.payment.api.PaymentApi
-import kyung.kung_android.data.payment.dto.MockPgApproveRequest
-import kyung.kung_android.data.payment.dto.MockPgApproveResponse
 import kyung.kung_android.data.payment.dto.PaymentConfirmRequest
 import kyung.kung_android.data.payment.dto.PaymentPrepareRequest
 import kyung.kung_android.data.payment.dto.PaymentPrepareResponse
@@ -15,7 +12,6 @@ import javax.inject.Singleton
 @Singleton
 class PaymentRepository @Inject constructor(
     private val paymentApi: PaymentApi,
-    private val mockPgApi: MockPgApi,
 ) {
 
     suspend fun getMyPayments(): List<PaymentResponse> = paymentApi.getMyPayments()
@@ -31,15 +27,22 @@ class PaymentRepository @Inject constructor(
                 targetType = "SERVICE_REQUEST",
                 targetId = requestId,
                 paymentMethod = paymentMethod,
+                pgProvider = PG_PROVIDER_TOSS,
             )
         )
 
-    suspend fun approveMockPg(
-        orderId: String,
-        amount: BigDecimal,
+    suspend fun prepareForBooking(
+        bookingId: Long,
         paymentMethod: String = "CARD",
-    ): MockPgApproveResponse =
-        mockPgApi.approve(MockPgApproveRequest(orderId, amount, paymentMethod))
+    ): PaymentPrepareResponse =
+        paymentApi.prepare(
+            PaymentPrepareRequest(
+                targetType = "BOOKING",
+                targetId = bookingId,
+                paymentMethod = paymentMethod,
+                pgProvider = PG_PROVIDER_TOSS,
+            )
+        )
 
     suspend fun confirm(
         orderId: String,
@@ -47,4 +50,8 @@ class PaymentRepository @Inject constructor(
         amount: BigDecimal,
     ): PaymentResponse =
         paymentApi.confirm(PaymentConfirmRequest(orderId, paymentKey, amount))
+
+    companion object {
+        private const val PG_PROVIDER_TOSS = "TOSS_PAYMENTS"
+    }
 }

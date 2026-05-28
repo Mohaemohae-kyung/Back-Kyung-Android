@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kyung.kung_android.data.expert.dto.ExpertDetailResponse
 import kyung.kung_android.data.request.dto.ServiceRequestResponse
+import kyung.kung_android.domain.chat.ChatRepository
 import kyung.kung_android.domain.expert.ExpertRepository
 import kyung.kung_android.domain.request.ServiceRequestRepository
 import kyung.kung_android.domain.user.UserRepository
@@ -22,6 +23,7 @@ data class QuoteDetailUiState(
     val expert: ExpertDetailResponse? = null,
     val myUserId: Long? = null,
     val myRole: String? = null,
+    val hasPaymentRequest: Boolean = false,
     val isLoading: Boolean = true,
     val isActing: Boolean = false,
     val error: String? = null,
@@ -41,6 +43,7 @@ class QuoteDetailViewModel @Inject constructor(
     private val serviceRequestRepository: ServiceRequestRepository,
     private val expertRepository: ExpertRepository,
     private val userRepository: UserRepository,
+    private val chatRepository: ChatRepository,
 ) : ViewModel() {
 
     private val requestId: Long = savedStateHandle.get<Long>("requestId") ?: 0L
@@ -82,6 +85,13 @@ class QuoteDetailViewModel @Inject constructor(
                 quote.expertProfileId?.let { id ->
                     runCatching { expertRepository.getExpertDetail(id) }
                         .onSuccess { expert -> _state.update { it.copy(expert = expert) } }
+                }
+                quote.chatRoomId?.let { roomId ->
+                    runCatching { chatRepository.getMessages(roomId) }
+                        .onSuccess { msgs ->
+                            val requested = msgs.any { it.messageType == "PAYMENT_REQUEST" }
+                            _state.update { it.copy(hasPaymentRequest = requested) }
+                        }
                 }
             } catch (t: Throwable) {
                 _state.update { it.copy(isLoading = false, error = "정보를 불러오지 못했어요.") }

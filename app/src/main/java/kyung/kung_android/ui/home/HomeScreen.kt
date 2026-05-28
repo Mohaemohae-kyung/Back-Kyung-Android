@@ -16,6 +16,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -36,6 +38,7 @@ import androidx.compose.material.icons.filled.School
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.SelfImprovement
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.Storefront
 import androidx.compose.material.icons.filled.Work
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.AssistChipDefaults
@@ -73,10 +76,13 @@ import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kyung.kung_android.R
 import kyung.kung_android.data.expert.dto.ExpertSearchResponse
+import kyung.kung_android.data.store.dto.StoreProductResponse
 import kyung.kung_android.domain.category.model.Categories
 import kyung.kung_android.domain.category.model.Category
 import kyung.kung_android.ui.common.InitialAvatar
 import kyung.kung_android.ui.theme.KungColors
+import java.text.NumberFormat
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -87,6 +93,8 @@ fun HomeScreen(
     onNavigateMyPage: () -> Unit,
     onNavigateExpertSearch: (keyword: String?, categoryId: Long?, locationId: Long?) -> Unit,
     onNavigateExpertDetail: (Long) -> Unit,
+    onNavigateStoreDetail: (Long) -> Unit = {},
+    onNavigateStoreAll: () -> Unit = {},
     onNavigateChatbot: () -> Unit,
     onNavigateExpertRegister: () -> Unit,
     modifier: Modifier = Modifier,
@@ -103,6 +111,7 @@ fun HomeScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .verticalScroll(rememberScrollState())
                 .padding(bottom = 16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
@@ -127,7 +136,12 @@ fun HomeScreen(
                 isLoading = state.isLoadingRecommended,
                 onExpertClick = onNavigateExpertDetail,
                 onShowAll = { onNavigateExpertSearch(null, null, null) },
-                modifier = Modifier.weight(1f),
+            )
+            HomeRecommendedStoreSection(
+                products = state.recommendedStore.take(12),
+                isLoading = state.isLoadingStore,
+                onProductClick = onNavigateStoreDetail,
+                onShowAll = onNavigateStoreAll,
             )
         }
 
@@ -226,11 +240,33 @@ private fun HomeHeroCard(
             .padding(horizontal = 18.dp, vertical = 14.dp),
     ) {
         Column {
+            Row(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(50))
+                    .background(KungColors.White.copy(alpha = 0.2f))
+                    .padding(horizontal = 10.dp, vertical = 5.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.AutoAwesome,
+                    contentDescription = null,
+                    tint = KungColors.White,
+                    modifier = Modifier.size(15.dp),
+                )
+                Spacer(modifier = Modifier.width(4.dp))
+                Text(
+                    text = "원하는 고수를 빠르게 만나는 방법",
+                    style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
+                    color = KungColors.White,
+                )
+            }
+            Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text = "필요한 서비스를 고수에게 바로 요청하세요",
+                text = "필요한 서비스를\n고수에게 바로 요청하세요",
                 style = MaterialTheme.typography.titleMedium.copy(
                     fontWeight = FontWeight.ExtraBold,
                     letterSpacing = (-0.4).sp,
+                    lineHeight = 26.sp,
                 ),
                 color = KungColors.White,
             )
@@ -278,7 +314,7 @@ private fun HeroSearchPill(
         ) {
             if (value.isEmpty()) {
                 Text(
-                    text = "어떤 서비스가 필요하세요?",
+                    text = "필요한 서비스를 검색해보세요",
                     style = MaterialTheme.typography.bodyMedium,
                     color = KungColors.Hint,
                 )
@@ -526,10 +562,10 @@ private fun HomeRecommendedExpertsSection(
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                 contentPadding = PaddingValues(horizontal = 16.dp),
             ) {
-                items(experts, key = { it.expertServiceId }) { expert ->
+                items(experts, key = { it.expertProfileId }) { expert ->
                     RecommendedExpertCard(
                         expert = expert,
-                        onClick = { onExpertClick(expert.expertServiceId) },
+                        onClick = { onExpertClick(expert.expertProfileId) },
                     )
                 }
             }
@@ -574,7 +610,7 @@ private fun RecommendedExpertCard(
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
-            expert.mainCategoryName?.let {
+            expert.categoryNames.firstOrNull()?.let {
                 Spacer(modifier = Modifier.height(2.dp))
                 Text(
                     text = it,
@@ -605,6 +641,142 @@ private fun RecommendedExpertCard(
                         color = KungColors.Purple,
                     )
                 }
+            }
+        }
+    }
+}
+
+private val STORE_PRICE_FMT = NumberFormat.getNumberInstance(Locale.KOREA)
+
+@Composable
+private fun HomeRecommendedStoreSection(
+    products: List<StoreProductResponse>,
+    isLoading: Boolean,
+    onProductClick: (Long) -> Unit,
+    onShowAll: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    if (!isLoading && products.isEmpty()) return
+
+    Column(modifier = modifier) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = "오늘의 추천 마켓",
+                style = MaterialTheme.typography.titleMedium.copy(
+                    fontWeight = FontWeight.ExtraBold,
+                    letterSpacing = (-0.3).sp,
+                ),
+                modifier = Modifier.weight(1f),
+            )
+            TextButton(
+                onClick = onShowAll,
+                contentPadding = PaddingValues(horizontal = 4.dp, vertical = 0.dp),
+            ) {
+                Text(
+                    text = "전체 보기",
+                    style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
+                    color = KungColors.Purple,
+                )
+            }
+        }
+        Spacer(modifier = Modifier.height(14.dp))
+
+        if (isLoading && products.isEmpty()) {
+            Text(
+                text = "불러오는 중...",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(horizontal = 16.dp),
+            )
+        } else {
+            LazyRow(
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                contentPadding = PaddingValues(horizontal = 16.dp),
+            ) {
+                items(products, key = { it.storeProductId }) { product ->
+                    RecommendedStoreCard(
+                        product = product,
+                        onClick = { onProductClick(product.storeProductId) },
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun RecommendedStoreCard(
+    product: StoreProductResponse,
+    onClick: () -> Unit,
+) {
+    Card(
+        modifier = Modifier
+            .width(170.dp)
+            .clickable(onClick = onClick),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
+        border = BorderStroke(1.dp, KungColors.BorderSoft),
+    ) {
+        Column {
+            if (!product.thumbnailImageUrl.isNullOrBlank()) {
+                AsyncImage(
+                    model = product.thumbnailImageUrl,
+                    contentDescription = null,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(100.dp)
+                        .clip(RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp)),
+                    contentScale = ContentScale.Crop,
+                )
+            } else {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(100.dp)
+                        .clip(RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp))
+                        .background(KungColors.PurpleBg),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Storefront,
+                        contentDescription = null,
+                        tint = KungColors.Purple,
+                        modifier = Modifier.size(36.dp),
+                    )
+                }
+            }
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(12.dp),
+            ) {
+                Text(
+                    text = product.title,
+                    style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(
+                    text = product.categoryName,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = product.price?.let { "${STORE_PRICE_FMT.format(it)}원" } ?: "가격 협의",
+                    style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.ExtraBold),
+                    color = KungColors.Purple,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
             }
         }
     }

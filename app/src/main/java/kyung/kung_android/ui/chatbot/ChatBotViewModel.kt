@@ -3,12 +3,14 @@ package kyung.kung_android.ui.chatbot
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kyung.kung_android.data.chatbot.api.ChatBotApi
+import kyung.kung_android.data.chatbot.dto.LlmChatRequest
+import java.util.UUID
 import javax.inject.Inject
 
 sealed class ChatBotMessage {
@@ -31,7 +33,11 @@ data class ChatBotUiState(
 }
 
 @HiltViewModel
-class ChatBotViewModel @Inject constructor() : ViewModel() {
+class ChatBotViewModel @Inject constructor(
+    private val chatBotApi: ChatBotApi,
+) : ViewModel() {
+
+    private var sessionId: String = UUID.randomUUID().toString()
 
     private val _state = MutableStateFlow(ChatBotUiState())
     val state: StateFlow<ChatBotUiState> = _state.asStateFlow()
@@ -53,12 +59,17 @@ class ChatBotViewModel @Inject constructor() : ViewModel() {
         }
 
         viewModelScope.launch {
-            delay(MOCK_DELAY_MS)
+            val reply = runCatching {
+                chatBotApi.sendMessage(
+                    LlmChatRequest(message = text, session_id = sessionId)
+                ).reply
+            }.getOrElse {
+                "⚠️ 응답을 받지 못했습니다. 잠시 후 다시 시도해주세요."
+            }
+
             _state.update {
                 it.copy(
-                    messages = it.messages + ChatBotMessage.Bot(
-                        "(mock 응답) v2에서 실제 LLM 연동 예정입니다."
-                    ),
+                    messages = it.messages + ChatBotMessage.Bot(reply),
                     isThinking = false,
                 )
             }
@@ -66,10 +77,7 @@ class ChatBotViewModel @Inject constructor() : ViewModel() {
     }
 
     fun onNewQuestion() {
+        sessionId = UUID.randomUUID().toString()
         _state.update { ChatBotUiState() }
-    }
-
-    private companion object {
-        private const val MOCK_DELAY_MS = 1000L
     }
 }

@@ -2,10 +2,12 @@ package kyung.kung_android.data.expert.api
 
 import kyung.kung_android.data.expert.dto.ExpertDetailResponse
 import kyung.kung_android.data.expert.dto.ExpertProfileCreateRequest
+import kyung.kung_android.data.expert.dto.ExpertProfileUpdateRequest
 import kyung.kung_android.data.expert.dto.ExpertSearchResponse
 import kyung.kung_android.data.expert.dto.FavoriteToggleResponse
 import retrofit2.http.Body
 import retrofit2.http.GET
+import retrofit2.http.PATCH
 import retrofit2.http.POST
 import retrofit2.http.Path
 import retrofit2.http.Query
@@ -26,6 +28,9 @@ interface ExpertApi {
 
     @POST("/api/experts/profile")
     suspend fun createProfile(@Body request: ExpertProfileCreateRequest): Unit?
+
+    @PATCH("/api/experts/profile")
+    suspend fun updateProfile(@Body request: ExpertProfileUpdateRequest): Unit?
 
     @POST("/api/experts/{expertProfileId}/favorite")
     suspend fun toggleFavorite(

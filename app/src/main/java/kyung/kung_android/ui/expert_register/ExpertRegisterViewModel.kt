@@ -14,7 +14,6 @@ import kotlinx.coroutines.launch
 import kyung.kung_android.data.network.ApiException
 import kyung.kung_android.domain.category.model.Categories
 import kyung.kung_android.domain.expert.ExpertRepository
-import kyung.kung_android.domain.expert_service.ExpertServiceRepository
 import kyung.kung_android.domain.location.model.Regions
 import kyung.kung_android.domain.user.UserRepository
 import javax.inject.Inject
@@ -24,13 +23,16 @@ data class ExpertRegisterUiState(
     val introduction: String = "",
     val careerYears: String = "",
     val mainCategoryId: Long? = null,
+    val subCategoryIds: Set<Long> = emptySet(),
     val mainLocationId: Long? = null,
+    val externalPortfolioUrl: String = "",
     val displayNameError: String? = null,
     val introductionError: String? = null,
     val careerYearsError: String? = null,
     val categoryError: String? = null,
     val locationError: String? = null,
     val errorMessage: String? = null,
+    val isEditMode: Boolean = false,
     val isSubmitting: Boolean = false,
 ) {
     val canSubmit: Boolean
@@ -38,6 +40,7 @@ data class ExpertRegisterUiState(
                 introduction.isNotBlank() &&
                 careerYears.toDoubleOrNull()?.let { it >= 0 } == true &&
                 mainCategoryId != null &&
+                subCategoryIds.isNotEmpty() &&
                 mainLocationId != null &&
                 !isSubmitting
 }
@@ -49,7 +52,6 @@ sealed interface ExpertRegisterEffect {
 @HiltViewModel
 class ExpertRegisterViewModel @Inject constructor(
     private val expertRepository: ExpertRepository,
-    private val expertServiceRepository: ExpertServiceRepository,
     private val userRepository: UserRepository,
 ) : ViewModel() {
 
@@ -58,10 +60,11 @@ class ExpertRegisterViewModel @Inject constructor(
 
     init {
         val me = userRepository.currentUser.value
-        val serviceId = me?.expertServiceId
-        if (serviceId != null && (me.role == "EXPERT" || me.role == "ADMIN")) {
+        val profileId = me?.expertProfileId
+        if (profileId != null && (me.role == "EXPERT" || me.role == "ADMIN")) {
+            _state.update { it.copy(isEditMode = true) }
             viewModelScope.launch {
-                runCatching { expertRepository.getExpertDetail(serviceId) }
+                runCatching { expertRepository.getExpertDetail(profileId) }
                     .onSuccess { d ->
                         _state.update {
                             it.copy(
@@ -71,6 +74,9 @@ class ExpertRegisterViewModel @Inject constructor(
                                     if (y % 1.0 == 0.0) y.toInt().toString() else y.toString()
                                 } ?: "",
                                 mainCategoryId = Categories.ALL.firstOrNull { it.name == d.mainCategoryName }?.id,
+                                subCategoryIds = d.categoryNames
+                                    .mapNotNull { name -> Categories.subcategoryByName(name)?.id }
+                                    .toSet(),
                                 mainLocationId = Regions.ALL.firstOrNull { it.name == d.mainLocationName }?.id,
                             )
                         }
@@ -91,8 +97,15 @@ class ExpertRegisterViewModel @Inject constructor(
             _state.update { it.copy(careerYears = normalized, careerYearsError = null) }
         }
     }
-    fun onCategorySelected(id: Long) = _state.update { it.copy(mainCategoryId = id, categoryError = null) }
+    fun onCategorySelected(id: Long) = _state.update {
+        it.copy(mainCategoryId = id, subCategoryIds = emptySet(), categoryError = null)
+    }
+    fun onSubCategoryToggle(id: Long) = _state.update {
+        val next = if (id in it.subCategoryIds) it.subCategoryIds - id else it.subCategoryIds + id
+        it.copy(subCategoryIds = next, categoryError = null)
+    }
     fun onLocationSelected(id: Long) = _state.update { it.copy(mainLocationId = id, locationError = null) }
+    fun onExternalPortfolioUrlChange(v: String) = _state.update { it.copy(externalPortfolioUrl = v) }
 
     fun onSubmit() {
         val current = _state.value
@@ -102,20 +115,31 @@ class ExpertRegisterViewModel @Inject constructor(
 
         viewModelScope.launch {
             try {
-                expertRepository.createProfile(
-                    displayName = current.displayName,
-                    introduction = current.introduction,
-                    careerYears = current.careerYears.toDouble(),
-                    mainCategoryId = requireNotNull(current.mainCategoryId),
-                    mainLocationId = requireNotNull(current.mainLocationId),
-                )
-                expertServiceRepository.createService(
-                    categoryId = requireNotNull(current.mainCategoryId),
-                    locationId = requireNotNull(current.mainLocationId),
-                    serviceTitle = current.displayName,
-                    serviceDescription = current.introduction,
-                    price = 0,
-                )
+                val mainCategoryId = requireNotNull(current.mainCategoryId)
+                val mainLocationId = requireNotNull(current.mainLocationId)
+                val careerYears = current.careerYears.toDouble()
+                val portfolioUrl = current.externalPortfolioUrl.trim().ifBlank { null }
+                if (current.isEditMode) {
+                    expertRepository.updateProfile(
+                        displayName = current.displayName,
+                        introduction = current.introduction,
+                        careerYears = careerYears,
+                        mainCategoryId = mainCategoryId,
+                        categoryIds = current.subCategoryIds.toList(),
+                        mainLocationId = mainLocationId,
+                        externalPortfolioUrl = portfolioUrl,
+                    )
+                } else {
+                    expertRepository.createProfile(
+                        displayName = current.displayName,
+                        introduction = current.introduction,
+                        careerYears = careerYears,
+                        mainCategoryId = mainCategoryId,
+                        categoryIds = current.subCategoryIds.toList(),
+                        mainLocationId = mainLocationId,
+                        externalPortfolioUrl = portfolioUrl,
+                    )
+                }
                 runCatching { userRepository.getMe() }
                 _effects.emit(ExpertRegisterEffect.NavigateBack)
             } catch (e: ApiException) {

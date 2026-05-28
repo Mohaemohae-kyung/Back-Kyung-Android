@@ -43,7 +43,9 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.ui.platform.LocalContext
 import kyung.kung_android.BuildConfig
+import kyung.kung_android.admin.AdminGate
 import kyung.kung_android.data.user.dto.UserProfileResponse
 import kyung.kung_android.ui.common.InitialAvatar
 import kyung.kung_android.ui.common.LoginGate
@@ -58,7 +60,7 @@ fun MyPageScreen(
     onNavigateExpertRegister: () -> Unit,
     onNavigateAccountSettings: () -> Unit = {},
     onNavigateFavorites: () -> Unit = {},
-    onNavigatePaymentHistory: () -> Unit = {},
+    onNavigatePaymentHistory: (type: String) -> Unit = {},
     onNavigateExpertTransactions: () -> Unit = {},
     onNavigateExpertSelf: (expertProfileId: Long?) -> Unit = {},
     viewModel: MyPageViewModel = hiltViewModel(),
@@ -90,9 +92,10 @@ fun MyPageScreen(
             LoggedInContent(
                 user = state.user,
                 isExpert = state.isExpert,
+                isAdmin = state.isAdmin,
                 modifier = Modifier.padding(padding),
                 onExpertBannerClick = {
-                    val id = state.user?.expertServiceId
+                    val id = state.user?.expertProfileId
                     if (state.isExpert && id != null) onNavigateExpertSelf(id) else onNavigateExpertRegister()
                 },
                 onAccountSettingsClick = onNavigateAccountSettings,
@@ -108,10 +111,11 @@ fun MyPageScreen(
 private fun LoggedInContent(
     user: UserProfileResponse?,
     isExpert: Boolean,
+    isAdmin: Boolean,
     onExpertBannerClick: () -> Unit,
     onAccountSettingsClick: () -> Unit,
     onFavoritesClick: () -> Unit,
-    onPaymentHistoryClick: () -> Unit,
+    onPaymentHistoryClick: (type: String) -> Unit,
     onExpertTransactionsClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -135,11 +139,23 @@ private fun LoggedInContent(
         }
 
         item {
-            SectionTitle("거래내역")
-            MyPageRow(
-                title = "매칭온페이 거래내역",
-                onClick = if (isExpert) onExpertTransactionsClick else onPaymentHistoryClick,
-            )
+            Column {
+                SectionTitle("거래내역")
+                MyPageRow(
+                    title = "마켓 거래내역",
+                    onClick = { onPaymentHistoryClick("BOOKING") },
+                )
+                MyPageRow(
+                    title = "고수찾기 거래내역",
+                    onClick = { onPaymentHistoryClick("SERVICE_REQUEST") },
+                )
+                if (isExpert) {
+                    MyPageRow(
+                        title = "받은 거래내역",
+                        onClick = onExpertTransactionsClick,
+                    )
+                }
+            }
         }
 
         item {
@@ -148,6 +164,17 @@ private fun LoggedInContent(
                 title = "찜한 고수",
                 onClick = onFavoritesClick,
             )
+        }
+
+        if (isAdmin) {
+            item {
+                val context = LocalContext.current
+                SectionTitle("관리자")
+                MyPageRow(
+                    title = "관리자 페이지",
+                    onClick = { AdminGate.open(context) },
+                )
+            }
         }
 
         item {

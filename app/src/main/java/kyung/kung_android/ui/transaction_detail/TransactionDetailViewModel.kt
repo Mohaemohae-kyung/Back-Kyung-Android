@@ -49,8 +49,8 @@ class TransactionDetailViewModel @Inject constructor(
                     runCatching { serviceRequestRepository.getRequest(rid) }
                         .onSuccess { req ->
                             _state.update { it.copy(request = req) }
-                            req.expertServiceId?.let { sid ->
-                                runCatching { expertRepository.getExpertDetail(sid) }
+                            req.expertProfileId?.let { pid ->
+                                runCatching { expertRepository.getExpertDetail(pid) }
                                     .onSuccess { e -> _state.update { it.copy(expert = e) } }
                             }
                         }

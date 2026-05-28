@@ -56,6 +56,7 @@ import kyung.kung_android.ui.theme.KungColors
 fun AccountSettingsScreen(
     onBack: () -> Unit,
     onNavigateProfileInfo: () -> Unit,
+    onNavigatePasswordChange: () -> Unit,
     onNavigateWithdraw: () -> Unit,
     onLoggedOut: () -> Unit,
     viewModel: AccountSettingsViewModel = hiltViewModel(),
@@ -124,6 +125,8 @@ fun AccountSettingsScreen(
             )
             HorizontalDivider()
             SettingsRow(label = "개인 정보 관리", onClick = onNavigateProfileInfo)
+            HorizontalDivider()
+            SettingsRow(label = "비밀번호 변경", onClick = onNavigatePasswordChange)
             HorizontalDivider()
             SettingsRow(label = "로그아웃", onClick = { logoutDialog = true })
             HorizontalDivider()

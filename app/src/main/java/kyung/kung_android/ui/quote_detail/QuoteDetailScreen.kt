@@ -116,6 +116,7 @@ fun QuoteDetailScreen(
                     isRequester = state.isRequester,
                     isReceivingExpert = state.isReceivingExpert,
                     isActing = state.isActing,
+                    hasPaymentRequest = state.hasPaymentRequest,
                     onNavigateExpertDetail = onNavigateExpertDetail,
                     onNavigateChat = onNavigateChat,
                     onNavigateCheckout = onNavigateCheckout,
@@ -153,6 +154,7 @@ private fun QuoteDetailContent(
     isRequester: Boolean,
     isReceivingExpert: Boolean,
     isActing: Boolean,
+    hasPaymentRequest: Boolean,
     onNavigateExpertDetail: (Long) -> Unit,
     onNavigateChat: (Long) -> Unit,
     onNavigateCheckout: (Long) -> Unit,
@@ -180,9 +182,17 @@ private fun QuoteDetailContent(
             }
         }
 
-        expert?.let {
+        if (!isReceivingExpert) {
+            expert?.let {
+                item {
+                    ExpertCardRow(expert = it, onClick = { onNavigateExpertDetail(it.expertProfileId) })
+                }
+            }
+        }
+
+        if (isReceivingExpert) {
             item {
-                ExpertCardRow(expert = it, onClick = { onNavigateExpertDetail(it.expertProfileId) })
+                RequesterCard(name = quote.requesterName)
             }
         }
 
@@ -213,6 +223,7 @@ private fun QuoteDetailContent(
                 isRequester = isRequester,
                 isReceivingExpert = isReceivingExpert,
                 isActing = isActing,
+                hasPaymentRequest = hasPaymentRequest,
                 onNavigateChat = onNavigateChat,
                 onNavigateCheckout = onNavigateCheckout,
                 onRequestCancel = onRequestCancel,
@@ -271,6 +282,36 @@ private fun ExpertCardRow(expert: ExpertDetailResponse, onClick: () -> Unit) {
 
 
 @Composable
+private fun RequesterCard(name: String?) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(18.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        border = BorderStroke(1.dp, KungColors.BorderSoft),
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(14.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            InitialAvatar(name = name ?: "?", size = 48.dp)
+            Spacer(modifier = Modifier.width(12.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = "의뢰인",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Text(
+                    text = name ?: "—",
+                    style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
+                )
+            }
+        }
+    }
+}
+
+@Composable
 private fun InfoRow(label: String, value: String) {
     Row(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
         Text(
@@ -289,6 +330,7 @@ private fun ActionArea(
     isRequester: Boolean,
     isReceivingExpert: Boolean,
     isActing: Boolean,
+    hasPaymentRequest: Boolean,
     onNavigateChat: (Long) -> Unit,
     onNavigateCheckout: (Long) -> Unit,
     onRequestCancel: () -> Unit,
@@ -330,22 +372,18 @@ private fun ActionArea(
         }
         isRequester && quote.status == "CHATTING" -> {
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                KungPrimaryButton(
-                    text = "결제하기",
-                    onClick = { onNavigateCheckout(quote.requestId) },
-                )
+                if (hasPaymentRequest) {
+                    KungPrimaryButton(
+                        text = "결제하기",
+                        onClick = { onNavigateCheckout(quote.requestId) },
+                    )
+                }
                 OutlinedButton(
                     onClick = { quote.chatRoomId?.let(onNavigateChat) },
                     enabled = quote.chatRoomId != null,
                     shape = RoundedCornerShape(16.dp),
                     modifier = Modifier.fillMaxWidth().height(54.dp),
                 ) { Text("채팅방 가기") }
-                OutlinedButton(
-                    onClick = onRequestCancel,
-                    enabled = !isActing,
-                    shape = RoundedCornerShape(16.dp),
-                    modifier = Modifier.fillMaxWidth().height(54.dp),
-                ) { Text(if (isActing) "취소 중..." else "요청 취소") }
             }
         }
         quote.status == "REJECTED" -> StatusBanner("고수가 견적을 거절했어요")

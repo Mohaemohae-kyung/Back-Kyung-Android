@@ -248,7 +248,7 @@ private fun PaymentSection(payment: PaymentResponse) {
 
 private fun methodLabel(method: String?): String = when (method) {
     "MATCHING_ON_PAY" -> "매칭온페이 결제"
-    "CARD" -> "신용카드"
+    "CARD" -> "신용/체크카드"
     "EASY_PAY" -> "간편결제"
     "BANK_TRANSFER" -> "계좌이체"
     null -> "—"
