@@ -11,6 +11,7 @@ data class ExpertSearchResponse(
     val careerYears: Double? = null,
     val mainCategoryName: String? = null,
     val mainLocationName: String? = null,
+    val categoryNames: List<String> = emptyList(),
     val verifiedYn: String? = null,
     val status: String? = null,
     val serviceTitle: String? = null,

@@ -99,8 +99,8 @@ fun AppNavHost(
         ) {
             ExpertDetailScreen(
                 onBack = { navController.popBackStack() },
-                onNavigateQuoteRequest = { expertId, expertServiceId ->
-                    navController.navigate("${AppRoute.QUOTE_REQUEST}/$expertId/$expertServiceId")
+                onNavigateQuoteRequest = { expertId, expertProfileId ->
+                    navController.navigate("${AppRoute.QUOTE_REQUEST}/$expertId/$expertProfileId")
                 },
                 onNavigateLogin = { navController.navigate(AppRoute.LOGIN) },
                 onNavigateEditProfile = { navController.navigate(AppRoute.EXPERT_REGISTER) },
@@ -108,10 +108,10 @@ fun AppNavHost(
         }
 
         composable(
-            route = "${AppRoute.QUOTE_REQUEST}/{expertId}/{expertServiceId}",
+            route = "${AppRoute.QUOTE_REQUEST}/{expertId}/{expertProfileId}",
             arguments = listOf(
                 navArgument("expertId") { type = NavType.LongType },
-                navArgument("expertServiceId") { type = NavType.LongType },
+                navArgument("expertProfileId") { type = NavType.LongType },
             ),
         ) {
             QuoteRequestScreen(

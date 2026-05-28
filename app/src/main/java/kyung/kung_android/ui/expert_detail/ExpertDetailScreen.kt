@@ -57,7 +57,7 @@ import kyung.kung_android.ui.theme.KungColors
 @Composable
 fun ExpertDetailScreen(
     onBack: () -> Unit,
-    onNavigateQuoteRequest: (expertId: Long, expertServiceId: Long) -> Unit,
+    onNavigateQuoteRequest: (expertId: Long, expertProfileId: Long) -> Unit,
     onNavigateLogin: () -> Unit = {},
     onNavigateEditProfile: () -> Unit = {},
     viewModel: ExpertDetailViewModel = hiltViewModel(),
@@ -110,14 +110,14 @@ fun ExpertDetailScreen(
                 )
                 else -> BottomCta(
                     text = "견적 요청하기",
-                    enabled = state.expert?.expertServiceIds?.isNotEmpty() == true,
+                    enabled = state.expert?.expertProfileId != null,
                     onClick = {
                         if (!isLoggedIn) {
                             onNavigateLogin()
                             return@BottomCta
                         }
-                        val firstServiceId = state.expert?.expertServiceIds?.firstOrNull() ?: return@BottomCta
-                        onNavigateQuoteRequest(state.expertId, firstServiceId)
+                        val profileId = state.expert?.expertProfileId ?: return@BottomCta
+                        onNavigateQuoteRequest(state.expertId, profileId)
                     },
                 )
             }

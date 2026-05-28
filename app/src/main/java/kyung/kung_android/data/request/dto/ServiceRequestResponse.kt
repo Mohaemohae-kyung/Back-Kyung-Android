@@ -12,6 +12,7 @@ data class ServiceRequestResponse(
     val expertServiceId: Long? = null,
     val expertProfileId: Long? = null,
     val categoryId: Long? = null,
+    val categoryName: String? = null,
     val locationId: Long? = null,
     val chatRoomId: Long? = null,
     val title: String,
