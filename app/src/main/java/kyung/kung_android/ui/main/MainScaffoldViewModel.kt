@@ -27,6 +27,10 @@ class MainScaffoldViewModel @Inject constructor(
         .map { it?.role == "EXPERT" }
         .stateIn(viewModelScope, SharingStarted.Eagerly, false)
 
+    val isAdmin: StateFlow<Boolean> = userRepository.currentUser
+        .map { it?.role == "ADMIN" }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, false)
+
     init {
         authRepository.isLoggedIn
             .filter { it }

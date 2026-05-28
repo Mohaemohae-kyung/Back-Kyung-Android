@@ -89,6 +89,7 @@ import java.util.Locale
 fun HomeScreen(
     isLoggedIn: Boolean,
     isExpert: Boolean = false,
+    isAdmin: Boolean = false,
     onNavigateLogin: () -> Unit,
     onNavigateMyPage: () -> Unit,
     onNavigateExpertSearch: (keyword: String?, categoryId: Long?, locationId: Long?) -> Unit,
@@ -118,6 +119,7 @@ fun HomeScreen(
             HomeTopBar(
                 isLoggedIn = isLoggedIn,
                 isExpert = isExpert,
+                isAdmin = isAdmin,
                 onNavigateMyPage = onNavigateMyPage,
                 onNavigateExpertRegister = onNavigateExpertRegister,
             )
@@ -167,6 +169,7 @@ fun HomeScreen(
 private fun HomeTopBar(
     isLoggedIn: Boolean,
     isExpert: Boolean,
+    isAdmin: Boolean,
     onNavigateMyPage: () -> Unit,
     onNavigateExpertRegister: () -> Unit,
 ) {
@@ -201,7 +204,7 @@ private fun HomeTopBar(
 
         Spacer(modifier = Modifier.weight(1f))
 
-        if (isLoggedIn && !isExpert) {
+        if (isLoggedIn && !isExpert && !isAdmin) {
             TextButton(
                 onClick = onNavigateExpertRegister,
             ) {
