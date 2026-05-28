@@ -6,11 +6,9 @@ import java.math.BigDecimal
 import java.time.LocalDateTime
 
 @Serializable
-data class ServiceRequestCreateRequest(
-    val expertProfileId: Long,
-    val categoryId: Long,
-    val title: String,
-    val content: String,
+data class ServiceRequestUpdateRequest(
+    val title: String? = null,
+    val content: String? = null,
     @Serializable(with = BigDecimalAsStringSerializer::class)
     val budget: BigDecimal? = null,
     @Serializable(with = LocalDateTimeSerializer::class)

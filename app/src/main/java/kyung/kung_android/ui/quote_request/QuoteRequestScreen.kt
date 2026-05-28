@@ -22,7 +22,11 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -150,6 +154,46 @@ fun QuoteRequestScreen(
             }
 
             Spacer(modifier = Modifier.height(4.dp))
+            FieldLabel("카테고리 *")
+            val categoryIds = state.expert?.categoryIds.orEmpty()
+            val categoryNames = state.expert?.categoryNames.orEmpty()
+            val pairs = categoryIds.zip(categoryNames)
+            var categoryMenuOpen by remember { mutableStateOf(false) }
+            val selectedName = state.categoryId
+                ?.let { id -> pairs.firstOrNull { it.first == id }?.second }
+                .orEmpty()
+            ExposedDropdownMenuBox(
+                expanded = categoryMenuOpen,
+                onExpandedChange = { categoryMenuOpen = !categoryMenuOpen },
+            ) {
+                OutlinedTextField(
+                    value = selectedName,
+                    onValueChange = {},
+                    readOnly = true,
+                    placeholder = { Text(if (pairs.isEmpty()) "등록된 카테고리가 없어요" else "카테고리를 선택해주세요") },
+                    shape = RoundedCornerShape(14.dp),
+                    colors = requestFieldColors(),
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = categoryMenuOpen) },
+                    modifier = Modifier
+                        .menuAnchor()
+                        .fillMaxWidth(),
+                )
+                DropdownMenu(
+                    expanded = categoryMenuOpen,
+                    onDismissRequest = { categoryMenuOpen = false },
+                ) {
+                    pairs.forEach { (id, name) ->
+                        DropdownMenuItem(
+                            text = { Text(name) },
+                            onClick = {
+                                viewModel.onCategoryChange(id)
+                                categoryMenuOpen = false
+                            },
+                        )
+                    }
+                }
+            }
+
             FieldLabel("제목 *")
             OutlinedTextField(
                 value = state.title,

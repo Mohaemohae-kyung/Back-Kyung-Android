@@ -18,13 +18,13 @@ import kyung.kung_android.domain.expert.ExpertRepository
 import kyung.kung_android.domain.request.ServiceRequestRepository
 import java.math.BigDecimal
 import java.time.LocalDate
-import java.time.LocalDateTime
 import javax.inject.Inject
 
 data class QuoteRequestUiState(
     val expertId: Long = 0L,
-    val expertServiceId: Long = 0L,
+    val expertProfileId: Long = 0L,
     val expert: ExpertDetailResponse? = null,
+    val categoryId: Long? = null,
     val title: String = "",
     val content: String = "",
     val budgetText: String = "",
@@ -35,7 +35,10 @@ data class QuoteRequestUiState(
     val isSubmitting: Boolean = false,
 ) {
     val canSubmit: Boolean
-        get() = title.isNotBlank() && content.isNotBlank() && !isSubmitting
+        get() = title.isNotBlank() &&
+            content.isNotBlank() &&
+            categoryId != null &&
+            !isSubmitting
 }
 
 sealed interface QuoteRequestEffect {
@@ -50,10 +53,10 @@ class QuoteRequestViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val expertId: Long = savedStateHandle.get<Long>("expertId") ?: 0L
-    private val expertServiceId: Long = savedStateHandle.get<Long>("expertServiceId") ?: 0L
+    private val expertProfileId: Long = savedStateHandle.get<Long>("expertProfileId") ?: 0L
 
     private val _state = MutableStateFlow(
-        QuoteRequestUiState(expertId = expertId, expertServiceId = expertServiceId)
+        QuoteRequestUiState(expertId = expertId, expertProfileId = expertProfileId)
     )
     val state: StateFlow<QuoteRequestUiState> = _state.asStateFlow()
 
@@ -66,6 +69,7 @@ class QuoteRequestViewModel @Inject constructor(
 
     fun onTitleChange(v: String) = _state.update { it.copy(title = v, titleError = null) }
     fun onContentChange(v: String) = _state.update { it.copy(content = v, contentError = null) }
+    fun onCategoryChange(id: Long?) = _state.update { it.copy(categoryId = id) }
     fun onBudgetChange(v: String) {
         if (v.isEmpty() || v.all { it.isDigit() }) {
             _state.update { it.copy(budgetText = v) }
@@ -76,13 +80,15 @@ class QuoteRequestViewModel @Inject constructor(
     fun onSubmit() {
         val current = _state.value
         if (!current.canSubmit) return
+        val categoryId = current.categoryId ?: return
 
         _state.update { it.copy(isSubmitting = true, errorMessage = null) }
 
         viewModelScope.launch {
             try {
                 serviceRequestRepository.create(
-                    expertServiceId = current.expertServiceId,
+                    expertProfileId = current.expertProfileId,
+                    categoryId = categoryId,
                     title = current.title,
                     content = current.content,
                     budget = current.budgetText.takeIf { it.isNotEmpty() }?.let { BigDecimal(it) },

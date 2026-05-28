@@ -3,6 +3,7 @@ package kyung.kung_android.domain.request
 import kyung.kung_android.data.request.api.ServiceRequestApi
 import kyung.kung_android.data.request.dto.ServiceRequestCreateRequest
 import kyung.kung_android.data.request.dto.ServiceRequestResponse
+import kyung.kung_android.data.request.dto.ServiceRequestUpdateRequest
 import java.math.BigDecimal
 import java.time.LocalDateTime
 import javax.inject.Inject
@@ -14,7 +15,8 @@ class ServiceRequestRepository @Inject constructor(
 ) {
 
     suspend fun create(
-        expertServiceId: Long,
+        expertProfileId: Long,
+        categoryId: Long,
         title: String,
         content: String,
         budget: BigDecimal? = null,
@@ -22,12 +24,30 @@ class ServiceRequestRepository @Inject constructor(
     ): ServiceRequestResponse =
         api.createServiceRequest(
             ServiceRequestCreateRequest(
-                expertServiceId = expertServiceId,
+                expertProfileId = expertProfileId,
+                categoryId = categoryId,
                 title = title.trim(),
                 content = content.trim(),
                 budget = budget,
                 preferredDate = preferredDate,
             )
+        )
+
+    suspend fun update(
+        requestId: Long,
+        title: String? = null,
+        content: String? = null,
+        budget: BigDecimal? = null,
+        preferredDate: LocalDateTime? = null,
+    ): ServiceRequestResponse =
+        api.updateServiceRequest(
+            requestId = requestId,
+            request = ServiceRequestUpdateRequest(
+                title = title?.trim(),
+                content = content?.trim(),
+                budget = budget,
+                preferredDate = preferredDate,
+            ),
         )
 
     suspend fun getMyRequests(): List<ServiceRequestResponse> = api.getMyServiceRequests()

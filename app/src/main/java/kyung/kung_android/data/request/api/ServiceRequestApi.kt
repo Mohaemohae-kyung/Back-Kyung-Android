@@ -2,6 +2,7 @@ package kyung.kung_android.data.request.api
 
 import kyung.kung_android.data.request.dto.ServiceRequestCreateRequest
 import kyung.kung_android.data.request.dto.ServiceRequestResponse
+import kyung.kung_android.data.request.dto.ServiceRequestUpdateRequest
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.PATCH
@@ -13,6 +14,12 @@ interface ServiceRequestApi {
     @POST("/api/service-requests")
     suspend fun createServiceRequest(
         @Body request: ServiceRequestCreateRequest,
+    ): ServiceRequestResponse
+
+    @PATCH("/api/service-requests/{requestId}")
+    suspend fun updateServiceRequest(
+        @Path("requestId") requestId: Long,
+        @Body request: ServiceRequestUpdateRequest,
     ): ServiceRequestResponse
 
     @GET("/api/service-requests/me")
