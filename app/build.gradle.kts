@@ -58,10 +58,10 @@ android {
                 "proguard-rules.pro"
             )
             buildConfigField("String", "BASE_URL", "\"$prodBaseUrl\"")
-            buildConfigField("Boolean", "SSL_PINNING_ENABLED", "false") // 실제 pin 값 존재 X 일단 비활성화함. 추후 변경 요망
-            buildConfigField("String", "PINNING_HOST", "\"can-fly.shop/\"")
-            buildConfigField("String", "PIN_CURRENT", "\"sha256/current_pin_here=\"")
-            buildConfigField("String", "PIN_BACKUP", "\"sha256/backup_pin_here=\"")
+            buildConfigField("Boolean", "SSL_PINNING_ENABLED", "true")
+            buildConfigField("String", "PINNING_HOST", "\"can-fly.shop\"")
+            buildConfigField("String", "PIN_CURRENT", "\"sha256/S4fHfavKWAJVY+UVx8FovdRLN2QaAJ7IHK+sK1BaTFo=\"")
+            buildConfigField("String", "PIN_BACKUP", "\"sha256/y7xVm0TVJNahMr2sZydE2jQH8SquXV9yLF9seROHHHU=\"")
             buildConfigField("String", "TOSS_CLIENT_KEY", "\"$tossClientKey\"")
             signingConfigs.findByName("release")?.let { signingConfig = it }
         }
