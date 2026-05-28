@@ -3,6 +3,7 @@ name: Release APK
 on:
   workflow_dispatch: # 수동 실행
   push:
+    branches: [main] # main push 시 자동 실행
     tags:
       - "v*" # v0.1.0 같은 태그 push 시 자동 실행
 
