@@ -1,7 +1,6 @@
 package kyung.kung_android.security
 
 import android.content.Context
-import android.util.Log
 import kyung.kung_android.dto.RootSignals
 
 data class FridaCheckResult(
@@ -19,8 +18,6 @@ data class AppSecurityCheckResult(
 )
 
 object SecurityCheckManager {
-
-    private const val TAG = "SecurityCheckManager"
 
     @Volatile
     private var initialFridaResult: FridaCheckResult? = null
@@ -44,8 +41,6 @@ object SecurityCheckManager {
                 detected = detected,
                 signals = signals
             )
-        }.onFailure { e ->
-            Log.w(TAG, "Frida check failed", e)
         }.getOrDefault(
             FridaCheckResult(
                 detected = false,

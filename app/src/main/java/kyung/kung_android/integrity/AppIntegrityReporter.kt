@@ -8,7 +8,6 @@ import kyung.kung_android.dto.AppIntegrityReportRequest
 import kyung.kung_android.dto.AppIntegrityReportResponse
 import kyung.kung_android.network.ApiService
 import kyung.kung_android.security.SecurityCheckManager
-import android.util.Log
 
 class AppIntegrityReporter(
     private val context: Context,
@@ -16,11 +15,6 @@ class AppIntegrityReporter(
 ) {
     suspend fun report(): AppIntegrityReportResponse {
         val securityResult = SecurityCheckManager.collectAppSecurityCheckResult(context)
-
-        Log.d("AppIntegrity", "initialFridaDetected=${securityResult.initialFridaDetected}")
-        Log.d("AppIntegrity", "currentFridaDetected=${securityResult.currentFridaDetected}")
-        Log.d("AppIntegrity", "fridaDetected=${securityResult.fridaDetected}")
-        Log.d("AppIntegrity", "rootSignals=${securityResult.rootSignals}")
 
         val request = AppIntegrityReportRequest(
             packageName = context.packageName,

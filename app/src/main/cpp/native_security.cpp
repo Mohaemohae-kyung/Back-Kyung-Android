@@ -31,7 +31,6 @@ static bool fileContainsAnyKeyword(
     std::string line;
     while (std::getline(file, line)) {
         std::string lowerLine = toLower(line);
-
         for (const auto& keyword : keywords) {
             if (lowerLine.find(keyword) != std::string::npos) {
                 return true;
