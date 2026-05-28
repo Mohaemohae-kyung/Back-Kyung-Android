@@ -24,7 +24,7 @@ class MainScaffoldViewModel @Inject constructor(
         .stateIn(viewModelScope, SharingStarted.Eagerly, false)
 
     val isExpert: StateFlow<Boolean> = userRepository.currentUser
-        .map { it?.role == "EXPERT" || it?.role == "ADMIN" }
+        .map { it?.role == "EXPERT" }
         .stateIn(viewModelScope, SharingStarted.Eagerly, false)
 
     init {

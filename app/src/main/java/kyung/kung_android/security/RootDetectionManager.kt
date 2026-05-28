@@ -2,13 +2,10 @@ package kyung.kung_android.security
 
 import android.content.Context
 import android.content.pm.PackageManager
-import android.util.Log
 import java.io.File
 import kyung.kung_android.dto.RootSignals
 
 object RootDetectionManager {
-
-    private const val TAG = "RootDetection"
 
     fun collectRootSignals(context: Context): RootSignals {
         return runCatching {
@@ -93,8 +90,6 @@ object RootDetectionManager {
                             suspiciousSystemPathDetected = (normalized and 0x10) != 0,
                             rootShellExecutable = (normalized and 0x20) != 0
                         )
-
-                        Log.d(TAG, "rootSignals = $rootSignals")
 
                         return@runCatching rootSignals
                     }
@@ -243,11 +238,6 @@ object RootDetectionManager {
             "/data/local/tmp/frida-server",
             "/data/local/tmp/re.frida.server"
         )
-
-        paths.forEach { path ->
-            val exists = File(path).exists()
-            Log.d(TAG, "suspiciousPath check: $path = $exists")
-        }
 
         return paths.any { path ->
             File(path).exists()

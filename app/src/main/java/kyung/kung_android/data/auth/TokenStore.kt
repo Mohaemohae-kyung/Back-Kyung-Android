@@ -1,7 +1,6 @@
 package kyung.kung_android.data.auth
 
 import android.content.Context
-import android.util.Log
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
@@ -12,7 +11,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import kyung.kung_android.BuildConfig
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -79,9 +77,6 @@ class TokenStore @Inject constructor(
             cachedAccess = prefs[Keys.ACCESS]?.let(::decryptOrNull)
             cachedRefresh = prefs[Keys.REFRESH]?.let(::decryptOrNull)
             primed = true
-            if (BuildConfig.DEBUG) {
-                Log.d(TAG, "primed access=${cachedAccess != null} refresh=${cachedRefresh != null}")
-            }
         }
         _isLoggedIn.value = cachedAccess != null
     }
@@ -91,24 +86,12 @@ class TokenStore @Inject constructor(
     }
 
     private fun decryptOrNull(stored: String): String? {
-        val blob = EncryptedBlob.fromBase64(stored)
-        if (blob == null) {
-            if (BuildConfig.DEBUG) Log.w(TAG, "stored blob format invalid")
-            return null
-        }
-        return runCatching { String(cipher.decrypt(blob), Charsets.UTF_8) }
-            .onFailure {
-                if (BuildConfig.DEBUG) Log.w(TAG, "stored blob unreadable: ${it.javaClass.simpleName}")
-            }
-            .getOrNull()
+        val blob = EncryptedBlob.fromBase64(stored) ?: return null
+        return runCatching { String(cipher.decrypt(blob), Charsets.UTF_8) }.getOrNull()
     }
 
     private object Keys {
         val ACCESS = stringPreferencesKey("access_token")
         val REFRESH = stringPreferencesKey("refresh_token")
-    }
-
-    private companion object {
-        private const val TAG = "TokenStore"
     }
 }
