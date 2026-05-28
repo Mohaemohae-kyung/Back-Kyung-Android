@@ -59,6 +59,7 @@ private val WEEKDAY_KO = listOf("월", "화", "수", "목", "금", "토", "일")
 fun StoreDetailScreen(
     onBack: () -> Unit,
     onNavigateCheckout: (bookingId: Long) -> Unit,
+    onNavigateLogin: () -> Unit,
     viewModel: StoreDetailViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -72,6 +73,7 @@ fun StoreDetailScreen(
         viewModel.effects.collect { effect ->
             when (effect) {
                 is StoreDetailEffect.NavigateToCheckout -> onNavigateCheckout(effect.bookingId)
+                StoreDetailEffect.NavigateToLogin -> onNavigateLogin()
             }
         }
     }

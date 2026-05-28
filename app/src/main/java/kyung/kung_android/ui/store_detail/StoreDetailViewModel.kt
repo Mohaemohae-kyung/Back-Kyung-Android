@@ -20,6 +20,7 @@ import kyung.kung_android.data.network.ApiException
 import kyung.kung_android.data.store.dto.StoreProductResponse
 import kyung.kung_android.domain.booking.BookingRepository
 import kyung.kung_android.domain.store.StoreRepository
+import kyung.kung_android.domain.user.UserRepository
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
@@ -46,6 +47,7 @@ data class StoreDetailUiState(
 
 sealed interface StoreDetailEffect {
     data class NavigateToCheckout(val bookingId: Long) : StoreDetailEffect
+    data object NavigateToLogin : StoreDetailEffect
 }
 
 @HiltViewModel
@@ -53,6 +55,7 @@ class StoreDetailViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val storeRepository: StoreRepository,
     private val bookingRepository: BookingRepository,
+    private val userRepository: UserRepository,
 ) : ViewModel() {
 
     private val storeProductId: Long = savedStateHandle.get<Long>("storeProductId") ?: 0L
@@ -159,6 +162,11 @@ class StoreDetailViewModel @Inject constructor(
         val (start, end) = parseSlot(current.selectedDate, time)
         if (!start.isAfter(LocalDateTime.now())) {
             _state.update { it.copy(reserveError = "이미 지난 시간입니다. 다른 시간을 선택해주세요.") }
+            return
+        }
+
+        if (userRepository.currentUser.value == null) {
+            viewModelScope.launch { _effects.emit(StoreDetailEffect.NavigateToLogin) }
             return
         }
 

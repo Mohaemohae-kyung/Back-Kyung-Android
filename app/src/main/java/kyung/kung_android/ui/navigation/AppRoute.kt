@@ -22,7 +22,7 @@ object AppRoute {
     const val FAVORITE_EXPERTS = "favorite_experts"
     const val PAYMENT_HISTORY = "payment_history"
     const val CHECKOUT = "checkout"
-    const val MOCK_PG = "mock_pg"
+    const val TOSS_PAYMENT = "toss_payment"
     const val PAYMENT_SUCCESS = "payment_success"
     const val TRANSACTION_DETAIL = "transaction_detail"
     const val EXPERT_TRANSACTIONS = "expert_transactions"

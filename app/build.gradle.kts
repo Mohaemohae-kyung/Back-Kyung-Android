@@ -17,6 +17,8 @@ val localProperties = Properties().apply {
 val prodBaseUrl: String = "https://can-fly.shop/"
 val debugBaseUrl: String = localProperties.getProperty("BASE_URL", prodBaseUrl)
 
+val tossClientKey: String = "test_ck_GePWvyJnrKmlw5N22DXR3gLzN97E"
+
 android {
     namespace = "kyung.kung_android"
     compileSdk = 36
@@ -48,6 +50,7 @@ android {
             buildConfigField("String", "PINNING_HOST", "\"can-fly.shop/\"")
             buildConfigField("String", "PIN_CURRENT", "\"sha256/current_pin_here=\"")
             buildConfigField("String", "PIN_BACKUP", "\"sha256/backup_pin_here=\"")
+            buildConfigField("String", "TOSS_CLIENT_KEY", "\"$tossClientKey\"")
         }
         debug {
             isMinifyEnabled = false
@@ -56,19 +59,7 @@ android {
             buildConfigField("String", "PINNING_HOST", "\"\"")
             buildConfigField("String", "PIN_CURRENT", "\"\"")
             buildConfigField("String", "PIN_BACKUP", "\"\"")
-        }
-    }
-
-    flavorDimensions += "distribution"
-    productFlavors {
-        create("user") {
-            dimension = "distribution"
-            isDefault = true
-        }
-        create("admin") {
-            dimension = "distribution"
-            applicationIdSuffix = ".admin"
-            versionNameSuffix = "-admin"
+            buildConfigField("String", "TOSS_CLIENT_KEY", "\"$tossClientKey\"")
         }
     }
 
@@ -134,6 +125,9 @@ dependencies {
 
     // DataStore (token storage)
     implementation(libs.androidx.datastore.preferences)
+
+    // Payment - 토스페이먼츠 결제 SDK
+    implementation("com.github.tosspayments:payment-sdk-android:0.1.22")
 
     // STOMP WebSocket (krossbow)
     implementation(libs.krossbow.stomp.core)

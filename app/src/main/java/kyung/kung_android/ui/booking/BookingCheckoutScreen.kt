@@ -56,7 +56,7 @@ private val TIME_FMT = DateTimeFormatter.ofPattern("HH:mm", Locale.KOREA)
 @Composable
 fun BookingCheckoutScreen(
     onBack: () -> Unit,
-    onNavigateMockPg: (orderId: String, amount: String, method: String) -> Unit,
+    onNavigateTossPayment: (orderId: String, amount: String, method: String, orderName: String) -> Unit,
     viewModel: BookingCheckoutViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -69,8 +69,8 @@ fun BookingCheckoutScreen(
     LaunchedEffect(Unit) {
         viewModel.effects.collect { effect ->
             when (effect) {
-                is BookingCheckoutEffect.NavigateToMockPg ->
-                    onNavigateMockPg(effect.orderId, effect.amount, effect.paymentMethod)
+                is BookingCheckoutEffect.NavigateToTossPayment ->
+                    onNavigateTossPayment(effect.orderId, effect.amount, effect.paymentMethod, effect.orderName)
             }
         }
     }
@@ -161,7 +161,6 @@ private fun BookingCheckoutContent(
             SectionTitle("예약 상품")
             Spacer(modifier = Modifier.height(8.dp))
             InfoRow("상품명", info.productTitle ?: "-")
-            InfoRow("서비스명", info.serviceTitle ?: "-")
             InfoRow("고수명", info.expertDisplayName ?: "-")
         }
 

@@ -21,20 +21,22 @@ import java.text.NumberFormat
 import java.util.Locale
 import javax.inject.Inject
 
-data class MockPgUiState(
+data class TossPaymentUiState(
     val orderId: String = "",
     val amount: BigDecimal = BigDecimal.ZERO,
-    val paymentMethod: String = "CARD",
-    val isApproving: Boolean = false,
+    val orderName: String = "매칭온 결제",
+    val launched: Boolean = false,
+    val pendingPaymentKey: String? = null,
+    val isConfirming: Boolean = false,
     val error: String? = null,
 )
 
-sealed interface MockPgEffect {
-    data class Success(val paymentId: Long) : MockPgEffect
+sealed interface TossPaymentEffect {
+    data class Success(val paymentId: Long) : TossPaymentEffect
 }
 
 @HiltViewModel
-class MockPgPaymentViewModel @Inject constructor(
+class TossPaymentViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val paymentRepository: PaymentRepository,
     private val serviceRequestRepository: ServiceRequestRepository,
@@ -46,40 +48,66 @@ class MockPgPaymentViewModel @Inject constructor(
     private val amount: BigDecimal =
         runCatching { BigDecimal(savedStateHandle.get<String>("amount").orEmpty()) }
             .getOrDefault(BigDecimal.ZERO)
-    private val paymentMethod: String = savedStateHandle.get<String>("method") ?: "CARD"
+    private val orderName: String =
+        savedStateHandle.get<String>("orderName")?.takeIf { it.isNotBlank() } ?: "매칭온 결제"
 
-    // 견적 결제일 때만 전달됨. 결제 완료 후 채팅방에 완료 메시지를 보내기 위함.
     private val requestId: Long? = savedStateHandle.get<String>("requestId")?.toLongOrNull()
 
     private val _state = MutableStateFlow(
-        MockPgUiState(orderId = orderId, amount = amount, paymentMethod = paymentMethod)
+        TossPaymentUiState(orderId = orderId, amount = amount, orderName = orderName)
     )
-    val state: StateFlow<MockPgUiState> = _state.asStateFlow()
+    val state: StateFlow<TossPaymentUiState> = _state.asStateFlow()
 
-    private val _effects = MutableSharedFlow<MockPgEffect>(extraBufferCapacity = 1)
-    val effects: SharedFlow<MockPgEffect> = _effects.asSharedFlow()
+    private val _effects = MutableSharedFlow<TossPaymentEffect>(extraBufferCapacity = 1)
+    val effects: SharedFlow<TossPaymentEffect> = _effects.asSharedFlow()
 
-    fun approve() {
-        if (_state.value.isApproving) return
-        _state.update { it.copy(isApproving = true, error = null) }
+    fun markLaunched() = _state.update { it.copy(launched = true) }
+
+    fun onPaymentSuccess(paymentKey: String) {
+        if (_state.value.isConfirming) return
+        _state.update { it.copy(pendingPaymentKey = paymentKey, isConfirming = true, error = null) }
+        confirmInternal(paymentKey)
+    }
+
+    fun retryConfirm() {
+        val key = _state.value.pendingPaymentKey ?: return
+        if (_state.value.isConfirming) return
+        _state.update { it.copy(isConfirming = true, error = null) }
+        confirmInternal(key)
+    }
+
+    fun retryPayment() {
+        _state.update { it.copy(launched = false, pendingPaymentKey = null, error = null) }
+    }
+
+    fun dismissError() {
+        _state.update { it.copy(error = null) }
+    }
+
+    fun onPaymentFailed(message: String?) {
+        val text = message?.takeIf { it.isNotBlank() } ?: "결제가 취소되었어요."
+        _state.update { it.copy(isConfirming = false, error = text) }
+    }
+
+    private fun confirmInternal(paymentKey: String) {
         viewModelScope.launch {
             try {
-                val pg = paymentRepository.approveMockPg(
-                    orderId = orderId,
-                    amount = amount,
-                    paymentMethod = paymentMethod,
-                )
                 val confirmed = paymentRepository.confirm(
                     orderId = orderId,
-                    paymentKey = pg.paymentKey,
+                    paymentKey = paymentKey,
                     amount = amount,
                 )
                 if (requestId != null) {
                     runCatching { sendPaymentCompletedChat(amount.toLong(), requestId) }
                 }
-                _effects.emit(MockPgEffect.Success(paymentId = confirmed.paymentId))
+                _effects.emit(TossPaymentEffect.Success(paymentId = confirmed.paymentId))
             } catch (t: Throwable) {
-                _state.update { it.copy(isApproving = false, error = "결제 승인에 실패했어요. 다시 시도해주세요.") }
+                _state.update {
+                    it.copy(
+                        isConfirming = false,
+                        error = "결제 승인에 실패했어요. 잠시 후 다시 시도해주세요.",
+                    )
+                }
             }
         }
     }

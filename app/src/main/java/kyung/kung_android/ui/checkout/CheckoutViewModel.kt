@@ -27,11 +27,12 @@ data class CheckoutUiState(
 )
 
 sealed interface CheckoutEffect {
-    data class NavigateToMockPg(
+    data class NavigateToTossPayment(
         val orderId: String,
         val amount: String,
         val paymentMethod: String,
         val requestId: Long,
+        val orderName: String,
     ) : CheckoutEffect
 }
 
@@ -77,11 +78,14 @@ class CheckoutViewModel @Inject constructor(
                 )
                 _state.update { it.copy(isPaying = false) }
                 _effects.emit(
-                    CheckoutEffect.NavigateToMockPg(
+                    CheckoutEffect.NavigateToTossPayment(
                         orderId = prepared.orderId,
                         amount = prepared.finalAmount.toPlainString(),
                         paymentMethod = method,
                         requestId = requestId,
+                        orderName = prepared.orderName
+                            ?: info.requestTitle
+                            ?: "매칭온 결제",
                     )
                 )
             } catch (t: Throwable) {

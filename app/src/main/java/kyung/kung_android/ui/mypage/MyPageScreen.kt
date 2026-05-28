@@ -92,6 +92,7 @@ fun MyPageScreen(
             LoggedInContent(
                 user = state.user,
                 isExpert = state.isExpert,
+                isAdmin = state.isAdmin,
                 modifier = Modifier.padding(padding),
                 onExpertBannerClick = {
                     val id = state.user?.expertProfileId
@@ -110,6 +111,7 @@ fun MyPageScreen(
 private fun LoggedInContent(
     user: UserProfileResponse?,
     isExpert: Boolean,
+    isAdmin: Boolean,
     onExpertBannerClick: () -> Unit,
     onAccountSettingsClick: () -> Unit,
     onFavoritesClick: () -> Unit,
@@ -164,7 +166,7 @@ private fun LoggedInContent(
             )
         }
 
-        if (AdminGate.IS_ADMIN_BUILD) {
+        if (isAdmin) {
             item {
                 val context = LocalContext.current
                 SectionTitle("관리자")

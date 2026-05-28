@@ -15,7 +15,7 @@ import kyung.kung_android.ui.account_withdraw.AccountWithdrawScreen
 import kyung.kung_android.ui.chat_detail.ChatDetailScreen
 import kyung.kung_android.ui.chatbot.ChatBotScreen
 import kyung.kung_android.ui.checkout.CheckoutScreen
-import kyung.kung_android.ui.checkout.MockPgPaymentScreen
+import kyung.kung_android.ui.checkout.TossPaymentScreen
 import kyung.kung_android.ui.checkout.PaymentSuccessScreen
 import kyung.kung_android.ui.expert_transactions.ExpertTransactionsScreen
 import kyung.kung_android.ui.notice_detail.NoticeDetailScreen
@@ -163,9 +163,9 @@ fun AppNavHost(
         ) {
             CheckoutScreen(
                 onBack = { navController.popBackStack() },
-                onNavigateMockPg = { orderId, amount, method, requestId ->
+                onNavigateTossPayment = { orderId, amount, method, requestId, orderName ->
                     navController.navigate(
-                        "${AppRoute.MOCK_PG}?orderId=${android.net.Uri.encode(orderId)}&amount=$amount&method=$method&requestId=$requestId"
+                        "${AppRoute.TOSS_PAYMENT}?orderId=${android.net.Uri.encode(orderId)}&amount=$amount&method=$method&requestId=$requestId&orderName=${android.net.Uri.encode(orderName)}"
                     )
                 },
             )
@@ -321,6 +321,7 @@ fun AppNavHost(
                 onNavigateCheckout = { bookingId ->
                     navController.navigate("${AppRoute.BOOKING_CHECKOUT}/$bookingId")
                 },
+                onNavigateLogin = { navController.navigate(AppRoute.LOGIN) },
             )
         }
 
@@ -337,25 +338,26 @@ fun AppNavHost(
         ) {
             BookingCheckoutScreen(
                 onBack = { navController.popBackStack() },
-                onNavigateMockPg = { orderId, amount, method ->
+                onNavigateTossPayment = { orderId, amount, method, orderName ->
                     navController.navigate(
-                        "${AppRoute.MOCK_PG}?orderId=${android.net.Uri.encode(orderId)}&amount=$amount&method=$method"
+                        "${AppRoute.TOSS_PAYMENT}?orderId=${android.net.Uri.encode(orderId)}&amount=$amount&method=$method&orderName=${android.net.Uri.encode(orderName)}"
                     )
                 },
             )
         }
 
         composable(
-            route = "${AppRoute.MOCK_PG}?orderId={orderId}&amount={amount}&method={method}&requestId={requestId}",
+            route = "${AppRoute.TOSS_PAYMENT}?orderId={orderId}&amount={amount}&method={method}&requestId={requestId}&orderName={orderName}",
             arguments = listOf(
                 navArgument("orderId") { type = NavType.StringType; nullable = true; defaultValue = null },
                 navArgument("amount") { type = NavType.StringType; nullable = true; defaultValue = null },
                 navArgument("method") { type = NavType.StringType; nullable = true; defaultValue = null },
                 navArgument("requestId") { type = NavType.StringType; nullable = true; defaultValue = null },
+                navArgument("orderName") { type = NavType.StringType; nullable = true; defaultValue = null },
             ),
         ) { backStackEntry ->
             val reqId = backStackEntry.arguments?.getString("requestId")?.toLongOrNull()
-            MockPgPaymentScreen(
+            TossPaymentScreen(
                 onBack = { navController.popBackStack() },
                 onPaymentSuccess = { paymentId ->
                     val popTarget = if (reqId != null) {

@@ -32,10 +32,11 @@ data class BookingCheckoutUiState(
 }
 
 sealed interface BookingCheckoutEffect {
-    data class NavigateToMockPg(
+    data class NavigateToTossPayment(
         val orderId: String,
         val amount: String,
         val paymentMethod: String,
+        val orderName: String,
     ) : BookingCheckoutEffect
 }
 
@@ -83,10 +84,13 @@ class BookingCheckoutViewModel @Inject constructor(
                 )
                 _state.update { it.copy(isPaying = false) }
                 _effects.emit(
-                    BookingCheckoutEffect.NavigateToMockPg(
+                    BookingCheckoutEffect.NavigateToTossPayment(
                         orderId = prepared.orderId,
                         amount = prepared.finalAmount.toPlainString(),
                         paymentMethod = method,
+                        orderName = prepared.orderName
+                            ?: current.info?.productTitle
+                            ?: "매칭온 결제",
                     )
                 )
             } catch (t: Throwable) {

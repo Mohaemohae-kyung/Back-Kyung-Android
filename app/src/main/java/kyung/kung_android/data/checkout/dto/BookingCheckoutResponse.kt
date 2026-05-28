@@ -10,9 +10,7 @@ import java.time.LocalDateTime
 data class BookingCheckoutResponse(
     val bookingId: Long,
     val storeProductId: Long? = null,
-    val expertServiceId: Long? = null,
     val productTitle: String? = null,
-    val serviceTitle: String? = null,
     val expertDisplayName: String? = null,
     @Serializable(with = LocalDateTimeSerializer::class)
     val startAt: LocalDateTime? = null,

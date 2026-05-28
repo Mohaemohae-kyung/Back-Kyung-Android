@@ -9,10 +9,11 @@ import java.time.LocalDateTime
 @Serializable
 data class ServiceRequestCheckoutResponse(
     val requestId: Long,
-    val expertServiceId: Long? = null,
     val expertProfileId: Long? = null,
-    val serviceTitle: String? = null,
     val expertDisplayName: String? = null,
+    val categoryId: Long? = null,
+    val categoryName: String? = null,
+    val requestTitle: String? = null,
     @Serializable(with = LocalDateTimeSerializer::class)
     val preferredDate: LocalDateTime? = null,
     val requestStatus: String? = null,

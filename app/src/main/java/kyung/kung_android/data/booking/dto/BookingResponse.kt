@@ -9,10 +9,8 @@ data class BookingResponse(
     val bookingId: Long,
     val userId: Long? = null,
     val storeProductId: Long? = null,
-    val expertServiceId: Long? = null,
     val expertProfileId: Long? = null,
     val productTitle: String? = null,
-    val serviceTitle: String? = null,
     val expertDisplayName: String? = null,
     @Serializable(with = LocalDateTimeSerializer::class)
     val startAt: LocalDateTime? = null,
