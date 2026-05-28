@@ -124,11 +124,13 @@ private fun LoggedInContent(
         contentPadding = PaddingValues(vertical = 16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        item {
-            ExpertBanner(
-                label = if (isExpert) "내 고수 프로필 보기" else "고수로 가입하기",
-                onClick = onExpertBannerClick,
-            )
+        if (!isAdmin) {
+            item {
+                ExpertBanner(
+                    label = if (isExpert) "내 고수 프로필 보기" else "고수로 가입하기",
+                    onClick = onExpertBannerClick,
+                )
+            }
         }
 
         item {
