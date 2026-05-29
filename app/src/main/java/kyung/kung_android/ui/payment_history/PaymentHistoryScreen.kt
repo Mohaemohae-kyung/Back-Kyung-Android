@@ -110,10 +110,10 @@ fun PaymentHistoryScreen(
                 contentPadding = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                items(state.payments, key = { it.paymentId }) { item ->
+                items(state.payments, key = { it.paymentId ?: 0L }) { item ->
                     PaymentCard(
                         item = item,
-                        onClick = { onNavigateTransactionDetail(item.paymentId) },
+                        onClick = { onNavigateTransactionDetail(item.paymentId ?: 0L) },
                     )
                 }
             }

@@ -31,6 +31,9 @@ class ApiResultCallAdapterFactory(private val json: Json) : CallAdapter.Factory(
         if (getRawType(returnType) != Call::class.java) return null
         if (returnType !is ParameterizedType) return null
 
+        // 외부/프록시 응답처럼 ApiResponse 형식이 아닌 경우 wrap 우회
+        if (annotations.any { it is RawResponse }) return null
+
         val responseType = getParameterUpperBound(0, returnType)
         // 이미 ApiResponse<T>로 선언된 경우는 건드리지 않음 (raw 접근 원하는 경우 대비)
         if (responseType is ParameterizedType && responseType.rawType == ApiResponse::class.java) {
