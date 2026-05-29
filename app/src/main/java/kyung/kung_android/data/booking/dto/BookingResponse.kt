@@ -1,6 +1,7 @@
 package kyung.kung_android.data.booking.dto
 
 import kotlinx.serialization.Serializable
+import kyung.kung_android.data.coupon.dto.AvailableCouponDto
 import kyung.kung_android.data.serialization.LocalDateTimeSerializer
 import java.time.LocalDateTime
 
@@ -26,4 +27,6 @@ data class BookingResponse(
     val createdAt: LocalDateTime? = null,
     @Serializable(with = LocalDateTimeSerializer::class)
     val updatedAt: LocalDateTime? = null,
+    val welcomeCouponAvailable: String? = null,
+    val availableCoupons: List<AvailableCouponDto>? = null,
 )
