@@ -10,6 +10,7 @@ import kyung.kung_android.ui.auth.login.LoginScreen
 import kyung.kung_android.ui.auth.signup.SignupScreen
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
+import androidx.navigation.navDeepLink
 import kyung.kung_android.ui.account_settings.AccountSettingsScreen
 import kyung.kung_android.ui.account_withdraw.AccountWithdrawScreen
 import kyung.kung_android.ui.chat_detail.ChatDetailScreen
@@ -79,7 +80,16 @@ fun AppNavHost(
         composable(
             route = "${AppRoute.CHAT_DETAIL}/{${AppRoute.ARG_CHAT_ROOM_ID}}",
             arguments = listOf(navArgument( AppRoute.ARG_CHAT_ROOM_ID) { type = NavType.LongType }),
-        ) {
+        ) { backStackEntry ->
+            val scannedRequestIdState = backStackEntry.savedStateHandle
+                .getStateFlow<Long?>("qrScannedRequestId", null)
+                .collectAsStateWithLifecycle()
+            androidx.compose.runtime.LaunchedEffect(scannedRequestIdState.value) {
+                val rid = scannedRequestIdState.value ?: return@LaunchedEffect
+                backStackEntry.savedStateHandle.remove<Long>("qrScannedRequestId")
+                backStackEntry.savedStateHandle.remove<String>("qrScannedAmount")
+                navController.navigate("${AppRoute.CHECKOUT}/$rid")
+            }
             ChatDetailScreen(
                 onNavigateBack = { navController.popBackStack() },
                 onNavigateCheckout = { requestId ->
@@ -170,6 +180,9 @@ fun AppNavHost(
         composable(
             route = "${AppRoute.CHECKOUT}/{requestId}",
             arguments = listOf(navArgument("requestId") { type = NavType.LongType }),
+            deepLinks = listOf(
+                navDeepLink { uriPattern = "matchingon://pay?v={v}&rid={requestId}&amt={amt}&exp={exp}" },
+            ),
         ) {
             CheckoutScreen(
                 onBack = { navController.popBackStack() },

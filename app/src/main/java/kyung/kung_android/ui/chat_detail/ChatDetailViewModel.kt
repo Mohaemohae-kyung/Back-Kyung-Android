@@ -153,6 +153,19 @@ class ChatDetailViewModel @Inject constructor(
     private val _qrEffect = MutableSharedFlow<ChatPaymentQrEffect>(extraBufferCapacity = 1)
     val qrEffect: SharedFlow<ChatPaymentQrEffect> = _qrEffect.asSharedFlow()
 
+    fun regenerateQr() {
+        val req = _state.value.linkedRequest ?: return
+        val amount = req.budget ?: BigDecimal.ZERO
+        viewModelScope.launch {
+            _qrEffect.emit(
+                ChatPaymentQrEffect.NavigateToGenerate(
+                    requestId = req.requestId,
+                    amount = amount.toPlainString(),
+                )
+            )
+        }
+    }
+
     fun requestPayment(serviceName: String, amount: BigDecimal, paymentMode: String = MODE_ONLINE) {
         val req = _state.value.linkedRequest ?: return
         if (_state.value.isRequestingPayment) return
@@ -166,7 +179,9 @@ class ChatDetailViewModel @Inject constructor(
                     budget = amount,
                     paymentMode = paymentMode,
                 )
-                paymentRepository.prepareForServiceRequest(req.requestId)
+                if (paymentMode != MODE_OFFLINE) {
+                    paymentRepository.prepareForServiceRequest(req.requestId)
+                }
                 val updated = runCatching { serviceRequestRepository.getRequest(req.requestId) }.getOrNull()
                 _state.update {
                     it.copy(
