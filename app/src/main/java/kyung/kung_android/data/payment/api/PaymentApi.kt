@@ -1,9 +1,9 @@
 package kyung.kung_android.data.payment.api
 
-import kyung.kung_android.data.payment.dto.PaymentConfirmRequest
-import kyung.kung_android.data.payment.dto.PaymentPrepareRequest
-import kyung.kung_android.data.payment.dto.PaymentPrepareResponse
+import kyung.kung_android.data.payment.dto.E2ePayloadRequest
+import kyung.kung_android.data.payment.dto.E2ePayloadResponse
 import kyung.kung_android.data.payment.dto.PaymentResponse
+import kyung.kung_android.data.payment.dto.PublicKeyResponse
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
@@ -17,9 +17,12 @@ interface PaymentApi {
     @GET("/api/payments/{paymentId}")
     suspend fun getPayment(@Path("paymentId") paymentId: Long): PaymentResponse
 
+    @GET("/api/payments/public-key")
+    suspend fun getPublicKey(): PublicKeyResponse
+
     @POST("/api/payments/prepare")
-    suspend fun prepare(@Body request: PaymentPrepareRequest): PaymentPrepareResponse
+    suspend fun prepare(@Body request: E2ePayloadRequest): E2ePayloadResponse
 
     @POST("/api/payments/confirm")
-    suspend fun confirm(@Body request: PaymentConfirmRequest): PaymentResponse
+    suspend fun confirm(@Body request: E2ePayloadRequest): E2ePayloadResponse
 }
