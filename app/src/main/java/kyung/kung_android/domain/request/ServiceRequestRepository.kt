@@ -39,6 +39,7 @@ class ServiceRequestRepository @Inject constructor(
         content: String? = null,
         budget: BigDecimal? = null,
         preferredDate: LocalDateTime? = null,
+        paymentMode: String? = null,
     ): ServiceRequestResponse =
         api.updateServiceRequest(
             requestId = requestId,
@@ -47,6 +48,7 @@ class ServiceRequestRepository @Inject constructor(
                 content = content?.trim(),
                 budget = budget,
                 preferredDate = preferredDate,
+                paymentMode = paymentMode,
             ),
         )
 

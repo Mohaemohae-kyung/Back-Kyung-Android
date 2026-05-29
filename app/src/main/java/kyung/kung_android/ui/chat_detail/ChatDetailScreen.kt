@@ -67,11 +67,22 @@ import java.math.BigDecimal
 fun ChatDetailScreen(
     onNavigateBack: () -> Unit,
     onNavigateCheckout: (requestId: Long) -> Unit = {},
+    onNavigateQrGenerate: (requestId: Long, amount: String) -> Unit = { _, _ -> },
+    onNavigateQrScan: () -> Unit = {},
     viewModel: ChatDetailViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val listState = rememberLazyListState()
     var showRequestDialog by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        viewModel.qrEffect.collect { effect ->
+            when (effect) {
+                is ChatPaymentQrEffect.NavigateToGenerate ->
+                    onNavigateQrGenerate(effect.requestId, effect.amount)
+            }
+        }
+    }
 
     LaunchedEffect(state.messages.size) {
         if (state.messages.isNotEmpty()) {
@@ -169,8 +180,8 @@ fun ChatDetailScreen(
         PaymentRequestDialog(
             isRequesting = state.isRequestingPayment,
             onDismiss = { showRequestDialog = false },
-            onSubmit = { serviceName, amount ->
-                viewModel.requestPayment(serviceName, amount)
+            onSubmit = { serviceName, amount, paymentMode ->
+                viewModel.requestPayment(serviceName, amount, paymentMode)
                 showRequestDialog = false
             },
         )
@@ -420,10 +431,11 @@ private fun QuoteInfoCard(
 private fun PaymentRequestDialog(
     isRequesting: Boolean,
     onDismiss: () -> Unit,
-    onSubmit: (serviceName: String, amount: BigDecimal) -> Unit,
+    onSubmit: (serviceName: String, amount: BigDecimal, paymentMode: String) -> Unit,
 ) {
     var serviceName by remember { mutableStateOf("") }
     var amountText by remember { mutableStateOf("") }
+    var paymentMode by remember { mutableStateOf(ChatDetailViewModel.MODE_ONLINE) }
     val amount = amountText.toBigDecimalOrNull()
     val canSubmit = serviceName.isNotBlank() &&
         amount != null && amount > BigDecimal.ZERO && !isRequesting
@@ -434,7 +446,7 @@ private fun PaymentRequestDialog(
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text(
-                    text = "서비스명과 금액을 입력해주세요.",
+                    text = "서비스명과 금액, 결제 방식을 입력해주세요.",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -453,11 +465,27 @@ private fun PaymentRequestDialog(
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     modifier = Modifier.fillMaxWidth(),
                 )
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    TextButton(
+                        onClick = { paymentMode = ChatDetailViewModel.MODE_ONLINE },
+                    ) {
+                        Text(
+                            text = if (paymentMode == ChatDetailViewModel.MODE_ONLINE) "● 비대면" else "○ 비대면",
+                        )
+                    }
+                    TextButton(
+                        onClick = { paymentMode = ChatDetailViewModel.MODE_OFFLINE },
+                    ) {
+                        Text(
+                            text = if (paymentMode == ChatDetailViewModel.MODE_OFFLINE) "● 대면" else "○ 대면",
+                        )
+                    }
+                }
             }
         },
         confirmButton = {
             TextButton(
-                onClick = { if (amount != null) onSubmit(serviceName.trim(), amount) },
+                onClick = { if (amount != null) onSubmit(serviceName.trim(), amount, paymentMode) },
                 enabled = canSubmit,
             ) { Text(if (isRequesting) "요청 중..." else "요청하기") }
         },

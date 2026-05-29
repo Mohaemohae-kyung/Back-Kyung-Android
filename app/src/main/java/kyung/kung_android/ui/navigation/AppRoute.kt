@@ -30,6 +30,8 @@ object AppRoute {
     const val STORE_DETAIL = "store_detail"
     const val STORE_EDITOR = "store_editor"
     const val BOOKING_CHECKOUT = "booking_checkout"
+    const val PAYMENT_QR_GENERATE = "payment_qr_generate"
+    const val PAYMENT_QR_SCAN = "payment_qr_scan"
 
     const val ARG_CHAT_ROOM_ID = "chatRoomId"
     const val ARG_FORCE_TAB = "forceTab"

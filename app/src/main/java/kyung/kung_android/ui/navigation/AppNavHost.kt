@@ -34,6 +34,8 @@ import kyung.kung_android.ui.profile_info.ProfileInfoScreen
 import kyung.kung_android.ui.quote_detail.QuoteDetailScreen
 import kyung.kung_android.ui.quote_request.QuoteRequestScreen
 import kyung.kung_android.ui.booking.BookingCheckoutScreen
+import kyung.kung_android.ui.payment_qr.PaymentQrGenerateScreen
+import kyung.kung_android.ui.payment_qr.PaymentQrScanScreen
 import kyung.kung_android.ui.store_detail.StoreDetailScreen
 import kyung.kung_android.ui.store_editor.StoreEditorScreen
 
@@ -82,6 +84,14 @@ fun AppNavHost(
                 onNavigateBack = { navController.popBackStack() },
                 onNavigateCheckout = { requestId ->
                     navController.navigate("${AppRoute.CHECKOUT}/$requestId")
+                },
+                onNavigateQrGenerate = { requestId, amount ->
+                    navController.navigate(
+                        "${AppRoute.PAYMENT_QR_GENERATE}/$requestId/${android.net.Uri.encode(amount)}"
+                    )
+                },
+                onNavigateQrScan = {
+                    navController.navigate(AppRoute.PAYMENT_QR_SCAN)
                 },
             )
         }
@@ -177,6 +187,33 @@ fun AppNavHost(
         ) {
             PaymentSuccessScreen(
                 onClose = { navController.popBackStack(AppRoute.MAIN, inclusive = false) },
+            )
+        }
+
+        composable(
+            route = "${AppRoute.PAYMENT_QR_GENERATE}/{requestId}/{amount}",
+            arguments = listOf(
+                navArgument("requestId") { type = NavType.StringType },
+                navArgument("amount") { type = NavType.StringType },
+            ),
+        ) {
+            PaymentQrGenerateScreen(
+                onBack = { navController.popBackStack() },
+            )
+        }
+
+        composable(AppRoute.PAYMENT_QR_SCAN) {
+            PaymentQrScanScreen(
+                onBack = { navController.popBackStack() },
+                onScanned = { requestId, amount ->
+                    navController.previousBackStackEntry
+                        ?.savedStateHandle
+                        ?.set("qrScannedRequestId", requestId)
+                    navController.previousBackStackEntry
+                        ?.savedStateHandle
+                        ?.set("qrScannedAmount", amount)
+                    navController.popBackStack()
+                },
             )
         }
 

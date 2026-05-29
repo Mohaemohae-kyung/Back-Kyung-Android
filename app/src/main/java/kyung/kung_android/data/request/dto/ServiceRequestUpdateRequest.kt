@@ -13,4 +13,5 @@ data class ServiceRequestUpdateRequest(
     val budget: BigDecimal? = null,
     @Serializable(with = LocalDateTimeSerializer::class)
     val preferredDate: LocalDateTime? = null,
+    val paymentMode: String? = null,
 )

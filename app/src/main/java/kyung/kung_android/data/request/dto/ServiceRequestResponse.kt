@@ -22,6 +22,7 @@ data class ServiceRequestResponse(
     @Serializable(with = LocalDateTimeSerializer::class)
     val preferredDate: LocalDateTime? = null,
     val status: String,
+    val paymentMode: String? = null,
     val requesterName: String? = null,
     val unreadCount: Long = 0,
     @Serializable(with = LocalDateTimeSerializer::class)
