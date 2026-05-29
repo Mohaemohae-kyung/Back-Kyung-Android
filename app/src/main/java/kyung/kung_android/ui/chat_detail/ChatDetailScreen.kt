@@ -104,6 +104,14 @@ fun ChatDetailScreen(
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "뒤로")
                     }
                 },
+                actions = {
+                    TextButton(onClick = onNavigateQrScan) {
+                        Text(
+                            text = "QR 스캔",
+                            style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
+                        )
+                    }
+                },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surface,
                 ),
