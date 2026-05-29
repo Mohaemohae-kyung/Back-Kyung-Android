@@ -54,9 +54,19 @@ data class ChatDetailUiState(
         get() = linkedRequest?.userId != null && currentUserId != null &&
             linkedRequest.userId != currentUserId
 
-    /** 고수가 결제 요청을 보냈는지 (채팅에 PAYMENT_REQUEST 메시지 존재) */
+    /**
+     * 고수가 결제 요청을 보냈는지.
+     * - 현재 세션에서 직접 요청한 경우(paymentRequested)
+     * - 채팅에 결제 관련 메시지가 영속화된 경우(PAYMENT_REQUEST / PAYMENT_REQUEST_NOTICE)
+     * - 또는 ServiceRequest 에 paymentMode 가 이미 set 된 경우(재진입/구매자 입장)
+     */
     val hasPaymentRequest: Boolean
-        get() = paymentRequested || messages.any { it.messageType == "PAYMENT_REQUEST" }
+        get() = paymentRequested
+            || messages.any {
+                it.messageType == "PAYMENT_REQUEST"
+                    || it.messageType == "PAYMENT_REQUEST_NOTICE"
+            }
+            || !linkedRequest?.paymentMode.isNullOrBlank()
 }
 
 @HiltViewModel
