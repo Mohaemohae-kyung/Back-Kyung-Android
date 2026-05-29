@@ -133,6 +133,7 @@ fun ChatDetailScreen(
                     ConnectionBanner()
                 }
                 state.linkedRequest?.let { req ->
+                    val isOfflineMode = req.paymentMode == ChatDetailViewModel.MODE_OFFLINE
                     QuoteInfoCard(
                         request = req,
                         expert = state.linkedExpert,
@@ -141,7 +142,14 @@ fun ChatDetailScreen(
                         showRequestButton = state.isExpertSide && req.status == "CHATTING",
                         paymentRequested = state.hasPaymentRequest,
                         isRequestingPayment = state.isRequestingPayment,
-                        onRequestPaymentClick = { showRequestDialog = true },
+                        onRequestPaymentClick = {
+                            if (state.hasPaymentRequest && isOfflineMode) {
+                                viewModel.regenerateQr()
+                            } else {
+                                showRequestDialog = true
+                            }
+                        },
+                        isOfflineMode = isOfflineMode,
                     )
                 }
                 LazyColumn(
@@ -366,6 +374,7 @@ private fun QuoteInfoCard(
     paymentRequested: Boolean = false,
     isRequestingPayment: Boolean = false,
     onRequestPaymentClick: () -> Unit = {},
+    isOfflineMode: Boolean = false,
 ) {
     val numberFmt = remember { java.text.NumberFormat.getNumberInstance(java.util.Locale.KOREA) }
     val dateFmt = remember { java.time.format.DateTimeFormatter.ofPattern("yyyy.MM.dd") }
@@ -425,11 +434,12 @@ private fun QuoteInfoCard(
             KungPrimaryButton(
                 text = when {
                     isRequestingPayment -> "요청 중..."
+                    paymentRequested && isOfflineMode -> "QR 다시 보기"
                     paymentRequested -> "결제 요청 완료"
                     else -> "결제 요청"
                 },
                 onClick = onRequestPaymentClick,
-                enabled = !isRequestingPayment && !paymentRequested,
+                enabled = !isRequestingPayment && (!paymentRequested || isOfflineMode),
             )
         }
     }

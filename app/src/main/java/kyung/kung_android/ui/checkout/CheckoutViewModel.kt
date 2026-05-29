@@ -21,10 +21,16 @@ data class CheckoutUiState(
     val requestId: Long = 0L,
     val info: ServiceRequestCheckoutResponse? = null,
     val paymentMethod: String = "CARD",
+    val agreePrivacy: Boolean = false,
+    val agreeThirdParty: Boolean = false,
     val isLoading: Boolean = true,
     val isPaying: Boolean = false,
     val error: String? = null,
-)
+) {
+    val canPay: Boolean
+        get() = info != null && info.finalAmount != null && !isPaying &&
+            agreePrivacy && agreeThirdParty
+}
 
 sealed interface CheckoutEffect {
     data class NavigateToTossPayment(
@@ -65,7 +71,13 @@ class CheckoutViewModel @Inject constructor(
 
     fun onMethodSelected(method: String) = _state.update { it.copy(paymentMethod = method) }
 
+    fun onAgreePrivacyChange(value: Boolean) = _state.update { it.copy(agreePrivacy = value) }
+
+    fun onAgreeThirdPartyChange(value: Boolean) = _state.update { it.copy(agreeThirdParty = value) }
+
     fun startPayment() {
+        val current = _state.value
+        if (!current.canPay) return
         val info = _state.value.info ?: return
         if (info.finalAmount == null || _state.value.isPaying) return
         _state.update { it.copy(isPaying = true, error = null) }

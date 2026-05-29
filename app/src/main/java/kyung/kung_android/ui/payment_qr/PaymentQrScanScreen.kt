@@ -132,6 +132,8 @@ fun PaymentQrScanScreen(
 private fun scanOptions(): ScanOptions = ScanOptions().apply {
     setBeepEnabled(false)
     setOrientationLocked(true)
-    setPrompt("결제 코드를 화면 안에 맞춰주세요")
+    setPrompt("화면 가운데 네모 안에 결제 코드를 맞춰주세요")
     setDesiredBarcodeFormats(ScanOptions.QR_CODE)
+    setBarcodeImageEnabled(false)
+    setCameraId(0)
 }

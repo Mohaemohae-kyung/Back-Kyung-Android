@@ -104,7 +104,7 @@ fun CheckoutScreen(
                         else -> "결제하기"
                     },
                     onClick = { viewModel.startPayment() },
-                    enabled = !state.isPaying && state.info != null,
+                    enabled = state.canPay,
                 )
             }
         },
@@ -123,6 +123,8 @@ fun CheckoutScreen(
             else -> CheckoutContent(
                 state = state,
                 onMethodSelected = viewModel::onMethodSelected,
+                onAgreePrivacyChange = viewModel::onAgreePrivacyChange,
+                onAgreeThirdPartyChange = viewModel::onAgreeThirdPartyChange,
                 modifier = Modifier.padding(padding),
             )
         }
@@ -139,6 +141,8 @@ fun CheckoutScreen(
 private fun CheckoutContent(
     state: CheckoutUiState,
     onMethodSelected: (String) -> Unit,
+    onAgreePrivacyChange: (Boolean) -> Unit,
+    onAgreeThirdPartyChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val info = state.info ?: return
@@ -191,6 +195,23 @@ private fun CheckoutContent(
             )
         }
 
+        HorizontalDivider()
+
+        Column {
+            SectionTitle("이용 동의")
+            Spacer(modifier = Modifier.height(4.dp))
+            AgreeRow(
+                checked = state.agreePrivacy,
+                label = "개인정보 수집 및 이용 동의 (필수)",
+                onCheckedChange = onAgreePrivacyChange,
+            )
+            AgreeRow(
+                checked = state.agreeThirdParty,
+                label = "제3자 정보 공유 동의 (필수)",
+                onCheckedChange = onAgreeThirdPartyChange,
+            )
+        }
+
         state.error?.let { err ->
             Text(
                 text = err,
@@ -198,6 +219,28 @@ private fun CheckoutContent(
                 style = MaterialTheme.typography.bodyMedium,
             )
         }
+    }
+}
+
+@Composable
+private fun AgreeRow(
+    checked: Boolean,
+    label: String,
+    onCheckedChange: (Boolean) -> Unit,
+) {
+    androidx.compose.foundation.layout.Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(8.dp))
+            .clickable { onCheckedChange(!checked) }
+            .padding(vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        androidx.compose.material3.Checkbox(checked = checked, onCheckedChange = onCheckedChange)
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodyMedium,
+        )
     }
 }
 
