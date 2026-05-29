@@ -8,6 +8,7 @@ import kyung.kung_android.dto.AppIntegrityReportRequest
 import kyung.kung_android.dto.AppIntegrityReportResponse
 import kyung.kung_android.network.ApiService
 import kyung.kung_android.security.SecurityCheckManager
+import kyung.kung_android.security.SecurityDebugLog
 
 class AppIntegrityReporter(
     private val context: Context,
@@ -29,7 +30,28 @@ class AppIntegrityReporter(
             fridaDetected = securityResult.fridaDetected
         )
 
-        return apiService.reportAppIntegrity(request)
+        SecurityDebugLog.d(
+            "Reporter",
+            buildString {
+                append("report -> server | ")
+                append("pkg=${request.packageName} ")
+                append("v=${request.versionName}(${request.versionCode}) ")
+                append("buildType=${request.buildType} | ")
+                append("frida=${request.fridaDetected} ")
+                append("root=${request.rootSignals} | ")
+                append("sigCount=${request.signatureSha256List.size} ")
+                append("dex=${request.classesDexSha256}")
+            }
+        )
+
+        return try {
+            apiService.reportAppIntegrity(request).also { response ->
+                SecurityDebugLog.d("Reporter", "server response <- $response")
+            }
+        } catch (e: Exception) {
+            SecurityDebugLog.e("Reporter", "reportAppIntegrity failed", e)
+            throw e
+        }
     }
 
     private fun getVersionCode(): Long {

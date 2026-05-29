@@ -27,36 +27,44 @@ object NativeSecurityCheck {
             while (true) {
                 when (state) {
                     mixState(0x13, 0x27) -> {
-                        if (detectFridaInMaps()) {
+                        val hit = detectFridaInMaps()
+                        if (hit) {
                             mask = mask or 0x01
                         }
+                        SecurityDebugLog.signal("Native/Frida", "detectFridaInMaps", hit)
 
                         guard = guard xor 0x11
                         state = nextState(state, 0x2A, guard)
                     }
 
                     mixState(0x2A, 0x4B) -> {
-                        if (detectTracerPid()) {
+                        val hit = detectTracerPid()
+                        if (hit) {
                             mask = mask or 0x02
                         }
+                        SecurityDebugLog.signal("Native/Frida", "detectTracerPid", hit)
 
                         guard = guard xor 0x23
                         state = nextState(state, 0x31, guard)
                     }
 
                     mixState(0x31, 0x6D) -> {
-                        if (detectFridaPorts()) {
+                        val hit = detectFridaPorts()
+                        if (hit) {
                             mask = mask or 0x04
                         }
+                        SecurityDebugLog.signal("Native/Frida", "detectFridaPorts", hit)
 
                         guard = guard xor 0x35
                         state = nextState(state, 0x44, guard)
                     }
 
                     mixState(0x44, 0x19) -> {
-                        if (detectSuspiciousLibraries()) {
+                        val hit = detectSuspiciousLibraries()
+                        if (hit) {
                             mask = mask or 0x08
                         }
+                        SecurityDebugLog.signal("Native/Frida", "detectSuspiciousLibraries", hit)
 
                         guard = guard xor 0x47
                         state = nextState(state, 0x7F, guard)
@@ -64,7 +72,12 @@ object NativeSecurityCheck {
 
                     mixState(0x7F, 0x08) -> {
                         val normalized = mask and 0x0F
-                        return@runCatching normalized != 0
+                        val result = normalized != 0
+                        SecurityDebugLog.d(
+                            "Native/Frida",
+                            "isFridaDetected mask=0x%02X -> %s".format(normalized, result)
+                        )
+                        return@runCatching result
                     }
 
                     else -> {
@@ -118,36 +131,44 @@ object NativeSecurityCheck {
             while (true) {
                 when (state) {
                     mixState2(0x21, 0x34) -> {
-                        if (detectFridaInMaps()) {
+                        val hit = detectFridaInMaps()
+                        if (hit) {
                             mask = mask or 0x01
                         }
+                        SecurityDebugLog.signal("Native/Signals", "mapsDetected", hit)
 
                         guard = guard xor 0x12
                         state = nextSignalState(state, 0x41, guard)
                     }
 
                     mixState2(0x41, 0x15) -> {
-                        if (detectTracerPid()) {
+                        val hit = detectTracerPid()
+                        if (hit) {
                             mask = mask or 0x02
                         }
+                        SecurityDebugLog.signal("Native/Signals", "tracerPidDetected", hit)
 
                         guard = guard xor 0x24
                         state = nextSignalState(state, 0x52, guard)
                     }
 
                     mixState2(0x52, 0x2B) -> {
-                        if (detectFridaPorts()) {
+                        val hit = detectFridaPorts()
+                        if (hit) {
                             mask = mask or 0x04
                         }
+                        SecurityDebugLog.signal("Native/Signals", "fridaPortDetected", hit)
 
                         guard = guard xor 0x36
                         state = nextSignalState(state, 0x63, guard)
                     }
 
                     mixState2(0x63, 0x7A) -> {
-                        if (detectSuspiciousLibraries()) {
+                        val hit = detectSuspiciousLibraries()
+                        if (hit) {
                             mask = mask or 0x08
                         }
+                        SecurityDebugLog.signal("Native/Signals", "suspiciousLibraryDetected", hit)
 
                         guard = guard xor 0x48
                         state = nextSignalState(state, 0x7E, guard)
@@ -156,12 +177,17 @@ object NativeSecurityCheck {
                     mixState2(0x7E, 0x09) -> {
                         val normalized = mask and 0x0F
 
-                        return@runCatching mapOf(
+                        val signals = mapOf(
                             "mapsDetected" to ((normalized and 0x01) != 0),
                             "tracerPidDetected" to ((normalized and 0x02) != 0),
                             "fridaPortDetected" to ((normalized and 0x04) != 0),
                             "suspiciousLibraryDetected" to ((normalized and 0x08) != 0)
                         )
+                        SecurityDebugLog.d(
+                            "Native/Signals",
+                            "collectFridaDebugSignals mask=0x%02X -> %s".format(normalized, signals)
+                        )
+                        return@runCatching signals
                     }
 
                     else -> {

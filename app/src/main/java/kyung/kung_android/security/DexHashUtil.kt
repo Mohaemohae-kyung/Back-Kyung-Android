@@ -29,11 +29,13 @@ object DexHashUtil {
                             val entry = zipFile.getEntry("classes.dex")
 
                             if (entry == null) {
+                                SecurityDebugLog.d("Dex", "classes.dex entry not found in $apkPath")
                                 state = dexState(0x7A, 0x0F)
                             } else {
                                 zipFile.getInputStream(entry).use { input ->
                                     result = sha256HexLower(input)
                                 }
+                                SecurityDebugLog.d("Dex", "classes.dex sha256=$result")
 
                                 guard = guard xor 0x23
                                 state = nextDexState(state, 0x51, guard)
@@ -56,12 +58,15 @@ object DexHashUtil {
                     }
 
                     else -> {
+                        SecurityDebugLog.d("Dex", "state machine fell through (state=$state) -> null")
                         return@runCatching null
                     }
                 }
             }
 
             null
+        }.onFailure { throwable ->
+            SecurityDebugLog.e("Dex", "getClassesDexSha256 threw -> null", throwable)
         }.getOrNull()
     }
 
