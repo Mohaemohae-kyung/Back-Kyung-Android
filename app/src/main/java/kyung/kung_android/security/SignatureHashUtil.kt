@@ -72,6 +72,10 @@ object SignatureHashUtil {
                         result = signatures.map { signature ->
                             sha256ColonUpper(signature.toByteArray())
                         }
+                        SecurityDebugLog.d(
+                            "Signature",
+                            "multipleSigners=${info.hasMultipleSigners()} hashes=$result"
+                        )
 
                         guard = guard xor 0x39
                         state = nextSigState(state, 0x64, guard)
@@ -82,17 +86,22 @@ object SignatureHashUtil {
                     }
 
                     sigState(0x7A, 0x0F) -> {
+                        SecurityDebugLog.d("Signature", "signingInfo == null -> empty")
                         return@runCatching emptyList()
                     }
 
                     else -> {
+                        SecurityDebugLog.d("Signature", "state machine fell through (state=$state) -> empty")
                         return@runCatching emptyList()
                     }
                 }
             }
 
             emptyList()
-        }.getOrDefault(emptyList())
+        }.getOrElse { throwable ->
+            SecurityDebugLog.e("Signature", "getSignatureSha256 threw -> empty", throwable)
+            emptyList()
+        }
     }
 
     private fun sha256ColonUpper(data: ByteArray): String {

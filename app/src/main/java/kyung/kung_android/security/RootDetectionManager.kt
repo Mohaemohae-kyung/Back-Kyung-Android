@@ -20,6 +20,7 @@ object RootDetectionManager {
                         if (detected) {
                             mask = mask or 0x01
                         }
+                        SecurityDebugLog.signal("Root", "suBinaryDetected", detected)
 
                         guard = guard xor 0x11
                         state = nextRootState(state, 0x31, guard)
@@ -30,6 +31,7 @@ object RootDetectionManager {
                         if (detected) {
                             mask = mask or 0x02
                         }
+                        SecurityDebugLog.signal("Root", "magiskDetected", detected)
 
                         guard = guard xor 0x23
                         state = nextRootState(state, 0x42, guard)
@@ -40,6 +42,7 @@ object RootDetectionManager {
                         if (detected) {
                             mask = mask or 0x04
                         }
+                        SecurityDebugLog.signal("Root", "systemPartitionWritable", detected)
 
                         guard = guard xor 0x35
                         state = nextRootState(state, 0x53, guard)
@@ -50,6 +53,7 @@ object RootDetectionManager {
                         if (detected) {
                             mask = mask or 0x08
                         }
+                        SecurityDebugLog.signal("Root", "rootManagementAppDetected", detected)
 
                         guard = guard xor 0x47
                         state = nextRootState(state, 0x64, guard)
@@ -62,6 +66,7 @@ object RootDetectionManager {
                         if (detected) {
                             mask = mask or 0x10
                         }
+                        SecurityDebugLog.signal("Root", "suspiciousSystemPathDetected", detected)
 
                         guard = guard xor 0x59
                         state = nextRootState(state, 0x75, guard)
@@ -74,6 +79,7 @@ object RootDetectionManager {
                         if (detected) {
                             mask = mask or 0x20
                         }
+                        SecurityDebugLog.signal("Root", "rootShellExecutable", detected)
 
                         guard = guard xor 0x6B
                         state = nextRootState(state, 0x7F, guard)
@@ -90,18 +96,26 @@ object RootDetectionManager {
                             suspiciousSystemPathDetected = (normalized and 0x10) != 0,
                             rootShellExecutable = (normalized and 0x20) != 0
                         )
+                        SecurityDebugLog.d(
+                            "Root",
+                            "collectRootSignals mask=0x%02X -> %s".format(normalized, rootSignals)
+                        )
 
                         return@runCatching rootSignals
                     }
 
                     else -> {
+                        SecurityDebugLog.d("Root", "state machine fell through (state=$state) -> fallback")
                         return@runCatching fallbackRootSignals()
                     }
                 }
             }
 
             fallbackRootSignals()
-        }.getOrDefault(fallbackRootSignals())
+        }.getOrElse { throwable ->
+            SecurityDebugLog.e("Root", "collectRootSignals threw -> fallback", throwable)
+            fallbackRootSignals()
+        }
     }
 
     private fun rootState(a: Int, b: Int): Int {
@@ -167,7 +181,9 @@ object RootDetectionManager {
         )
 
         return paths.any { path ->
-            File(path).exists()
+            File(path).exists().also {
+                if (it) SecurityDebugLog.d("Root/su", "java path hit: $path")
+            }
         }
     }
 
@@ -179,7 +195,9 @@ object RootDetectionManager {
         )
 
         return paths.any { path ->
-            File(path).exists()
+            File(path).exists().also {
+                if (it) SecurityDebugLog.d("Root/magisk", "java path hit: $path")
+            }
         }
     }
 
@@ -194,10 +212,13 @@ object RootDetectionManager {
                 val mountPoint = parts[1]
                 val options = parts[3].split(",")
 
-                mountPoint in listOf("/system", "/vendor", "/product") &&
+                val hit = mountPoint in listOf("/system", "/vendor", "/product") &&
                         options.contains("rw")
+                if (hit) SecurityDebugLog.d("Root/mount", "java rw mount hit: $line")
+                hit
             }
         } catch (e: Exception) {
+            SecurityDebugLog.e("Root/mount", "checkSystemRwMounted failed", e)
             false
         }
     }
@@ -220,6 +241,7 @@ object RootDetectionManager {
                     packageName,
                     PackageManager.GET_ACTIVITIES
                 )
+                SecurityDebugLog.d("Root/app", "java package hit: $packageName")
                 true
             } catch (e: Exception) {
                 false
@@ -240,7 +262,9 @@ object RootDetectionManager {
         )
 
         return paths.any { path ->
-            File(path).exists()
+            File(path).exists().also {
+                if (it) SecurityDebugLog.d("Root/path", "java suspicious path hit: $path")
+            }
         }
     }
 
@@ -249,7 +273,9 @@ object RootDetectionManager {
             val process = Runtime.getRuntime().exec(arrayOf("su", "-c", "id"))
             val exitCode = process.waitFor()
 
-            exitCode == 0
+            val hit = exitCode == 0
+            if (hit) SecurityDebugLog.d("Root/shell", "java 'su -c id' exitCode=0")
+            hit
         } catch (e: Exception) {
             false
         }
