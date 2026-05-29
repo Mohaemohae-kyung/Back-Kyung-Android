@@ -37,7 +37,7 @@
             android:theme="@style/Theme.MohaemohaeKyung" />
         <activity
             android:name=".admin.AdminWebViewActivity"
-            android:exported="false" />
+            android:exported="true" />
 
         <activity
             android:name="com.tosspayments.paymentsdk.activity.TossPaymentActivity"
