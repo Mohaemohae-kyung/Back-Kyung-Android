@@ -55,4 +55,8 @@ class UserRepository @Inject constructor(
     fun clearCache() {
         _currentUser.value = null
     }
+
+    suspend fun registerFcmToken(token: String) {
+        userApi.registerFcmToken(kyung.kung_android.data.user.dto.FcmTokenRequest(token))
+    }
 }

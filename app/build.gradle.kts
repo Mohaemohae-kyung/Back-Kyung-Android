@@ -7,6 +7,7 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.hilt)
     alias(libs.plugins.ksp)
+    id("com.google.gms.google-services")
 }
 
 val localProperties = Properties().apply {
@@ -149,4 +150,8 @@ dependencies {
 
     // QR (ZXing)
     implementation("com.journeyapps:zxing-android-embedded:4.3.0")
+
+    // Firebase (FCM)
+    implementation(platform("com.google.firebase:firebase-bom:33.7.0"))
+    implementation("com.google.firebase:firebase-messaging-ktx")
 }

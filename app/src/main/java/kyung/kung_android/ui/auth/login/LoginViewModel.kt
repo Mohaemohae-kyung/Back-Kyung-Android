@@ -2,6 +2,7 @@ package kyung.kung_android.ui.auth.login
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.firebase.messaging.FirebaseMessaging
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -13,6 +14,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kyung.kung_android.data.network.ApiException
 import kyung.kung_android.domain.auth.AuthRepository
+import kyung.kung_android.domain.user.UserRepository
 import javax.inject.Inject
 
 data class LoginUiState(
@@ -33,6 +35,7 @@ sealed interface LoginEffect {
 @HiltViewModel
 class LoginViewModel @Inject constructor(
     private val authRepository: AuthRepository,
+    private val userRepository: UserRepository,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(LoginUiState())
@@ -58,6 +61,7 @@ class LoginViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 authRepository.login(current.email, current.password)
+                registerFcmTokenSilently()
                 _effects.emit(LoginEffect.NavigateToHome)
             } catch (e: ApiException) {
                 handleError(e)
@@ -65,6 +69,16 @@ class LoginViewModel @Inject constructor(
                 _state.update { it.copy(errorMessage = "네트워크 오류가 발생했습니다.") }
             } finally {
                 _state.update { it.copy(isLoading = false) }
+            }
+        }
+    }
+
+    private fun registerFcmTokenSilently() {
+        FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
+            if (!task.isSuccessful) return@addOnCompleteListener
+            val token = task.result ?: return@addOnCompleteListener
+            viewModelScope.launch {
+                runCatching { userRepository.registerFcmToken(token) }
             }
         }
     }
