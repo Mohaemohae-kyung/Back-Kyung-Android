@@ -146,4 +146,7 @@ dependencies {
     implementation(libs.krossbow.stomp.core)
     implementation(libs.krossbow.websocket.okhttp)
     implementation(libs.krossbow.stomp.kxserialization.json)
+
+    // QR (ZXing)
+    implementation("com.journeyapps:zxing-android-embedded:4.3.0")
 }

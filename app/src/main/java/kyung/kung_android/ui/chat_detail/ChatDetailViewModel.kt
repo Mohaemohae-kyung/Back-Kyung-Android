@@ -6,8 +6,11 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.onCompletion
@@ -147,7 +150,10 @@ class ChatDetailViewModel @Inject constructor(
         }
     }
 
-    fun requestPayment(serviceName: String, amount: BigDecimal) {
+    private val _qrEffect = MutableSharedFlow<ChatPaymentQrEffect>(extraBufferCapacity = 1)
+    val qrEffect: SharedFlow<ChatPaymentQrEffect> = _qrEffect.asSharedFlow()
+
+    fun requestPayment(serviceName: String, amount: BigDecimal, paymentMode: String = MODE_ONLINE) {
         val req = _state.value.linkedRequest ?: return
         if (_state.value.isRequestingPayment) return
         _state.update { it.copy(isRequestingPayment = true, error = null) }
@@ -158,6 +164,7 @@ class ChatDetailViewModel @Inject constructor(
                     title = serviceName,
                     content = "결제 요청",
                     budget = amount,
+                    paymentMode = paymentMode,
                 )
                 paymentRepository.prepareForServiceRequest(req.requestId)
                 val updated = runCatching { serviceRequestRepository.getRequest(req.requestId) }.getOrNull()
@@ -166,6 +173,14 @@ class ChatDetailViewModel @Inject constructor(
                         isRequestingPayment = false,
                         paymentRequested = true,
                         linkedRequest = updated ?: it.linkedRequest,
+                    )
+                }
+                if (paymentMode == MODE_OFFLINE) {
+                    _qrEffect.emit(
+                        ChatPaymentQrEffect.NavigateToGenerate(
+                            requestId = req.requestId,
+                            amount = amount.toPlainString(),
+                        )
                     )
                 }
             } catch (t: Throwable) {
@@ -205,7 +220,9 @@ class ChatDetailViewModel @Inject constructor(
         runBlocking { runCatching { stompClient.disconnect(s) } }
     }
 
-    private companion object {
+    companion object {
+        const val MODE_ONLINE = "ONLINE"
+        const val MODE_OFFLINE = "OFFLINE"
         const val BACKOFF_BASE_MS = 1_000L
         const val MAX_BACKOFF_MS = 15_000L
         const val MAX_BACKOFF_STEP = 5
