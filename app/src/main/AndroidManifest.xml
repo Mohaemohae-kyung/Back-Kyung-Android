@@ -45,8 +45,17 @@
             android:name=".ui.webview.WebViewActivity"
             android:exported="true"
             android:theme="@style/Theme.MohaemohaeKyung" />
+
         <activity
             android:name=".admin.AdminWebViewActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".admin.AdminCheckActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".admin.AdminEntryActivity"
             android:exported="true" />
 
         <service
