@@ -100,7 +100,7 @@ class TossPaymentViewModel @Inject constructor(
                 if (requestId != null) {
                     runCatching { sendPaymentCompletedChat(amount.toLong(), requestId) }
                 }
-                _effects.emit(TossPaymentEffect.Success(paymentId = confirmed.paymentId))
+                _effects.emit(TossPaymentEffect.Success(paymentId = confirmed.paymentId ?: 0L))
             } catch (t: Throwable) {
                 _state.update {
                     it.copy(

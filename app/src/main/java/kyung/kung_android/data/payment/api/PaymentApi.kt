@@ -1,5 +1,6 @@
 package kyung.kung_android.data.payment.api
 
+import kyung.kung_android.data.network.RawResponse
 import kyung.kung_android.data.payment.dto.E2ePayloadRequest
 import kyung.kung_android.data.payment.dto.E2ePayloadResponse
 import kyung.kung_android.data.payment.dto.PaymentResponse
@@ -17,12 +18,15 @@ interface PaymentApi {
     @GET("/api/payments/{paymentId}")
     suspend fun getPayment(@Path("paymentId") paymentId: Long): PaymentResponse
 
+    @RawResponse
     @GET("/api/payments/public-key")
     suspend fun getPublicKey(): PublicKeyResponse
 
+    @RawResponse
     @POST("/api/payments/prepare")
     suspend fun prepare(@Body request: E2ePayloadRequest): E2ePayloadResponse
 
+    @RawResponse
     @POST("/api/payments/confirm")
     suspend fun confirm(@Body request: E2ePayloadRequest): E2ePayloadResponse
 }

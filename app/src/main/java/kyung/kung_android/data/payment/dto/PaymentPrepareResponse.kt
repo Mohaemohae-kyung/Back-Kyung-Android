@@ -6,7 +6,7 @@ import java.math.BigDecimal
 
 @Serializable
 data class PaymentPrepareResponse(
-    val paymentId: Long,
+    val paymentId: Long? = null,
     val transactionId: Long? = null,
     val bookingId: Long? = null,
     val serviceRequestId: Long? = null,
