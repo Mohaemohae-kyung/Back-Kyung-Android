@@ -6,11 +6,14 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.lifecycleScope
+import com.google.firebase.messaging.FirebaseMessaging
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kyung.kung_android.data.auth.TokenStore
+import kyung.kung_android.domain.user.UserRepository
+import kyung.kung_android.fcm.FcmTokenStore
 import kyung.kung_android.integrity.AppIntegrityReporter
 import kyung.kung_android.network.ApiService
 import javax.inject.Inject
@@ -20,6 +23,7 @@ class SplashActivity : ComponentActivity() {
 
     @Inject lateinit var tokenStore: TokenStore
     @Inject lateinit var apiService: ApiService
+    @Inject lateinit var userRepository: UserRepository
 
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
@@ -27,10 +31,23 @@ class SplashActivity : ComponentActivity() {
 
         lifecycleScope.launch {
             tokenStore.prime()
+            registerFcmTokenIfLoggedIn()
             if (BuildConfig.DEBUG) {
                 moveToMain()
             } else {
                 checkAppIntegrity()
+            }
+        }
+    }
+
+    private fun registerFcmTokenIfLoggedIn() {
+        if (tokenStore.getAccessSync() == null) return
+        FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
+            if (!task.isSuccessful) return@addOnCompleteListener
+            val token = task.result ?: return@addOnCompleteListener
+            FcmTokenStore.cacheToken(applicationContext, token)
+            lifecycleScope.launch {
+                runCatching { userRepository.registerFcmToken(token) }
             }
         }
     }

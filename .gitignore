@@ -41,3 +41,6 @@ local_readme.md
 local_*.md
 LOCAL_*.md
 app/release/
+
+# Firebase
+app/google-services.json
