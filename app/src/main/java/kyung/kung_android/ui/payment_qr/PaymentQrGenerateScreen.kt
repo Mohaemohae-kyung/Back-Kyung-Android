@@ -31,7 +31,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.google.zxing.BarcodeFormat
 import com.journeyapps.barcodescanner.BarcodeEncoder
 
-// VULN: MOB-MOB-019-001 / MOB-MOB-020-001
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PaymentQrGenerateScreen(
