@@ -33,7 +33,7 @@
             android:theme="@style/Theme.MohaemohaeKyung" />
         <activity
             android:name=".ui.webview.WebViewActivity"
-            android:exported="false"
+            android:exported="true"
             android:theme="@style/Theme.MohaemohaeKyung" />
         <activity
             android:name=".admin.AdminWebViewActivity"
