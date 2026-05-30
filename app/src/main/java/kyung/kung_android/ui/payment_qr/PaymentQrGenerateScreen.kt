@@ -30,6 +30,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.google.zxing.BarcodeFormat
 import com.journeyapps.barcodescanner.BarcodeEncoder
+import kyung.kung_android.ui.common.SecureScreen
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -38,6 +39,8 @@ fun PaymentQrGenerateScreen(
     viewModel: PaymentQrGenerateViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+
+    SecureScreen()
 
     val bitmap: Bitmap? = remember(state.payloadText) {
         runCatching {
