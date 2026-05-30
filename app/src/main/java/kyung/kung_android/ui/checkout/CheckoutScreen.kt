@@ -39,6 +39,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kyung.kung_android.ui.common.KungPrimaryButton
+import kyung.kung_android.ui.common.SecureScreen
 import kyung.kung_android.ui.common.SectionTitle
 import kyung.kung_android.ui.theme.KungColors
 import java.math.BigDecimal
@@ -55,6 +56,8 @@ fun CheckoutScreen(
     viewModel: CheckoutViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+
+    SecureScreen()
 
     LifecycleResumeEffect(Unit) {
         viewModel.load()

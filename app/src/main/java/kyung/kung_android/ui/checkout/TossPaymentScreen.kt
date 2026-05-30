@@ -32,6 +32,7 @@ import com.tosspayments.paymentsdk.TossPayments
 import com.tosspayments.paymentsdk.model.TossPaymentResult
 import com.tosspayments.paymentsdk.model.paymentinfo.TossCardPaymentInfo
 import kyung.kung_android.BuildConfig
+import kyung.kung_android.ui.common.SecureScreen
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -42,6 +43,8 @@ fun TossPaymentScreen(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
+
+    SecureScreen()
 
     val launcher = rememberLauncherForActivityResult(
         ActivityResultContracts.StartActivityForResult()
