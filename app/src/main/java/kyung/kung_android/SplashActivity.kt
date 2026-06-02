@@ -17,6 +17,7 @@ import kyung.kung_android.fcm.FcmTokenStore
 import kyung.kung_android.integrity.AppIntegrityReporter
 import kyung.kung_android.network.ApiService
 import javax.inject.Inject
+import javax.net.ssl.SSLException
 
 @AndroidEntryPoint
 class SplashActivity : ComponentActivity() {
@@ -69,7 +70,8 @@ class SplashActivity : ComponentActivity() {
                 else -> showBlockDialog("UNKNOWN_RISK_LEVEL")
             }
         } catch (e: Exception) {
-            showBlockDialog("SECURITY_CHECK_FAILED")
+            val reason = if (e is SSLException) "Certificate pinning failure" else "SECURITY_CHECK_FAILED"
+            showBlockDialog(reason)
         }
     }
 
