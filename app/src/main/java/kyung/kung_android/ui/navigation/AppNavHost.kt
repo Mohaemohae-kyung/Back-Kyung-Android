@@ -16,6 +16,7 @@ import kyung.kung_android.ui.account_withdraw.AccountWithdrawScreen
 import kyung.kung_android.ui.chat_detail.ChatDetailScreen
 import kyung.kung_android.ui.chatbot.ChatBotScreen
 import kyung.kung_android.ui.checkout.CheckoutScreen
+import kyung.kung_android.ui.payment_password.PaymentPasswordSetupScreen
 import kyung.kung_android.ui.checkout.TossPaymentScreen
 import kyung.kung_android.ui.checkout.PaymentSuccessScreen
 import kyung.kung_android.ui.expert_transactions.ExpertTransactionsScreen
@@ -191,6 +192,7 @@ fun AppNavHost(
                         "${AppRoute.TOSS_PAYMENT}?orderId=${android.net.Uri.encode(orderId)}&amount=$amount&method=$method&requestId=$requestId&orderName=${android.net.Uri.encode(orderName)}"
                     )
                 },
+                onNavigatePaymentPasswordSetup = { navController.navigate(AppRoute.PAYMENT_PASSWORD_SETUP) },
             )
         }
 
@@ -279,6 +281,7 @@ fun AppNavHost(
                 onBack = { navController.popBackStack() },
                 onNavigateProfileInfo = { navController.navigate(AppRoute.PROFILE_INFO) },
                 onNavigatePasswordChange = { navController.navigate(AppRoute.PASSWORD_CHANGE) },
+                onNavigatePaymentPassword = { navController.navigate(AppRoute.PAYMENT_PASSWORD_SETUP) },
                 onNavigateWithdraw = { navController.navigate(AppRoute.ACCOUNT_WITHDRAW) },
                 onLoggedOut = {
                     navController.popBackStack(AppRoute.MAIN, inclusive = false)
@@ -298,6 +301,13 @@ fun AppNavHost(
 
         composable(AppRoute.PROFILE_INFO) {
             ProfileInfoScreen(onBack = { navController.popBackStack() })
+        }
+
+        composable(AppRoute.PAYMENT_PASSWORD_SETUP) {
+            PaymentPasswordSetupScreen(
+                onBack = { navController.popBackStack() },
+                onDone = { navController.popBackStack() },
+            )
         }
 
         composable(AppRoute.PASSWORD_CHANGE) {
@@ -393,6 +403,7 @@ fun AppNavHost(
                         "${AppRoute.TOSS_PAYMENT}?orderId=${android.net.Uri.encode(orderId)}&amount=$amount&method=$method&orderName=${android.net.Uri.encode(orderName)}"
                     )
                 },
+                onNavigatePaymentPasswordSetup = { navController.navigate(AppRoute.PAYMENT_PASSWORD_SETUP) },
             )
         }
 

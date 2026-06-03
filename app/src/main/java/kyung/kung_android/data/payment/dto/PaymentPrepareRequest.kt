@@ -9,4 +9,5 @@ data class PaymentPrepareRequest(
     val paymentMethod: String,
     val userCouponId: Long? = null,
     val pgProvider: String? = null,
+    val paymentPin: String? = null,
 )

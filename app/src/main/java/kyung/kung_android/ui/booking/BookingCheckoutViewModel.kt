@@ -15,6 +15,7 @@ import kotlinx.coroutines.launch
 import kyung.kung_android.data.checkout.dto.BookingCheckoutResponse
 import kyung.kung_android.domain.checkout.CheckoutRepository
 import kyung.kung_android.domain.payment.PaymentRepository
+import kyung.kung_android.domain.user.UserRepository
 import javax.inject.Inject
 
 data class BookingCheckoutUiState(
@@ -25,6 +26,8 @@ data class BookingCheckoutUiState(
     val agreeThirdParty: Boolean = false,
     val isLoading: Boolean = true,
     val isPaying: Boolean = false,
+    val showPinDialog: Boolean = false,
+    val pin: String = "",
     val error: String? = null,
 ) {
     val canPay: Boolean
@@ -38,6 +41,8 @@ sealed interface BookingCheckoutEffect {
         val paymentMethod: String,
         val orderName: String,
     ) : BookingCheckoutEffect
+
+    data object NavigateToPaymentPasswordSetup : BookingCheckoutEffect
 }
 
 @HiltViewModel
@@ -45,6 +50,7 @@ class BookingCheckoutViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val checkoutRepository: CheckoutRepository,
     private val paymentRepository: PaymentRepository,
+    private val userRepository: UserRepository,
 ) : ViewModel() {
 
     private val bookingId: Long = savedStateHandle.get<Long>("bookingId") ?: 0L
@@ -74,27 +80,49 @@ class BookingCheckoutViewModel @Inject constructor(
     fun startPayment() {
         val current = _state.value
         if (!current.canPay) return
-        _state.update { it.copy(isPaying = true, error = null) }
+        viewModelScope.launch {
+            val hasPassword = userRepository.currentUser.value?.hasPaymentPassword
+                ?: runCatching { userRepository.getMe().hasPaymentPassword }.getOrDefault(false)
+            if (!hasPassword) {
+                _effects.emit(BookingCheckoutEffect.NavigateToPaymentPasswordSetup)
+            } else {
+                _state.update { it.copy(showPinDialog = true, pin = "", error = null) }
+            }
+        }
+    }
+
+    fun onPinChange(value: String) = _state.update { it.copy(pin = value) }
+
+    fun dismissPinDialog() = _state.update { it.copy(showPinDialog = false, pin = "") }
+
+    fun confirmPin() {
+        val current = _state.value
+        if (current.pin.length != 6 || current.info == null || current.isPaying) return
+        val pin = current.pin
+        _state.update { it.copy(isPaying = true, showPinDialog = false, error = null) }
         viewModelScope.launch {
             try {
-                val method = current.paymentMethod
+                val method = _state.value.paymentMethod
                 val prepared = paymentRepository.prepareForBooking(
                     bookingId = bookingId,
                     paymentMethod = method,
+                    paymentPin = pin,
                 )
-                _state.update { it.copy(isPaying = false) }
+                _state.update { it.copy(isPaying = false, pin = "") }
                 _effects.emit(
                     BookingCheckoutEffect.NavigateToTossPayment(
                         orderId = prepared.orderId,
                         amount = prepared.finalAmount.toPlainString(),
                         paymentMethod = method,
                         orderName = prepared.orderName
-                            ?: current.info?.productTitle
+                            ?: _state.value.info?.productTitle
                             ?: "매칭온 결제",
                     )
                 )
             } catch (t: Throwable) {
-                _state.update { it.copy(isPaying = false, error = "결제 준비에 실패했어요. 다시 시도해주세요.") }
+                _state.update {
+                    it.copy(isPaying = false, pin = "", error = t.message ?: "결제 준비에 실패했어요. 다시 시도해주세요.")
+                }
             }
         }
     }

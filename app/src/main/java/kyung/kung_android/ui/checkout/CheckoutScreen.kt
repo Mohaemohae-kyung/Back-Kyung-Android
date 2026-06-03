@@ -39,6 +39,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kyung.kung_android.ui.common.KungPrimaryButton
+import kyung.kung_android.ui.common.PaymentPinField
 import kyung.kung_android.ui.common.SecureScreen
 import kyung.kung_android.ui.common.SectionTitle
 import kyung.kung_android.ui.theme.KungColors
@@ -53,6 +54,7 @@ private val NUMBER_FMT = NumberFormat.getNumberInstance(Locale.KOREA)
 fun CheckoutScreen(
     onBack: () -> Unit,
     onNavigateTossPayment: (orderId: String, amount: String, method: String, requestId: Long, orderName: String) -> Unit,
+    onNavigatePaymentPasswordSetup: () -> Unit,
     viewModel: CheckoutViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -69,8 +71,20 @@ fun CheckoutScreen(
             when (effect) {
                 is CheckoutEffect.NavigateToTossPayment ->
                     onNavigateTossPayment(effect.orderId, effect.amount, effect.paymentMethod, effect.requestId, effect.orderName)
+                CheckoutEffect.NavigateToPaymentPasswordSetup ->
+                    onNavigatePaymentPasswordSetup()
             }
         }
+    }
+
+    if (state.showPinDialog) {
+        PaymentPinDialog(
+            pin = state.pin,
+            isError = state.error != null,
+            onPinChange = viewModel::onPinChange,
+            onConfirm = viewModel::confirmPin,
+            onDismiss = viewModel::dismissPinDialog,
+        )
     }
 
     Scaffold(
@@ -223,6 +237,37 @@ private fun CheckoutContent(
             )
         }
     }
+}
+
+@Composable
+private fun PaymentPinDialog(
+    pin: String,
+    isError: Boolean,
+    onPinChange: (String) -> Unit,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    androidx.compose.material3.AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("결제 비밀번호 입력") },
+        text = {
+            PaymentPinField(
+                value = pin,
+                onValueChange = onPinChange,
+                label = "6자리 비밀번호",
+                isError = isError,
+            )
+        },
+        confirmButton = {
+            androidx.compose.material3.TextButton(
+                onClick = onConfirm,
+                enabled = pin.length == 6,
+            ) { Text("결제") }
+        },
+        dismissButton = {
+            androidx.compose.material3.TextButton(onClick = onDismiss) { Text("취소") }
+        },
+    )
 }
 
 @Composable

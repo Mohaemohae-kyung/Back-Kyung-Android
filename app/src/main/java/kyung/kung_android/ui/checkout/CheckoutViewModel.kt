@@ -15,6 +15,7 @@ import kotlinx.coroutines.launch
 import kyung.kung_android.data.checkout.dto.ServiceRequestCheckoutResponse
 import kyung.kung_android.domain.checkout.CheckoutRepository
 import kyung.kung_android.domain.payment.PaymentRepository
+import kyung.kung_android.domain.user.UserRepository
 import javax.inject.Inject
 
 data class CheckoutUiState(
@@ -25,6 +26,8 @@ data class CheckoutUiState(
     val agreeThirdParty: Boolean = false,
     val isLoading: Boolean = true,
     val isPaying: Boolean = false,
+    val showPinDialog: Boolean = false,
+    val pin: String = "",
     val error: String? = null,
 ) {
     val canPay: Boolean
@@ -40,6 +43,8 @@ sealed interface CheckoutEffect {
         val requestId: Long,
         val orderName: String,
     ) : CheckoutEffect
+
+    data object NavigateToPaymentPasswordSetup : CheckoutEffect
 }
 
 @HiltViewModel
@@ -47,6 +52,7 @@ class CheckoutViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val checkoutRepository: CheckoutRepository,
     private val paymentRepository: PaymentRepository,
+    private val userRepository: UserRepository,
 ) : ViewModel() {
 
     private val requestId: Long = savedStateHandle.get<Long>("requestId") ?: 0L
@@ -75,20 +81,42 @@ class CheckoutViewModel @Inject constructor(
 
     fun onAgreeThirdPartyChange(value: Boolean) = _state.update { it.copy(agreeThirdParty = value) }
 
+    /** 결제 시작: 결제 비밀번호 미설정이면 설정 화면으로, 설정돼 있으면 PIN 입력 다이얼로그를 띄운다. */
     fun startPayment() {
         val current = _state.value
         if (!current.canPay) return
-        val info = _state.value.info ?: return
-        if (info.finalAmount == null || _state.value.isPaying) return
-        _state.update { it.copy(isPaying = true, error = null) }
+        if (current.info?.finalAmount == null || current.isPaying) return
+        viewModelScope.launch {
+            val hasPassword = userRepository.currentUser.value?.hasPaymentPassword
+                ?: runCatching { userRepository.getMe().hasPaymentPassword }.getOrDefault(false)
+            if (!hasPassword) {
+                _effects.emit(CheckoutEffect.NavigateToPaymentPasswordSetup)
+            } else {
+                _state.update { it.copy(showPinDialog = true, pin = "", error = null) }
+            }
+        }
+    }
+
+    fun onPinChange(value: String) = _state.update { it.copy(pin = value) }
+
+    fun dismissPinDialog() = _state.update { it.copy(showPinDialog = false, pin = "") }
+
+    /** PIN 입력 확정 후 실제 결제 준비. */
+    fun confirmPin() {
+        val current = _state.value
+        val info = current.info ?: return
+        if (current.pin.length != 6 || info.finalAmount == null || current.isPaying) return
+        val pin = current.pin
+        _state.update { it.copy(isPaying = true, showPinDialog = false, error = null) }
         viewModelScope.launch {
             try {
                 val method = _state.value.paymentMethod
                 val prepared = paymentRepository.prepareForServiceRequest(
                     requestId = requestId,
                     paymentMethod = method,
+                    paymentPin = pin,
                 )
-                _state.update { it.copy(isPaying = false) }
+                _state.update { it.copy(isPaying = false, pin = "") }
                 _effects.emit(
                     CheckoutEffect.NavigateToTossPayment(
                         orderId = prepared.orderId,
@@ -101,7 +129,13 @@ class CheckoutViewModel @Inject constructor(
                     )
                 )
             } catch (t: Throwable) {
-                _state.update { it.copy(isPaying = false, error = "결제 준비에 실패했어요. 다시 시도해주세요.") }
+                _state.update {
+                    it.copy(
+                        isPaying = false,
+                        pin = "",
+                        error = t.message ?: "결제 준비에 실패했어요. 다시 시도해주세요.",
+                    )
+                }
             }
         }
     }

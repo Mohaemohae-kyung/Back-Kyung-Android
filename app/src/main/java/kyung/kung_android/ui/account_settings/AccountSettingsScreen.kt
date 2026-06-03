@@ -57,6 +57,7 @@ fun AccountSettingsScreen(
     onBack: () -> Unit,
     onNavigateProfileInfo: () -> Unit,
     onNavigatePasswordChange: () -> Unit,
+    onNavigatePaymentPassword: () -> Unit,
     onNavigateWithdraw: () -> Unit,
     onLoggedOut: () -> Unit,
     viewModel: AccountSettingsViewModel = hiltViewModel(),
@@ -127,6 +128,8 @@ fun AccountSettingsScreen(
             SettingsRow(label = "개인 정보 관리", onClick = onNavigateProfileInfo)
             HorizontalDivider()
             SettingsRow(label = "비밀번호 변경", onClick = onNavigatePasswordChange)
+            HorizontalDivider()
+            SettingsRow(label = "결제 비밀번호 설정", onClick = onNavigatePaymentPassword)
             HorizontalDivider()
             SettingsRow(label = "로그아웃", onClick = { logoutDialog = true })
             HorizontalDivider()

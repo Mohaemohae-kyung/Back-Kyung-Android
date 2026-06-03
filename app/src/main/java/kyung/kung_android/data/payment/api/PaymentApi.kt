@@ -23,6 +23,10 @@ interface PaymentApi {
     suspend fun getPublicKey(): PublicKeyResponse
 
     @RawResponse
+    @POST("/api/payments/password/setup")
+    suspend fun setupPaymentPassword(@Body request: E2ePayloadRequest): E2ePayloadResponse
+
+    @RawResponse
     @POST("/api/payments/prepare")
     suspend fun prepare(@Body request: E2ePayloadRequest): E2ePayloadResponse
 

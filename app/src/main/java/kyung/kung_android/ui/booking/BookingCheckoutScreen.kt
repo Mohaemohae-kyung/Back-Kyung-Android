@@ -57,6 +57,7 @@ private val TIME_FMT = DateTimeFormatter.ofPattern("HH:mm", Locale.KOREA)
 fun BookingCheckoutScreen(
     onBack: () -> Unit,
     onNavigateTossPayment: (orderId: String, amount: String, method: String, orderName: String) -> Unit,
+    onNavigatePaymentPasswordSetup: () -> Unit,
     viewModel: BookingCheckoutViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -71,8 +72,34 @@ fun BookingCheckoutScreen(
             when (effect) {
                 is BookingCheckoutEffect.NavigateToTossPayment ->
                     onNavigateTossPayment(effect.orderId, effect.amount, effect.paymentMethod, effect.orderName)
+                BookingCheckoutEffect.NavigateToPaymentPasswordSetup ->
+                    onNavigatePaymentPasswordSetup()
             }
         }
+    }
+
+    if (state.showPinDialog) {
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = viewModel::dismissPinDialog,
+            title = { Text("결제 비밀번호 입력") },
+            text = {
+                kyung.kung_android.ui.common.PaymentPinField(
+                    value = state.pin,
+                    onValueChange = viewModel::onPinChange,
+                    label = "6자리 비밀번호",
+                    isError = state.error != null,
+                )
+            },
+            confirmButton = {
+                androidx.compose.material3.TextButton(
+                    onClick = viewModel::confirmPin,
+                    enabled = state.pin.length == 6,
+                ) { Text("결제") }
+            },
+            dismissButton = {
+                androidx.compose.material3.TextButton(onClick = viewModel::dismissPinDialog) { Text("취소") }
+            },
+        )
     }
 
     Scaffold(
