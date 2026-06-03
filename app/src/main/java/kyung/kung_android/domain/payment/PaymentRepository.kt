@@ -11,6 +11,7 @@ import kyung.kung_android.data.payment.dto.PaymentPasswordSetupRequest
 import kyung.kung_android.data.payment.dto.PaymentPrepareRequest
 import kyung.kung_android.data.payment.dto.PaymentPrepareResponse
 import kyung.kung_android.data.payment.dto.PaymentResponse
+import kyung.kung_android.data.payment.dto.ServiceRequestPaymentRequestCreateRequest
 import java.math.BigDecimal
 import java.security.PublicKey
 import javax.inject.Inject
@@ -29,6 +30,22 @@ class PaymentRepository @Inject constructor(
     suspend fun getMyPayments(): List<PaymentResponse> = paymentApi.getMyPayments()
 
     suspend fun getPayment(paymentId: Long): PaymentResponse = paymentApi.getPayment(paymentId)
+
+    /**
+     * 고수/전문가가 고객에게 결제 요청 메시지를 생성한다.
+     * 실제 결제 비밀번호 검증·Toss 준비는 고객이 결제할 때(prepare) 수행한다.
+     */
+    suspend fun requestServiceRequestPayment(
+        requestId: Long,
+        paymentMethod: String = "CARD",
+    ): PaymentResponse =
+        paymentApi.createServiceRequestPaymentRequest(
+            requestId = requestId,
+            request = ServiceRequestPaymentRequestCreateRequest(
+                paymentMethod = paymentMethod,
+                pgProvider = PG_PROVIDER_TOSS,
+            ),
+        )
 
     suspend fun prepareForServiceRequest(
         requestId: Long,

@@ -190,7 +190,8 @@ class ChatDetailViewModel @Inject constructor(
                     paymentMode = paymentMode,
                 )
                 if (paymentMode != MODE_OFFLINE) {
-                    paymentRepository.prepareForServiceRequest(req.requestId)
+                    // 고수는 결제 요청 메시지만 생성한다(PIN 검증·Toss 준비는 고객 결제 시 수행).
+                    paymentRepository.requestServiceRequestPayment(req.requestId)
                 }
                 val updated = runCatching { serviceRequestRepository.getRequest(req.requestId) }.getOrNull()
                 _state.update {
