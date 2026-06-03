@@ -8,4 +8,5 @@ data class UserProfileUpdateRequest(
     val phone: String? = null,
     val nickname: String? = null,
     val profileImageFileId: Long? = null,
+    val detailAddress: String? = null,
 )

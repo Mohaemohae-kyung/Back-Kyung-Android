@@ -11,5 +11,8 @@ data class UserProfileResponse(
     val nickname: String? = null,
     val role: String,
     val profileImageUrl: String? = null,
+    val residentRegistrationNumberMasked: String? = null,
+    val detailAddress: String? = null,
     val expertProfileId: Long? = null,
+    val hasPaymentPassword: Boolean = false,
 )

@@ -50,6 +50,7 @@ fun ProfileInfoScreen(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     var phoneDialog by remember { mutableStateOf(false) }
+    var addressDialog by remember { mutableStateOf(false) }
 
     LifecycleResumeEffect(Unit) {
         viewModel.load()
@@ -111,6 +112,18 @@ fun ProfileInfoScreen(
                         value = state.user?.email ?: "—",
                         onClick = null,
                     )
+                    androidx.compose.material3.HorizontalDivider(color = KungColors.BorderSoft)
+                    InfoRow(
+                        label = "주민등록번호",
+                        value = state.user?.residentRegistrationNumberMasked ?: "—",
+                        onClick = null,
+                    )
+                    androidx.compose.material3.HorizontalDivider(color = KungColors.BorderSoft)
+                    InfoRow(
+                        label = "상세주소",
+                        value = state.user?.detailAddress?.takeIf { it.isNotBlank() } ?: "—",
+                        onClick = { addressDialog = true },
+                    )
                 }
             }
         }
@@ -124,6 +137,18 @@ fun ProfileInfoScreen(
             onConfirm = { phone ->
                 viewModel.updatePhone(phone)
                 phoneDialog = false
+            },
+        )
+    }
+
+    if (addressDialog) {
+        DetailAddressEditDialog(
+            initial = state.user?.detailAddress.orEmpty(),
+            isUpdating = state.isUpdating,
+            onDismiss = { addressDialog = false },
+            onConfirm = { address ->
+                viewModel.updateDetailAddress(address)
+                addressDialog = false
             },
         )
     }
@@ -185,6 +210,36 @@ private fun PhoneEditDialog(
             TextButton(
                 onClick = { onConfirm(phone) },
                 enabled = !isUpdating && phone.isNotBlank(),
+            ) { Text("저장") }
+        },
+        dismissButton = { TextButton(onClick = onDismiss) { Text("취소") } },
+    )
+}
+
+@Composable
+private fun DetailAddressEditDialog(
+    initial: String,
+    isUpdating: Boolean,
+    onDismiss: () -> Unit,
+    onConfirm: (String) -> Unit,
+) {
+    var address by remember { mutableStateOf(initial) }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("상세주소 수정") },
+        text = {
+            OutlinedTextField(
+                value = address,
+                onValueChange = { address = it },
+                label = { Text("상세주소") },
+                placeholder = { Text("동/호수 등 (비우면 삭제)") },
+                singleLine = true,
+            )
+        },
+        confirmButton = {
+            TextButton(
+                onClick = { onConfirm(address) },
+                enabled = !isUpdating,
             ) { Text("저장") }
         },
         dismissButton = { TextButton(onClick = onDismiss) { Text("취소") } },

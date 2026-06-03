@@ -3,6 +3,7 @@ package kyung.kung_android.ui.auth.signup
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -20,6 +21,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.platform.LocalFocusManager
@@ -174,8 +176,72 @@ fun SignupScreen(
             supportingText = state.phoneError?.let { { Text(it) } },
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Phone,
-                imeAction = ImeAction.Done,
+                imeAction = ImeAction.Next,
             ),
+            keyboardActions = KeyboardActions(
+                onNext = { focusManager.moveFocus(FocusDirection.Down) },
+            ),
+            modifier = Modifier.fillMaxWidth(),
+        )
+
+        FieldLabel("주민등록번호")
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            OutlinedTextField(
+                value = state.residentFront,
+                onValueChange = viewModel::onResidentFrontChange,
+                placeholder = { Text("앞 6자리") },
+                singleLine = true,
+                shape = RoundedCornerShape(14.dp),
+                colors = signupFieldColors(),
+                isError = state.residentRegistrationNumberError != null,
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.NumberPassword,
+                    imeAction = ImeAction.Next,
+                ),
+                keyboardActions = KeyboardActions(
+                    onNext = { focusManager.moveFocus(FocusDirection.Next) },
+                ),
+                modifier = Modifier.weight(1f),
+            )
+            Text("-", style = MaterialTheme.typography.titleMedium)
+            OutlinedTextField(
+                value = state.residentBack,
+                onValueChange = viewModel::onResidentBackChange,
+                placeholder = { Text("뒤 7자리") },
+                singleLine = true,
+                shape = RoundedCornerShape(14.dp),
+                colors = signupFieldColors(),
+                visualTransformation = PasswordVisualTransformation(),
+                isError = state.residentRegistrationNumberError != null,
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.NumberPassword,
+                    imeAction = ImeAction.Next,
+                ),
+                keyboardActions = KeyboardActions(
+                    onNext = { focusManager.moveFocus(FocusDirection.Down) },
+                ),
+                modifier = Modifier.weight(1f),
+            )
+        }
+        state.residentRegistrationNumberError?.let {
+            Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+        }
+
+        FieldLabel("상세주소")
+        OutlinedTextField(
+            value = state.detailAddress,
+            onValueChange = viewModel::onDetailAddressChange,
+            placeholder = { Text("동/호수 등 상세주소") },
+            singleLine = true,
+            shape = RoundedCornerShape(14.dp),
+            colors = signupFieldColors(),
+            isError = state.detailAddressError != null,
+            supportingText = state.detailAddressError?.let { { Text(it) } },
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
             keyboardActions = KeyboardActions(
                 onDone = {
                     keyboard?.hide()

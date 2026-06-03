@@ -30,6 +30,8 @@ import kyung.kung_android.domain.user.UserRepository
 import kyung.kung_android.ui.navigation.AppRoute
 import org.hildan.krossbow.stomp.StompSession
 import java.math.BigDecimal
+import java.text.NumberFormat
+import java.util.Locale
 import javax.inject.Inject
 
 data class ChatDetailUiState(
@@ -190,7 +192,8 @@ class ChatDetailViewModel @Inject constructor(
                     paymentMode = paymentMode,
                 )
                 if (paymentMode != MODE_OFFLINE) {
-                    paymentRepository.prepareForServiceRequest(req.requestId)
+                    // 고수는 결제 요청 메시지만 생성한다(PIN 검증·Toss 준비는 고객 결제 시 수행).
+                    paymentRepository.requestServiceRequestPayment(req.requestId)
                 }
                 val updated = runCatching { serviceRequestRepository.getRequest(req.requestId) }.getOrNull()
                 _state.update {
@@ -201,6 +204,20 @@ class ChatDetailViewModel @Inject constructor(
                     )
                 }
                 if (paymentMode == MODE_OFFLINE) {
+                    // 대면은 백엔드 메시지 대신 QR로 결제. 채팅에는 금액 안내 메시지를 직접 남긴다.
+                    val s = session
+                    val senderId = _state.value.currentUserId
+                    if (s != null && senderId != null) {
+                        val formatted = NumberFormat.getNumberInstance(Locale.KOREA).format(amount)
+                        runCatching {
+                            stompClient.sendMessage(
+                                session = s,
+                                roomId = chatRoomId,
+                                senderId = senderId,
+                                message = "대면 결제를 요청했어요. 결제 금액 ${formatted}원 — QR 코드로 결제해주세요.",
+                            )
+                        }
+                    }
                     _qrEffect.emit(
                         ChatPaymentQrEffect.NavigateToGenerate(
                             requestId = req.requestId,
@@ -211,6 +228,15 @@ class ChatDetailViewModel @Inject constructor(
             } catch (t: Throwable) {
                 _state.update { it.copy(isRequestingPayment = false, error = "결제 요청에 실패했어요.") }
             }
+        }
+    }
+
+    /** 채팅 메시지 목록을 다시 불러온다. */
+    fun refresh() {
+        _state.update { it.copy(isLoading = true, error = null) }
+        viewModelScope.launch {
+            loadHistory()
+            markRead()
         }
     }
 

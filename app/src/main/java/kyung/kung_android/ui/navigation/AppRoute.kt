@@ -21,6 +21,7 @@ object AppRoute {
     const val PASSWORD_CHANGE = "password_change"
     const val FAVORITE_EXPERTS = "favorite_experts"
     const val PAYMENT_HISTORY = "payment_history"
+    const val PAYMENT_PASSWORD_SETUP = "payment_password_setup"
     const val CHECKOUT = "checkout"
     const val TOSS_PAYMENT = "toss_payment"
     const val PAYMENT_SUCCESS = "payment_success"

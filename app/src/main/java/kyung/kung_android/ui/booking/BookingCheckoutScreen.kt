@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -57,6 +58,7 @@ private val TIME_FMT = DateTimeFormatter.ofPattern("HH:mm", Locale.KOREA)
 fun BookingCheckoutScreen(
     onBack: () -> Unit,
     onNavigateTossPayment: (orderId: String, amount: String, method: String, orderName: String) -> Unit,
+    onNavigatePaymentPasswordSetup: () -> Unit,
     viewModel: BookingCheckoutViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -71,8 +73,34 @@ fun BookingCheckoutScreen(
             when (effect) {
                 is BookingCheckoutEffect.NavigateToTossPayment ->
                     onNavigateTossPayment(effect.orderId, effect.amount, effect.paymentMethod, effect.orderName)
+                BookingCheckoutEffect.NavigateToPaymentPasswordSetup ->
+                    onNavigatePaymentPasswordSetup()
             }
         }
+    }
+
+    if (state.showPinDialog) {
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = viewModel::dismissPinDialog,
+            title = { Text("결제 비밀번호 입력") },
+            text = {
+                kyung.kung_android.ui.common.PaymentPinField(
+                    value = state.pin,
+                    onValueChange = viewModel::onPinChange,
+                    label = "6자리 비밀번호",
+                    isError = state.error != null,
+                )
+            },
+            confirmButton = {
+                androidx.compose.material3.TextButton(
+                    onClick = viewModel::confirmPin,
+                    enabled = state.pin.length == 6,
+                ) { Text("결제") }
+            },
+            dismissButton = {
+                androidx.compose.material3.TextButton(onClick = viewModel::dismissPinDialog) { Text("취소") }
+            },
+        )
     }
 
     Scaffold(
@@ -95,7 +123,7 @@ fun BookingCheckoutScreen(
             )
         },
         bottomBar = {
-            val amount = state.info?.finalAmount
+            val amount = state.info?.let { state.displayFinalAmount }
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -128,6 +156,7 @@ fun BookingCheckoutScreen(
             else -> BookingCheckoutContent(
                 info = requireNotNull(state.info),
                 state = state,
+                onCouponSelected = viewModel::onCouponSelected,
                 onAgreePrivacyChange = viewModel::onAgreePrivacyChange,
                 onAgreeThirdPartyChange = viewModel::onAgreeThirdPartyChange,
                 modifier = Modifier.padding(padding),
@@ -146,6 +175,7 @@ fun BookingCheckoutScreen(
 private fun BookingCheckoutContent(
     info: BookingCheckoutResponse,
     state: BookingCheckoutUiState,
+    onCouponSelected: (Long?) -> Unit,
     onAgreePrivacyChange: (Boolean) -> Unit,
     onAgreeThirdPartyChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
@@ -187,6 +217,27 @@ private fun BookingCheckoutContent(
 
         HorizontalDivider()
 
+        if (state.coupons.isNotEmpty()) {
+            Column {
+                SectionTitle("쿠폰")
+                Spacer(modifier = Modifier.height(8.dp))
+                CouponRow(
+                    label = "쿠폰 미적용",
+                    selected = state.selectedCouponId == null,
+                    onClick = { onCouponSelected(null) },
+                )
+                state.coupons.forEach { coupon ->
+                    val discount = coupon.discountAmount ?: BigDecimal.ZERO
+                    CouponRow(
+                        label = "${coupon.name ?: "쿠폰"} (-${NUMBER_FMT.format(discount)}원)",
+                        selected = state.selectedCouponId == coupon.userCouponId,
+                        onClick = { onCouponSelected(coupon.userCouponId) },
+                    )
+                }
+            }
+            HorizontalDivider()
+        }
+
         Column {
             SectionTitle("결제 금액")
             Spacer(modifier = Modifier.height(8.dp))
@@ -194,10 +245,13 @@ private fun BookingCheckoutContent(
             if ((info.discountAmount ?: BigDecimal.ZERO) > BigDecimal.ZERO) {
                 AmountRow("할인 금액", info.discountAmount ?: BigDecimal.ZERO, negative = true)
             }
+            state.selectedCoupon?.discountAmount?.takeIf { it > BigDecimal.ZERO }?.let {
+                AmountRow("쿠폰 할인", it, negative = true)
+            }
             Spacer(modifier = Modifier.height(6.dp))
             HorizontalDivider()
             Spacer(modifier = Modifier.height(6.dp))
-            AmountRow("최종 결제 금액", info.finalAmount ?: BigDecimal.ZERO, emphasize = true)
+            AmountRow("최종 결제 금액", state.displayFinalAmount, emphasize = true)
         }
 
         HorizontalDivider()
@@ -224,6 +278,27 @@ private fun BookingCheckoutContent(
                 style = MaterialTheme.typography.bodyMedium,
             )
         }
+    }
+}
+
+@Composable
+private fun CouponRow(label: String, selected: Boolean, onClick: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .background(if (selected) KungColors.PurpleBg else MaterialTheme.colorScheme.surface)
+            .clickable(onClick = onClick)
+            .padding(horizontal = 14.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text = if (selected) "●" else "○",
+            color = if (selected) KungColors.Purple else MaterialTheme.colorScheme.onSurfaceVariant,
+            style = MaterialTheme.typography.bodyMedium,
+        )
+        Spacer(modifier = Modifier.width(10.dp))
+        Text(text = label, style = MaterialTheme.typography.bodyMedium)
     }
 }
 

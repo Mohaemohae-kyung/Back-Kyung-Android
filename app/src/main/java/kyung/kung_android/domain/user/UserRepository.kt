@@ -29,6 +29,7 @@ class UserRepository @Inject constructor(
         phone: String? = null,
         nickname: String? = null,
         profileImageFileId: Long? = null,
+        detailAddress: String? = null,
     ): UserProfileResponse {
         val updated = userApi.updateMyProfile(
             UserProfileUpdateRequest(
@@ -36,6 +37,8 @@ class UserRepository @Inject constructor(
                 phone = phone?.trim()?.takeIf { it.isNotEmpty() },
                 nickname = nickname?.trim()?.takeIf { it.isNotEmpty() },
                 profileImageFileId = profileImageFileId,
+                // null = 변경 안 함, 빈 문자열 = 삭제, 값 = 설정 (서버 정규화 규칙에 맞춤)
+                detailAddress = detailAddress?.trim(),
             )
         )
         _currentUser.value = updated

@@ -24,6 +24,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowUpward
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -105,6 +106,9 @@ fun ChatDetailScreen(
                     }
                 },
                 actions = {
+                    IconButton(onClick = { viewModel.refresh() }) {
+                        Icon(Icons.Filled.Refresh, contentDescription = "새로고침")
+                    }
                     TextButton(onClick = onNavigateQrScan) {
                         Text(
                             text = "QR 스캔",
@@ -139,6 +143,7 @@ fun ChatDetailScreen(
                         expert = state.linkedExpert,
                         showPayButton = state.isRequester && req.status == "CHATTING" && state.hasPaymentRequest,
                         onPayClick = { onNavigateCheckout(req.requestId) },
+                        onScanQrClick = onNavigateQrScan,
                         showRequestButton = state.isExpertSide && req.status == "CHATTING",
                         paymentRequested = state.hasPaymentRequest,
                         isRequestingPayment = state.isRequestingPayment,
@@ -370,6 +375,7 @@ private fun QuoteInfoCard(
     expert: ExpertDetailResponse?,
     showPayButton: Boolean,
     onPayClick: () -> Unit,
+    onScanQrClick: () -> Unit = {},
     showRequestButton: Boolean = false,
     paymentRequested: Boolean = false,
     isRequestingPayment: Boolean = false,
@@ -424,9 +430,10 @@ private fun QuoteInfoCard(
         }
         if (showPayButton) {
             Spacer(modifier = Modifier.size(10.dp))
+            // 대면(OFFLINE)은 고수가 띄운 QR을 스캔해 결제, 비대면은 결제 화면으로 이동
             KungPrimaryButton(
-                text = "결제하기",
-                onClick = onPayClick,
+                text = if (isOfflineMode) "QR 스캔하기" else "결제하기",
+                onClick = if (isOfflineMode) onScanQrClick else onPayClick,
             )
         }
         if (showRequestButton) {
