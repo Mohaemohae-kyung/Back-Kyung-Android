@@ -72,4 +72,19 @@ class ProfileInfoViewModel @Inject constructor(
             }
         }
     }
+
+    fun updateDetailAddress(detailAddress: String) {
+        if (_local.value.isUpdating) return
+        _local.update { it.copy(isUpdating = true, error = null) }
+        viewModelScope.launch {
+            try {
+                // 빈 문자열 전달 시 서버에서 상세주소 삭제 처리
+                userRepository.updateMyProfile(detailAddress = detailAddress.trim())
+            } catch (t: Throwable) {
+                _local.update { it.copy(error = "변경에 실패했어요.") }
+            } finally {
+                _local.update { it.copy(isUpdating = false) }
+            }
+        }
+    }
 }

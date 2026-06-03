@@ -27,6 +27,8 @@ class AuthRepository @Inject constructor(
         name: String,
         nickname: String?,
         phone: String?,
+        residentRegistrationNumber: String?,
+        detailAddress: String?,
     ): SignupResponse {
         return authApi.signup(
             SignupRequest(
@@ -35,6 +37,8 @@ class AuthRepository @Inject constructor(
                 name = name.trim(),
                 nickname = nickname?.trim()?.takeIf { it.isNotEmpty() },
                 phone = phone?.trim()?.takeIf { it.isNotEmpty() },
+                residentRegistrationNumber = residentRegistrationNumber?.trim()?.takeIf { it.isNotEmpty() },
+                detailAddress = detailAddress?.trim()?.takeIf { it.isNotEmpty() },
             )
         )
     }

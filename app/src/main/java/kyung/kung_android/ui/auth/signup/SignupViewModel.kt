@@ -21,12 +21,17 @@ data class SignupUiState(
     val name: String = "",
     val nickname: String = "",
     val phone: String = "",
+    val residentFront: String = "",
+    val residentBack: String = "",
+    val detailAddress: String = "",
     val isLoading: Boolean = false,
     val emailError: String? = null,
     val passwordError: String? = null,
     val nameError: String? = null,
     val nicknameError: String? = null,
     val phoneError: String? = null,
+    val residentRegistrationNumberError: String? = null,
+    val detailAddressError: String? = null,
     val errorMessage: String? = null,
 ) {
     val canSubmit: Boolean
@@ -53,6 +58,13 @@ class SignupViewModel @Inject constructor(
     fun onNameChange(v: String) = _state.update { it.copy(name = v, nameError = null, errorMessage = null) }
     fun onNicknameChange(v: String) = _state.update { it.copy(nickname = v, nicknameError = null, errorMessage = null) }
     fun onPhoneChange(v: String) = _state.update { it.copy(phone = v, phoneError = null, errorMessage = null) }
+    fun onResidentFrontChange(v: String) = _state.update {
+        it.copy(residentFront = v.filter(Char::isDigit).take(6), residentRegistrationNumberError = null, errorMessage = null)
+    }
+    fun onResidentBackChange(v: String) = _state.update {
+        it.copy(residentBack = v.filter(Char::isDigit).take(7), residentRegistrationNumberError = null, errorMessage = null)
+    }
+    fun onDetailAddressChange(v: String) = _state.update { it.copy(detailAddress = v, detailAddressError = null, errorMessage = null) }
 
     fun onSubmit() {
         val current = _state.value
@@ -64,7 +76,14 @@ class SignupViewModel @Inject constructor(
                 errorMessage = null,
                 emailError = null, passwordError = null, nameError = null,
                 nicknameError = null, phoneError = null,
+                residentRegistrationNumberError = null, detailAddressError = null,
             )
+        }
+
+        val residentRegistrationNumber = if (current.residentFront.isBlank() && current.residentBack.isBlank()) {
+            null
+        } else {
+            "${current.residentFront}-${current.residentBack}"
         }
 
         viewModelScope.launch {
@@ -75,6 +94,8 @@ class SignupViewModel @Inject constructor(
                     name = current.name,
                     nickname = current.nickname,
                     phone = current.phone,
+                    residentRegistrationNumber = residentRegistrationNumber,
+                    detailAddress = current.detailAddress,
                 )
                 _effects.emit(SignupEffect.NavigateBackToLogin)
             } catch (e: ApiException) {
@@ -97,6 +118,8 @@ class SignupViewModel @Inject constructor(
                     nameError = f["name"],
                     nicknameError = f["nickname"],
                     phoneError = f["phone"],
+                    residentRegistrationNumberError = f["residentRegistrationNumber"],
+                    detailAddressError = f["detailAddress"],
                 )
             }
             return

@@ -9,4 +9,6 @@ data class SignupRequest(
     val name: String,
     val nickname: String? = null,
     val phone: String? = null,
+    val residentRegistrationNumber: String? = null,
+    val detailAddress: String? = null,
 )
