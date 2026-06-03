@@ -13,15 +13,20 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kyung.kung_android.data.checkout.dto.BookingCheckoutResponse
+import kyung.kung_android.data.coupon.dto.AvailableCouponDto
 import kyung.kung_android.domain.checkout.CheckoutRepository
+import kyung.kung_android.domain.coupon.CouponRepository
 import kyung.kung_android.domain.payment.PaymentRepository
 import kyung.kung_android.domain.user.UserRepository
+import java.math.BigDecimal
 import javax.inject.Inject
 
 data class BookingCheckoutUiState(
     val bookingId: Long = 0L,
     val info: BookingCheckoutResponse? = null,
     val paymentMethod: String = "CARD",
+    val coupons: List<AvailableCouponDto> = emptyList(),
+    val selectedCouponId: Long? = null,
     val agreePrivacy: Boolean = false,
     val agreeThirdParty: Boolean = false,
     val isLoading: Boolean = true,
@@ -32,6 +37,17 @@ data class BookingCheckoutUiState(
 ) {
     val canPay: Boolean
         get() = info != null && agreePrivacy && agreeThirdParty && !isPaying
+
+    val selectedCoupon: AvailableCouponDto?
+        get() = coupons.firstOrNull { it.userCouponId == selectedCouponId }
+
+    /** 쿠폰 선택을 반영한 표시용 최종 금액(실제 청구액은 서버 prepare 응답 기준). */
+    val displayFinalAmount: BigDecimal
+        get() {
+            val base = info?.finalAmount ?: BigDecimal.ZERO
+            val discount = selectedCoupon?.discountAmount ?: BigDecimal.ZERO
+            return (base - discount).coerceAtLeast(BigDecimal.ZERO)
+        }
 }
 
 sealed interface BookingCheckoutEffect {
@@ -51,6 +67,7 @@ class BookingCheckoutViewModel @Inject constructor(
     private val checkoutRepository: CheckoutRepository,
     private val paymentRepository: PaymentRepository,
     private val userRepository: UserRepository,
+    private val couponRepository: CouponRepository,
 ) : ViewModel() {
 
     private val bookingId: Long = savedStateHandle.get<Long>("bookingId") ?: 0L
@@ -70,8 +87,16 @@ class BookingCheckoutViewModel @Inject constructor(
             } catch (t: Throwable) {
                 _state.update { it.copy(isLoading = false, error = "결제 정보를 불러오지 못했어요.") }
             }
+            // 사용 가능한 쿠폰 조회(실패해도 결제 흐름은 진행)
+            runCatching {
+                couponRepository.getUsableCoupons(targetType = "BOOKING", targetId = bookingId)
+            }.onSuccess { coupons ->
+                _state.update { it.copy(coupons = coupons) }
+            }
         }
     }
+
+    fun onCouponSelected(userCouponId: Long?) = _state.update { it.copy(selectedCouponId = userCouponId) }
 
     fun onAgreePrivacyChange(value: Boolean) = _state.update { it.copy(agreePrivacy = value) }
 
@@ -107,6 +132,7 @@ class BookingCheckoutViewModel @Inject constructor(
                     bookingId = bookingId,
                     paymentMethod = method,
                     paymentPin = pin,
+                    userCouponId = _state.value.selectedCouponId,
                 )
                 _state.update { it.copy(isPaying = false, pin = "") }
                 _effects.emit(
