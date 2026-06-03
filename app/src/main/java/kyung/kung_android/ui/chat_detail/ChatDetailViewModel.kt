@@ -231,6 +231,15 @@ class ChatDetailViewModel @Inject constructor(
         }
     }
 
+    /** 채팅 메시지 목록을 다시 불러온다. */
+    fun refresh() {
+        _state.update { it.copy(isLoading = true, error = null) }
+        viewModelScope.launch {
+            loadHistory()
+            markRead()
+        }
+    }
+
     fun updateInput(text: String) {
         _state.update { it.copy(input = text) }
     }
