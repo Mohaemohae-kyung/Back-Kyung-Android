@@ -34,6 +34,7 @@ class PaymentRepository @Inject constructor(
         requestId: Long,
         paymentMethod: String = "CARD",
         paymentPin: String? = null,
+        userCouponId: Long? = null,
     ): PaymentPrepareResponse =
         e2eCall(
             plain = PaymentPrepareRequest(
@@ -42,6 +43,7 @@ class PaymentRepository @Inject constructor(
                 paymentMethod = paymentMethod,
                 pgProvider = PG_PROVIDER_TOSS,
                 paymentPin = paymentPin,
+                userCouponId = userCouponId,
             ),
             requestSerializer = PaymentPrepareRequest.serializer(),
             responseSerializer = PaymentPrepareResponse.serializer(),
@@ -52,6 +54,7 @@ class PaymentRepository @Inject constructor(
         bookingId: Long,
         paymentMethod: String = "CARD",
         paymentPin: String? = null,
+        userCouponId: Long? = null,
     ): PaymentPrepareResponse =
         e2eCall(
             plain = PaymentPrepareRequest(
@@ -60,6 +63,7 @@ class PaymentRepository @Inject constructor(
                 paymentMethod = paymentMethod,
                 pgProvider = PG_PROVIDER_TOSS,
                 paymentPin = paymentPin,
+                userCouponId = userCouponId,
             ),
             requestSerializer = PaymentPrepareRequest.serializer(),
             responseSerializer = PaymentPrepareResponse.serializer(),
