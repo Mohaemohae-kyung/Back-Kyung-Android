@@ -20,12 +20,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import kyung.kung_android.ui.common.KungPrimaryButton
-import kyung.kung_android.ui.common.PaymentPinField
+import kyung.kung_android.ui.common.PinKeypad
 import kyung.kung_android.ui.common.SecureScreen
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -79,23 +77,22 @@ fun PaymentPasswordSetupScreen(
                 },
                 style = MaterialTheme.typography.bodyLarge,
             )
-            PaymentPinField(
+            Spacer(Modifier.height(8.dp))
+            PinKeypad(
                 value = state.pin,
-                onValueChange = viewModel::onPinChange,
-                label = if (state.step == PinStep.FIRST) "결제 비밀번호" else "결제 비밀번호 확인",
-                isError = state.error != null,
-                imeAction = ImeAction.Done,
+                onValueChange = { v ->
+                    viewModel.onPinChange(v)
+                    if (v.length == 6) viewModel.onProceed()
+                },
+                resetKey = state.step,
             )
             state.error?.let {
                 Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
             }
-            Spacer(Modifier.height(8.dp))
-            KungPrimaryButton(
-                text = if (state.step == PinStep.FIRST) "다음" else "설정 완료",
-                onClick = viewModel::onProceed,
-                enabled = state.canProceed,
-                loading = state.isSubmitting,
-            )
+            if (state.isSubmitting) {
+                Spacer(Modifier.height(8.dp))
+                androidx.compose.material3.CircularProgressIndicator()
+            }
         }
     }
 }

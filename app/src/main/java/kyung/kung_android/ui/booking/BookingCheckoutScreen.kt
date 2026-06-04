@@ -84,11 +84,12 @@ fun BookingCheckoutScreen(
             onDismissRequest = viewModel::dismissPinDialog,
             title = { Text("결제 비밀번호 입력") },
             text = {
-                kyung.kung_android.ui.common.PaymentPinField(
+                kyung.kung_android.ui.common.PinKeypad(
                     value = state.pin,
-                    onValueChange = viewModel::onPinChange,
-                    label = "6자리 비밀번호",
-                    isError = state.error != null,
+                    onValueChange = { v ->
+                        viewModel.onPinChange(v)
+                        if (v.length == 6) viewModel.confirmPin()
+                    },
                 )
             },
             confirmButton = {

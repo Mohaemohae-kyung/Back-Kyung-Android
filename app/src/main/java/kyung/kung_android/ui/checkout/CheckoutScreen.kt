@@ -41,7 +41,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kyung.kung_android.ui.common.KungPrimaryButton
-import kyung.kung_android.ui.common.PaymentPinField
+import kyung.kung_android.ui.common.PinKeypad
 import kyung.kung_android.ui.common.SecureScreen
 import kyung.kung_android.ui.common.SectionTitle
 import kyung.kung_android.ui.theme.KungColors
@@ -279,11 +279,12 @@ private fun PaymentPinDialog(
         onDismissRequest = onDismiss,
         title = { Text("결제 비밀번호 입력") },
         text = {
-            PaymentPinField(
+            PinKeypad(
                 value = pin,
-                onValueChange = onPinChange,
-                label = "6자리 비밀번호",
-                isError = isError,
+                onValueChange = { v ->
+                    onPinChange(v)
+                    if (v.length == 6) onConfirm()
+                },
             )
         },
         confirmButton = {
