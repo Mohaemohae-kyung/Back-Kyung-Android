@@ -61,7 +61,7 @@ android {
             buildConfigField("String", "BASE_URL", "\"$prodBaseUrl\"")
             buildConfigField("Boolean", "SSL_PINNING_ENABLED", "true")
             buildConfigField("String", "PINNING_HOST", "\"can-fly.shop\"")
-            buildConfigField("String", "PIN_CURRENT", "\"sha256/S4fHfavKWAJVY+UVx8FovdRLN2QaAJ7IHK+sK1BaTFo=\"")
+            buildConfigField("String", "PIN_CURRENT", "\"sha256/S4fHfavKWAJVY+UVx8FovdRLN2QaAJ7IHk+sK1BaTFo=\"")
             buildConfigField("String", "PIN_BACKUP", "\"sha256/y7xVm0TVJNahMr2sZydE2jQH8SquXV9yLF9seROHHHU=\"")
             buildConfigField("String", "TOSS_CLIENT_KEY", "\"$tossClientKey\"")
             signingConfigs.findByName("release")?.let { signingConfig = it }
