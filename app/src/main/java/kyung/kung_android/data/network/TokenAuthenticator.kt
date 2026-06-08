@@ -21,6 +21,10 @@ class TokenAuthenticator @Inject constructor(
         // 무한 재시도 방지: 이미 한 번 재시도한 요청이면 포기
         if (responseRetryCount(response) >= MAX_RETRIES) return null
 
+        // 토큰 만료가 아닌 도메인 401(결제 비밀번호 불일치 등)은 갱신/재시도 대상이 아니다.
+        // 재시도하면 서버 측 실패 카운트가 한 번에 2씩 오르므로 여기서 차단한다.
+        if (isDomainAuthError(response)) return null
+
         return runBlocking {
             mutex.withLock {
                 val attached = response.request.header("Authorization")
@@ -43,6 +47,17 @@ class TokenAuthenticator @Inject constructor(
         }
     }
 
+    /**
+     * 401 응답 본문을 소비하지 않고(peek) 들여다봐, 토큰 만료가 아닌
+     * 결제 도메인 오류 코드가 담겨 있으면 갱신 흐름에서 제외한다.
+     */
+    private fun isDomainAuthError(response: Response): Boolean = try {
+        val body = response.peekBody(PEEK_LIMIT).string()
+        DOMAIN_AUTH_CODES.any { body.contains("\"$it\"") }
+    } catch (t: Throwable) {
+        false
+    }
+
     private fun responseRetryCount(response: Response): Int {
         var count = 0
         var prior = response.priorResponse
@@ -58,5 +73,7 @@ class TokenAuthenticator @Inject constructor(
 
     companion object {
         private const val MAX_RETRIES = 1
+        private const val PEEK_LIMIT = 2048L
+        private val DOMAIN_AUTH_CODES = listOf("INVALID_PASSWORD")
     }
 }

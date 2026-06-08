@@ -81,9 +81,11 @@ fun CheckoutScreen(
 
     if (state.showPinDialog) {
         PaymentPinDialog(
-            pin = state.pin,
-            isError = state.error != null,
-            onPinChange = viewModel::onPinChange,
+            pinLength = state.pinLength,
+            resetKey = state.keypadNonce,
+            error = state.error,
+            onDigit = viewModel::onPinDigit,
+            onDelete = viewModel::onPinDelete,
             onConfirm = viewModel::confirmPin,
             onDismiss = viewModel::dismissPinDialog,
         )
@@ -269,28 +271,40 @@ private fun CheckoutContent(
 
 @Composable
 private fun PaymentPinDialog(
-    pin: String,
-    isError: Boolean,
-    onPinChange: (String) -> Unit,
+    pinLength: Int,
+    resetKey: Any?,
+    error: String?,
+    onDigit: (Char) -> Unit,
+    onDelete: () -> Unit,
     onConfirm: () -> Unit,
     onDismiss: () -> Unit,
 ) {
     androidx.compose.material3.AlertDialog(
         onDismissRequest = onDismiss,
+        containerColor = MaterialTheme.colorScheme.surface,
         title = { Text("결제 비밀번호 입력") },
         text = {
-            PinKeypad(
-                value = pin,
-                onValueChange = { v ->
-                    onPinChange(v)
-                    if (v.length == 6) onConfirm()
-                },
-            )
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                PinKeypad(
+                    length = pinLength,
+                    onDigit = onDigit,
+                    onDelete = onDelete,
+                    resetKey = resetKey,
+                )
+                if (error != null) {
+                    Spacer(Modifier.height(12.dp))
+                    Text(
+                        text = error,
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall,
+                    )
+                }
+            }
         },
         confirmButton = {
             androidx.compose.material3.TextButton(
                 onClick = onConfirm,
-                enabled = pin.length == 6,
+                enabled = pinLength == 6,
             ) { Text("결제") }
         },
         dismissButton = {

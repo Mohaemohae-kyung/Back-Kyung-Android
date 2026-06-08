@@ -58,6 +58,7 @@ fun AccountSettingsScreen(
     onNavigateProfileInfo: () -> Unit,
     onNavigatePasswordChange: () -> Unit,
     onNavigatePaymentPassword: () -> Unit,
+    onNavigatePaymentPasswordChange: () -> Unit,
     onNavigateWithdraw: () -> Unit,
     onLoggedOut: () -> Unit,
     viewModel: AccountSettingsViewModel = hiltViewModel(),
@@ -129,7 +130,11 @@ fun AccountSettingsScreen(
             HorizontalDivider()
             SettingsRow(label = "비밀번호 변경", onClick = onNavigatePasswordChange)
             HorizontalDivider()
-            SettingsRow(label = "결제 비밀번호 설정", onClick = onNavigatePaymentPassword)
+            val hasPaymentPassword = state.user?.hasPaymentPassword == true
+            SettingsRow(
+                label = if (hasPaymentPassword) "결제 비밀번호 재설정" else "결제 비밀번호 설정",
+                onClick = if (hasPaymentPassword) onNavigatePaymentPasswordChange else onNavigatePaymentPassword,
+            )
             HorizontalDivider()
             SettingsRow(label = "로그아웃", onClick = { logoutDialog = true })
             HorizontalDivider()

@@ -82,20 +82,30 @@ fun BookingCheckoutScreen(
     if (state.showPinDialog) {
         androidx.compose.material3.AlertDialog(
             onDismissRequest = viewModel::dismissPinDialog,
+            containerColor = MaterialTheme.colorScheme.surface,
             title = { Text("결제 비밀번호 입력") },
             text = {
-                kyung.kung_android.ui.common.PinKeypad(
-                    value = state.pin,
-                    onValueChange = { v ->
-                        viewModel.onPinChange(v)
-                        if (v.length == 6) viewModel.confirmPin()
-                    },
-                )
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    kyung.kung_android.ui.common.PinKeypad(
+                        length = state.pinLength,
+                        onDigit = viewModel::onPinDigit,
+                        onDelete = viewModel::onPinDelete,
+                        resetKey = state.keypadNonce,
+                    )
+                    state.error?.let {
+                        Spacer(Modifier.height(12.dp))
+                        Text(
+                            text = it,
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodySmall,
+                        )
+                    }
+                }
             },
             confirmButton = {
                 androidx.compose.material3.TextButton(
                     onClick = viewModel::confirmPin,
-                    enabled = state.pin.length == 6,
+                    enabled = state.pinLength == 6,
                 ) { Text("결제") }
             },
             dismissButton = {
