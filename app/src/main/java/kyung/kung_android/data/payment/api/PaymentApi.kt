@@ -34,6 +34,14 @@ interface PaymentApi {
     suspend fun setupPaymentPassword(@Body request: E2ePayloadRequest): E2ePayloadResponse
 
     @RawResponse
+    @POST("/api/payments/password/verify")
+    suspend fun verifyPaymentPassword(@Body request: E2ePayloadRequest): E2ePayloadResponse
+
+    @RawResponse
+    @POST("/api/payments/password/change")
+    suspend fun changePaymentPassword(@Body request: E2ePayloadRequest): E2ePayloadResponse
+
+    @RawResponse
     @POST("/api/payments/prepare")
     suspend fun prepare(@Body request: E2ePayloadRequest): E2ePayloadResponse
 

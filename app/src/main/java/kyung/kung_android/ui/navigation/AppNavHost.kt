@@ -16,6 +16,7 @@ import kyung.kung_android.ui.account_withdraw.AccountWithdrawScreen
 import kyung.kung_android.ui.chat_detail.ChatDetailScreen
 import kyung.kung_android.ui.chatbot.ChatBotScreen
 import kyung.kung_android.ui.checkout.CheckoutScreen
+import kyung.kung_android.ui.payment_password.PaymentPasswordChangeScreen
 import kyung.kung_android.ui.payment_password.PaymentPasswordSetupScreen
 import kyung.kung_android.ui.checkout.TossPaymentScreen
 import kyung.kung_android.ui.checkout.PaymentSuccessScreen
@@ -28,6 +29,7 @@ import kyung.kung_android.ui.expert_register.ExpertRegisterScreen
 import kyung.kung_android.ui.favorite_experts.FavoriteExpertsScreen
 import kyung.kung_android.ui.main.MainScaffold
 import kyung.kung_android.ui.mypage.MyPageScreen
+import kyung.kung_android.ui.coupons.CouponsScreen
 import kyung.kung_android.ui.payment_history.PaymentHistoryScreen
 import kyung.kung_android.ui.post_detail.PostDetailScreen
 import kyung.kung_android.ui.post_editor.PostEditorScreen
@@ -265,6 +267,7 @@ fun AppNavHost(
                 onNavigatePaymentHistory = { type ->
                     navController.navigate("${AppRoute.PAYMENT_HISTORY}?type=$type")
                 },
+                onNavigateCoupons = { navController.navigate(AppRoute.COUPONS) },
                 onNavigateExpertTransactions = { navController.navigate(AppRoute.EXPERT_TRANSACTIONS) },
                 onNavigateExpertSelf = { id ->
                     if (id != null) navController.navigate("${AppRoute.EXPERT_DETAIL}/$id")
@@ -276,12 +279,17 @@ fun AppNavHost(
             ExpertRegisterScreen(onBack = { navController.popBackStack() })
         }
 
+        composable(AppRoute.COUPONS) {
+            CouponsScreen(onBack = { navController.popBackStack() })
+        }
+
         composable(AppRoute.ACCOUNT_SETTINGS) {
             AccountSettingsScreen(
                 onBack = { navController.popBackStack() },
                 onNavigateProfileInfo = { navController.navigate(AppRoute.PROFILE_INFO) },
                 onNavigatePasswordChange = { navController.navigate(AppRoute.PASSWORD_CHANGE) },
                 onNavigatePaymentPassword = { navController.navigate(AppRoute.PAYMENT_PASSWORD_SETUP) },
+                onNavigatePaymentPasswordChange = { navController.navigate(AppRoute.PAYMENT_PASSWORD_CHANGE) },
                 onNavigateWithdraw = { navController.navigate(AppRoute.ACCOUNT_WITHDRAW) },
                 onLoggedOut = {
                     navController.popBackStack(AppRoute.MAIN, inclusive = false)
@@ -305,6 +313,13 @@ fun AppNavHost(
 
         composable(AppRoute.PAYMENT_PASSWORD_SETUP) {
             PaymentPasswordSetupScreen(
+                onBack = { navController.popBackStack() },
+                onDone = { navController.popBackStack() },
+            )
+        }
+
+        composable(AppRoute.PAYMENT_PASSWORD_CHANGE) {
+            PaymentPasswordChangeScreen(
                 onBack = { navController.popBackStack() },
                 onDone = { navController.popBackStack() },
             )

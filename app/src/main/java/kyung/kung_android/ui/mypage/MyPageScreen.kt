@@ -61,6 +61,7 @@ fun MyPageScreen(
     onNavigateAccountSettings: () -> Unit = {},
     onNavigateFavorites: () -> Unit = {},
     onNavigatePaymentHistory: (type: String) -> Unit = {},
+    onNavigateCoupons: () -> Unit = {},
     onNavigateExpertTransactions: () -> Unit = {},
     onNavigateExpertSelf: (expertProfileId: Long?) -> Unit = {},
     viewModel: MyPageViewModel = hiltViewModel(),
@@ -101,6 +102,7 @@ fun MyPageScreen(
                 onAccountSettingsClick = onNavigateAccountSettings,
                 onFavoritesClick = onNavigateFavorites,
                 onPaymentHistoryClick = onNavigatePaymentHistory,
+                onCouponsClick = onNavigateCoupons,
                 onExpertTransactionsClick = onNavigateExpertTransactions,
             )
         }
@@ -116,6 +118,7 @@ private fun LoggedInContent(
     onAccountSettingsClick: () -> Unit,
     onFavoritesClick: () -> Unit,
     onPaymentHistoryClick: (type: String) -> Unit,
+    onCouponsClick: () -> Unit,
     onExpertTransactionsClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -158,6 +161,14 @@ private fun LoggedInContent(
                     )
                 }
             }
+        }
+
+        item {
+            SectionTitle("혜택")
+            MyPageRow(
+                title = "보유 쿠폰",
+                onClick = onCouponsClick,
+            )
         }
 
         item {

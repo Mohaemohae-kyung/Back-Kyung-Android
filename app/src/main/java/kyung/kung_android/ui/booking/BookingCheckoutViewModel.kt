@@ -16,10 +16,13 @@ import kyung.kung_android.data.checkout.dto.BookingCheckoutResponse
 import kyung.kung_android.data.coupon.dto.AvailableCouponDto
 import kyung.kung_android.domain.checkout.CheckoutRepository
 import kyung.kung_android.domain.coupon.CouponRepository
+import kyung.kung_android.domain.payment.PaymentException
 import kyung.kung_android.domain.payment.PaymentRepository
 import kyung.kung_android.domain.user.UserRepository
 import java.math.BigDecimal
 import javax.inject.Inject
+
+private const val PIN_LENGTH = 6
 
 data class BookingCheckoutUiState(
     val bookingId: Long = 0L,
@@ -32,7 +35,10 @@ data class BookingCheckoutUiState(
     val isLoading: Boolean = true,
     val isPaying: Boolean = false,
     val showPinDialog: Boolean = false,
-    val pin: String = "",
+    /** 입력 자릿수(표시용). */
+    val pinLength: Int = 0,
+    /** 키 배열 재구성 트리거. */
+    val keypadNonce: Int = 0,
     val error: String? = null,
 ) {
     val canPay: Boolean
@@ -78,6 +84,14 @@ class BookingCheckoutViewModel @Inject constructor(
     private val _effects = MutableSharedFlow<BookingCheckoutEffect>(extraBufferCapacity = 1)
     val effects: SharedFlow<BookingCheckoutEffect> = _effects.asSharedFlow()
 
+    private val pinBuffer = CharArray(PIN_LENGTH)
+    private var pinCount = 0
+
+    private fun clearPin() {
+        pinBuffer.fill(' ')
+        pinCount = 0
+    }
+
     fun load() {
         _state.update { it.copy(isLoading = true, error = null) }
         viewModelScope.launch {
@@ -111,20 +125,39 @@ class BookingCheckoutViewModel @Inject constructor(
             if (!hasPassword) {
                 _effects.emit(BookingCheckoutEffect.NavigateToPaymentPasswordSetup)
             } else {
-                _state.update { it.copy(showPinDialog = true, pin = "", error = null) }
+                clearPin()
+                _state.update {
+                    it.copy(showPinDialog = true, pinLength = 0, keypadNonce = it.keypadNonce + 1, error = null)
+                }
             }
         }
     }
 
-    fun onPinChange(value: String) = _state.update { it.copy(pin = value) }
+    fun onPinDigit(digit: Char) {
+        if (pinCount >= PIN_LENGTH) return
+        pinBuffer[pinCount++] = digit
+        _state.update { it.copy(pinLength = pinCount, error = null) }
+        if (pinCount == PIN_LENGTH) confirmPin()
+    }
 
-    fun dismissPinDialog() = _state.update { it.copy(showPinDialog = false, pin = "") }
+    fun onPinDelete() {
+        if (pinCount == 0) return
+        pinCount--
+        pinBuffer[pinCount] = ' '
+        _state.update { it.copy(pinLength = pinCount) }
+    }
+
+    fun dismissPinDialog() {
+        clearPin()
+        _state.update { it.copy(showPinDialog = false, pinLength = 0) }
+    }
 
     fun confirmPin() {
         val current = _state.value
-        if (current.pin.length != 6 || current.info == null || current.isPaying) return
-        val pin = current.pin
-        _state.update { it.copy(isPaying = true, showPinDialog = false, error = null) }
+        if (pinCount != PIN_LENGTH || current.info == null || current.isPaying) return
+        val pin = String(pinBuffer, 0, pinCount)
+        clearPin()
+        _state.update { it.copy(isPaying = true, showPinDialog = false, pinLength = 0, error = null) }
         viewModelScope.launch {
             try {
                 val method = _state.value.paymentMethod
@@ -134,7 +167,7 @@ class BookingCheckoutViewModel @Inject constructor(
                     paymentPin = pin,
                     userCouponId = _state.value.selectedCouponId,
                 )
-                _state.update { it.copy(isPaying = false, pin = "") }
+                _state.update { it.copy(isPaying = false) }
                 _effects.emit(
                     BookingCheckoutEffect.NavigateToTossPayment(
                         orderId = prepared.orderId,
@@ -146,10 +179,31 @@ class BookingCheckoutViewModel @Inject constructor(
                     )
                 )
             } catch (t: Throwable) {
-                _state.update {
-                    it.copy(isPaying = false, pin = "", error = t.message ?: "결제 준비에 실패했어요. 다시 시도해주세요.")
+                val pe = t as? PaymentException
+                when {
+                    pe?.isWrongPassword == true -> _state.update {
+                        it.copy(
+                            isPaying = false,
+                            showPinDialog = true,
+                            pinLength = 0,
+                            keypadNonce = it.keypadNonce + 1,
+                            error = pe.message,
+                        )
+                    }
+                    pe?.isPasswordNotSet == true -> {
+                        _state.update { it.copy(isPaying = false, error = null) }
+                        _effects.emit(BookingCheckoutEffect.NavigateToPaymentPasswordSetup)
+                    }
+                    else -> _state.update {
+                        it.copy(isPaying = false, error = t.message ?: "결제 준비에 실패했어요. 다시 시도해주세요.")
+                    }
                 }
             }
         }
+    }
+
+    override fun onCleared() {
+        clearPin()
+        super.onCleared()
     }
 }

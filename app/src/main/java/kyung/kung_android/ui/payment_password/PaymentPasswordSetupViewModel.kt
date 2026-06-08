@@ -17,13 +17,16 @@ import javax.inject.Inject
 
 enum class PinStep { FIRST, CONFIRM }
 
+private const val PIN_LENGTH = 6
+
 data class PaymentPasswordSetupUiState(
     val step: PinStep = PinStep.FIRST,
-    val pin: String = "",
+    /** 입력 자릿수(표시용). */
+    val pinLength: Int = 0,
     val isSubmitting: Boolean = false,
     val error: String? = null,
 ) {
-    val canProceed: Boolean get() = pin.length == 6 && !isSubmitting
+    val canProceed: Boolean get() = pinLength == PIN_LENGTH && !isSubmitting
 }
 
 sealed interface PaymentPasswordSetupEffect {
@@ -42,32 +45,71 @@ class PaymentPasswordSetupViewModel @Inject constructor(
     private val _effects = MutableSharedFlow<PaymentPasswordSetupEffect>(extraBufferCapacity = 1)
     val effects: SharedFlow<PaymentPasswordSetupEffect> = _effects.asSharedFlow()
 
-    private var firstPin: String = ""
+    private val pinBuffer = CharArray(PIN_LENGTH)
+    private var pinCount = 0
+    private val firstPin = CharArray(PIN_LENGTH)
+    private var firstCount = 0
 
-    fun onPinChange(value: String) = _state.update { it.copy(pin = value, error = null) }
+    private fun clearCurrent() {
+        pinBuffer.fill(' ')
+        pinCount = 0
+    }
 
-    fun onProceed() {
+    private fun clearFirst() {
+        firstPin.fill(' ')
+        firstCount = 0
+    }
+
+    fun onPinDigit(digit: Char) {
+        if (pinCount >= PIN_LENGTH) return
+        pinBuffer[pinCount++] = digit
+        _state.update { it.copy(pinLength = pinCount, error = null) }
+        if (pinCount == PIN_LENGTH) onProceed()
+    }
+
+    fun onPinDelete() {
+        if (pinCount == 0) return
+        pinCount--
+        pinBuffer[pinCount] = ' '
+        _state.update { it.copy(pinLength = pinCount) }
+    }
+
+    private fun onProceed() {
         val current = _state.value
-        if (!current.canProceed) return
+        if (pinCount != PIN_LENGTH || current.isSubmitting) return
         when (current.step) {
             PinStep.FIRST -> {
-                firstPin = current.pin
-                _state.update { it.copy(step = PinStep.CONFIRM, pin = "", error = null) }
+                pinBuffer.copyInto(firstPin)
+                firstCount = pinCount
+                clearCurrent()
+                _state.update { it.copy(step = PinStep.CONFIRM, pinLength = 0, error = null) }
             }
             PinStep.CONFIRM -> {
-                if (current.pin != firstPin) {
-                    firstPin = ""
+                if (!buffersMatch()) {
+                    clearCurrent()
+                    clearFirst()
                     _state.update {
-                        it.copy(step = PinStep.FIRST, pin = "", error = "비밀번호가 일치하지 않아요. 다시 입력해주세요.")
+                        it.copy(step = PinStep.FIRST, pinLength = 0, error = "비밀번호가 일치하지 않아요. 다시 입력해주세요.")
                     }
                     return
                 }
-                submit(current.pin)
+                submit()
             }
         }
     }
 
-    private fun submit(pin: String) {
+    /** 1차/2차 입력 버퍼를 자리별로 비교한다. */
+    private fun buffersMatch(): Boolean {
+        if (firstCount != pinCount) return false
+        var diff = 0
+        for (i in 0 until PIN_LENGTH) diff = diff or (firstPin[i].code xor pinBuffer[i].code)
+        return diff == 0
+    }
+
+    private fun submit() {
+        val pin = String(pinBuffer, 0, pinCount)
+        clearCurrent()
+        clearFirst()
         _state.update { it.copy(isSubmitting = true, error = null) }
         viewModelScope.launch {
             try {
@@ -79,13 +121,18 @@ class PaymentPasswordSetupViewModel @Inject constructor(
                 runCatching { userRepository.getMe() }
                 _effects.emit(PaymentPasswordSetupEffect.Done)
             } catch (t: Throwable) {
-                firstPin = ""
                 _state.update {
-                    it.copy(step = PinStep.FIRST, pin = "", error = t.message ?: "설정에 실패했어요. 다시 시도해주세요.")
+                    it.copy(step = PinStep.FIRST, pinLength = 0, error = t.message ?: "설정에 실패했어요. 다시 시도해주세요.")
                 }
             } finally {
                 _state.update { it.copy(isSubmitting = false) }
             }
         }
+    }
+
+    override fun onCleared() {
+        clearCurrent()
+        clearFirst()
+        super.onCleared()
     }
 }
